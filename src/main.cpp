@@ -2,6 +2,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
+#include "bla.hpp"
 
 using namespace std;
 using namespace rapidjson;
@@ -22,7 +23,10 @@ int main(int argc, char *argv[]) {
     d.Accept(writer);
 
     // Output {"project":"rapidjson","stars":11}
-    std::cout << buffer.GetString() << std::endl;
+    cout << buffer.GetString() << endl;
+
+    sayHi();
+    cout << "10 x 2 = " << mult2(10) << endl;
     return 0;
 }
 
