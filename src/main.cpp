@@ -27,6 +27,7 @@ int main(int argc, char *argv[]) {
 
     sayHi();
     cout << "10 x 2 = " << mult2(10) << endl;
+    cout << "20 x 2 = " << mult2(20) << endl;
     return 0;
 }
 

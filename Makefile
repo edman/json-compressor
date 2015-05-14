@@ -26,8 +26,7 @@ OBJECTS_NO_MAIN := $(patsubst $(BUILDDIR)/main.o,,$(OBJECTS))
 $(TARGET): $(OBJECTS)
 	@echo " Linking...";
 	$(CC) $^ -o $(TARGET) $(LIB)
-	@echo " Running..."; $(TARGET)
-
+	# @echo " Running..."; $(TARGET)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)
@@ -35,14 +34,16 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 
 clean:
 	@echo " Cleaning...";
-	$(RM) -r $(BUILDDIR) $(TARGET)
+	$(RM) -r $(BUILDDIR) $(TARGET) bin/tester
 
 # Tests
 $(BUILDDIR)/gtest-all.o: $(GTESTDIR)/src/gtest-all.cc
+	@echo " Compiling gtest-all.cc..."
 	g++ -isystem $(GTESTDIR)/include -I$(GTESTDIR) -pthread -c \
 		$(GTESTDIR)/src/gtest-all.cc -o build/gtest-all.o
 
 $(BUILDDIR)/gtest_main.o: $(GTESTDIR)/src/gtest_main.cc
+	@echo " Compiling gtest_main.cc..."
 	g++ -isystem $(GTESTDIR)/include -I$(GTESTDIR) -pthread -c \
 		$(GTESTDIR)/src/gtest_main.cc -o build/gtest_main.o
 
@@ -50,13 +51,12 @@ $(LIBDIR)/gtest_main.a: $(BUILDDIR)/gtest_main.o $(BUILDDIR)/gtest-all.o
 	@echo " Creating gtest library archive..."
 	ar -rv $(LIBDIR)/gtest_main.a $(BUILDDIR)/gtest-all.o $(BUILDDIR)/gtest_main.o
 
-test: $(OBJECTS_NO_MAIN) test/tester.cpp $(LIBDIR)/gtest_main.a
+bin/tester: $(OBJECTS_NO_MAIN) test/tester.cpp $(LIBDIR)/gtest_main.a
 	@echo " Building tests...";
 	$(CC) $(CFLAGS) -isystem ${GTESTDIR}/include $(INC) $(LIB) -pthread \
 		$^ -o bin/tester
-	@echo " Running tests..."
-	bin/tester
 
+test: bin/tester
+	@echo " Running tests..."
 
 .PHONY: clean
-
