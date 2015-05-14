@@ -15,7 +15,9 @@ TARGET := bin/runner
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-CFLAGS := -g -Wall
+# CFLAGS := -g -Wall -std=c++11 -O3
+CFLAGS := -g -Wall -std=c++11
+LFLAGS := -lsdsl -ldivsufsort -ldivsufsort64
 # LIB := -pthread -L lib -lboost_thread-mt -lboost_filesystem-mt -lboost_system-mt
 LIB := -L $(LIBDIR)
 INC := -I include
@@ -25,8 +27,8 @@ OBJECTS_NO_MAIN := $(patsubst $(BUILDDIR)/main.o,,$(OBJECTS))
 
 $(TARGET): $(OBJECTS)
 	@echo " Linking...";
-	$(CC) $^ -o $(TARGET) $(LIB)
-	# @echo " Running..."; $(TARGET)
+	$(CC) $^ -o $(TARGET) $(LIB) $(LFLAGS)
+	@echo " Running..."; $(TARGET)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)
@@ -53,8 +55,8 @@ $(LIBDIR)/gtest_main.a: $(BUILDDIR)/gtest_main.o $(BUILDDIR)/gtest-all.o
 
 bin/tester: $(OBJECTS_NO_MAIN) test/tester.cpp $(LIBDIR)/gtest_main.a
 	@echo " Building tests...";
-	$(CC) $(CFLAGS) -isystem ${GTESTDIR}/include $(INC) $(LIB) -pthread \
-		$^ -o bin/tester
+	$(CC) $(CFLAGS) -isystem ${GTESTDIR}/include $(INC) $(LIB) $(LFLAGS) \
+		-pthread $^ -o bin/tester
 
 test: bin/tester
 	@echo " Running tests..."

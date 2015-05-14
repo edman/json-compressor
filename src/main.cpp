@@ -4,8 +4,12 @@
 #include "rapidjson/stringbuffer.h"
 #include "bla.hpp"
 
+#include <sdsl/suffix_arrays.hpp>
+#include <fstream>
+
 using namespace std;
 using namespace rapidjson;
+using namespace sdsl;
 
 int main(int argc, char *argv[]) {
     // 1. Parse a JSON string into DOM.
@@ -28,7 +32,11 @@ int main(int argc, char *argv[]) {
     sayHi();
     cout << "10 x 2 = " << mult2(10) << endl;
     cout << "20 x 2 = " << mult2(20) << endl;
+
+    csa_wt<> fm_index;
+    construct_im(fm_index, "mississippi!", 1);
+    cout << "'si' occurs " << count(fm_index,"si") << " times.\n";
+
     return 0;
 }
-
 
