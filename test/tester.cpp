@@ -8,10 +8,16 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/filereadstream.h"
 #include "../src/bla.hpp"
+#include "../src/succinct_tree.hpp"
 using namespace std;
 using namespace rapidjson;
 
-int wow();
+Document wow();
+
+TEST (SuccinctTreeTest, DocumentDFS) {
+    Document d = wow();
+    SuccinctTree tree(d);
+}
 
 TEST (SquareRootTest, PositiveNos) {
     EXPECT_EQ(2.0, sqrt(4.0));
@@ -19,7 +25,7 @@ TEST (SquareRootTest, PositiveNos) {
     wow();
 }
 
-int wow() {
+Document wow() {
     {
         // 1. Parse a JSON string into DOM.
         const char* json = "{\"project\":\"rapidjson\",\"stars\":10}";
@@ -36,37 +42,36 @@ int wow() {
         d.Accept(writer);
 
         // Output {"project":"rapidjson","stars":11}
-        cout << buffer.GetString() << endl;
+        // cout << buffer.GetString() << endl;
 
         sayHi();
-        cout << "10 x 2 = " << mult2(10) << endl;
-        cout << "20 x 2 = " << mult2(20) << endl;
     }
 
+    Document d;
     FILE *fp = fopen("../test/sample1.json", "r");
+    if (!fp) fp = fopen("test/sample1.json", "r");
     if (!fp) {
       cout << "Make sure you're running this from the bin folder\n";
-      return 1;
+      return d;
     }
 
     char buf[2 << 16];
     FileReadStream is(fp, buf, sizeof(buf));
-    Document d;
     d.ParseStream(is);
     fclose(fp);
 
-    StringBuffer buffer;
-    Writer<StringBuffer> writer(buffer);
-    d.Accept(writer);
-    cout << buffer.GetString() << endl;
-
-    for (Value::ConstMemberIterator it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-        cout << "Name: " << it->name.GetString() << endl;
-        cout << "Value type: " << it->value.GetType() << endl;
-    }
+    // StringBuffer buffer;
+    // Writer<StringBuffer> writer(buffer);
+    // d.Accept(writer);
+    // cout << buffer.GetString() << endl;
+    //
+    // for (Value::ConstMemberIterator it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
+    //     cout << "Name: " << it->name.GetString() << endl;
+    //     cout << "Value type: " << it->value.GetType() << endl;
+    // }
 
     // d.Accept(writer);
     // cout << buffer.GetString() << endl;
 
-    return 0;
+    return d;
 }
