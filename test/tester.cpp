@@ -9,23 +9,30 @@
 #include "rapidjson/filereadstream.h"
 #include "../src/bla.hpp"
 #include "../src/succinct_tree.hpp"
+#include "../src/parser.hpp"
+
 using namespace std;
 using namespace rapidjson;
 
-Document wow();
+Document wow(int k = 1);
 
-TEST (SuccinctTreeTest, DocumentDFS) {
+TEST(SuccinctTreeTest, DocumentDFS) {
     Document d = wow();
     SuccinctTree tree(d);
 }
 
-TEST (SquareRootTest, PositiveNos) {
+TEST(ParserTest, Names) {
+    Document d = wow(2);
+    Parser p(d);
+}
+
+TEST(SquareRootTest, PositiveNos) {
     EXPECT_EQ(2.0, sqrt(4.0));
     EXPECT_EQ(4, mult2(2.0));
     wow();
 }
 
-Document wow() {
+Document wow(int k) {
     {
         // 1. Parse a JSON string into DOM.
         const char* json = "{\"project\":\"rapidjson\",\"stars\":10}";
@@ -43,12 +50,12 @@ Document wow() {
 
         // Output {"project":"rapidjson","stars":11}
         // cout << buffer.GetString() << endl;
-
-        sayHi();
     }
 
     Document d;
-    FILE *fp = fopen("../test/sample1.json", "r");
+    char fn[100];
+    sprintf(fn, "../test/sample%d.json", k);
+    FILE *fp = fopen(fn, "r");
     if (!fp) fp = fopen("test/sample1.json", "r");
     if (!fp) {
       cout << "Make sure you're running this from the bin folder\n";
