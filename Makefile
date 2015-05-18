@@ -13,6 +13,7 @@ LIBDIR := lib
 TARGET := bin/runner
 
 SRCEXT := cpp
+HDREXT := hpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 # CFLAGS := -g -Wall -std=c++11 -O3
@@ -30,7 +31,7 @@ $(TARGET): $(OBJECTS)
 	$(CC) $^ -o $(TARGET) $(LIB) $(LFLAGS)
 	@echo " Running..."; $(TARGET)
 
-$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
+$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT) $(SRCDIR)/%.$(HDREXT)
 	@mkdir -p $(BUILDDIR)
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
@@ -61,4 +62,4 @@ bin/tester: $(OBJECTS_NO_MAIN) test/tester.cpp $(LIBDIR)/gtest_main.a
 test: bin/tester
 	@echo " Running tests..."
 
-.PHONY: clean
+.PHONY: clean test
