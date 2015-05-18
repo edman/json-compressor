@@ -4,17 +4,18 @@
 
 #include "rapidjson/document.h"
 
-#include <set>
+#include "encodedvalue.hpp"
+#include <iostream>
+#include <unordered_set>
 #include <string>
-#include <vector>
 
 using namespace std;
 using namespace rapidjson;
 
 class Parser {
 public:
-    set<string> names;
-    vector<string> values;
+    unordered_set<string> names;
+    unordered_set<EncodedValue> values;
 
 public:
     Parser(Value&);

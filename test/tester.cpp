@@ -21,45 +21,48 @@ TEST(SuccinctTreeTest, DocumentDFS) {
     SuccinctTree tree(d);
 }
 
-TEST(ParserTest, Names) {
+TEST(ParserTest, NamesAndValues) {
     Document d = wow(2);
     Parser p(d);
+
+    cout << "names# " << p.names.size() << endl;
+    for (auto i = p.names.begin(); i != p.names.end(); ++i)
+        cout << *i << "|"; cout << endl;
+    cout << "values# " << p.values.size() << endl;
+    for (auto i = p.values.begin(); i != p.values.end(); ++i)
+        cout << *i << "|"; cout << endl;
 }
 
-TEST(SquareRootTest, PositiveNos) {
-    EXPECT_EQ(2.0, sqrt(4.0));
-    EXPECT_EQ(4, mult2(2.0));
-    wow();
+TEST(RapidJsonTest, ReadingStuff) {
+    // 1. Parse a JSON string into DOM.
+    const char* json = "{\"project\":\"rapidjson\",\"stars\":10}";
+    Document d;
+    d.Parse(json);
+
+    // 2. Modify it by DOM.
+    Value& s = d["stars"];
+    s.SetInt(s.GetInt() + 1);
+    // cout << "stars: " << s.GetInt() << endl;
+
+    // 3. Stringify the DOM
+    StringBuffer buffer;
+    Writer<StringBuffer> writer(buffer);
+    d.Accept(writer);
+
+    // Output {"project":"rapidjson","stars":11}
+    // cout << buffer.GetString() << endl;
 }
 
 Document wow(int k) {
-    {
-        // 1. Parse a JSON string into DOM.
-        const char* json = "{\"project\":\"rapidjson\",\"stars\":10}";
-        Document d;
-        d.Parse(json);
-
-        // 2. Modify it by DOM.
-        Value& s = d["stars"];
-        s.SetInt(s.GetInt() + 1);
-
-        // 3. Stringify the DOM
-        StringBuffer buffer;
-        Writer<StringBuffer> writer(buffer);
-        d.Accept(writer);
-
-        // Output {"project":"rapidjson","stars":11}
-        // cout << buffer.GetString() << endl;
-    }
-
     Document d;
     char fn[100];
     sprintf(fn, "../test/sample%d.json", k);
     FILE *fp = fopen(fn, "r");
-    if (!fp) fp = fopen("test/sample1.json", "r");
+    if (!fp) sprintf(fn, "test/sample%d.json", k), fp = fopen(fn, "r");
     if (!fp) {
-      cout << "Make sure you're running this from the bin folder\n";
-      return d;
+        cout << "line: " << fn << endl;
+        cout << "Sample file not found\n";
+        return d;
     }
 
     char buf[2 << 16];
