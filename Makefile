@@ -60,5 +60,9 @@ bin/tester: $(OBJECTS_NO_MAIN) test/tester.cpp $(LIBDIR)/gtest_main.a
 
 test: bin/tester
 	@echo " Running tests..."
+	bin/tester
 
-.PHONY: clean test
+run: $(TARGET)
+	@echo " Running..."; $(TARGET)
+
+.PHONY: clean test run
