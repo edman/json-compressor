@@ -18,7 +18,6 @@ Parser::Parser(Value &d) {
 void Parser::loadNames(Value &d) {
     if (d.IsObject())
         for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-            // cout << it->name.GetString() << " ";
             names.insert(it->name.GetString());
             loadNames(it->value);
         }
@@ -28,9 +27,8 @@ void Parser::loadNames(Value &d) {
 
 void Parser::loadValues(Value &d) {
     if (d.IsObject())
-        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
+        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it)
             loadValues(it->value);
-        }
     else if (d.IsArray()) for (auto it = d.Begin(); it != d.End(); ++it)
         loadValues(*it);
     else values.insert(EncodedValue(d));
