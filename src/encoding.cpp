@@ -9,7 +9,7 @@
 using namespace std;
 using namespace rapidjson;
 
-EncodedValue::EncodedValue(Value& d) {
+Encoding::Encoding(Value& d) {
     if (d.IsString())
         init(kString, string(d.GetString()));
     else if (d.IsInt())
@@ -24,7 +24,7 @@ EncodedValue::EncodedValue(Value& d) {
         init(kNull);
 }
 
-bool EncodedValue::operator==(const EncodedValue &enc) const {
+bool Encoding::operator==(const Encoding &enc) const {
     // Not same type => different
     if (type != enc.type) return false;
     // Equal type with value => compare value
@@ -35,7 +35,7 @@ bool EncodedValue::operator==(const EncodedValue &enc) const {
     return true;
 }
 
-ostream& operator<<(ostream &o, const EncodedValue &enc) {
+ostream& operator<<(ostream &o, const Encoding &enc) {
     string t[] = {"Null", "False", "True", "Object", "Array", "String", "Int",
         "Double"};
     o << "(" << t[enc.type];
@@ -46,4 +46,3 @@ ostream& operator<<(ostream &o, const EncodedValue &enc) {
 }
 
 #endif
-

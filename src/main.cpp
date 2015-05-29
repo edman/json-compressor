@@ -2,7 +2,6 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-#include "bla.hpp"
 
 #include <sdsl/suffix_arrays.hpp>
 #include <fstream>
@@ -29,14 +28,9 @@ int main(int argc, char *argv[]) {
     // Output {"project":"rapidjson","stars":11}
     cout << buffer.GetString() << endl;
 
-    sayHi();
-    cout << "10 x 2 = " << mult2(10) << endl;
-    cout << "20 x 2 = " << mult2(20) << endl;
-
     csa_wt<> fm_index;
     construct_im(fm_index, "mississippi!", 1);
     cout << "'si' occurs " << count(fm_index,"si") << " times.\n";
 
     return 0;
 }
-

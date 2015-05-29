@@ -3,7 +3,7 @@
 #define __PARSER_CPP__
 
 #include "parser.hpp"
-#include "encodedvalue.hpp"
+#include "encoding.hpp"
 #include "rapidjson/document.h"
 #include <iostream>
 
@@ -11,28 +11,29 @@ using namespace std;
 using namespace rapidjson;
 
 Parser::Parser(Value &d) {
-    loadNames(d);
-    loadValues(d);
+    unordered_set<string> nameSet;
+    unordered_set<Encoding> valueSet;
+    loadNames(nameSet, d);
+    loadValues(valueSet, d);
 }
 
-void Parser::loadNames(Value &d) {
+void loadNames(unordered_set<string> nameSet, Value &d) {
     if (d.IsObject())
         for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-            names.insert(it->name.GetString());
-            loadNames(it->value);
+            nameSet.insert(it->name.GetString());
+            loadNames(nameSet, it->value);
         }
     if (d.IsArray()) for (auto it = d.Begin(); it != d.End(); ++it)
-        loadNames(*it);
+        loadNames(nameSet, *it);
 }
 
-void Parser::loadValues(Value &d) {
+void loadValues(unordered_set<Encoding> valueSet, Value &d) {
     if (d.IsObject())
         for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it)
-            loadValues(it->value);
+            loadValues(valueSet, it->value);
     else if (d.IsArray()) for (auto it = d.Begin(); it != d.End(); ++it)
-        loadValues(*it);
-    else values.insert(EncodedValue(d));
+        loadValues(valueSet, *it);
+    else valueSet.insert(Encoding(d));
 }
 
 #endif
-

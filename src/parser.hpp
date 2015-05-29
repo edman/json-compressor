@@ -4,7 +4,7 @@
 
 #include "rapidjson/document.h"
 
-#include "encodedvalue.hpp"
+#include "encoding.hpp"
 #include <iostream>
 #include <unordered_set>
 #include <string>
@@ -14,16 +14,14 @@ using namespace rapidjson;
 
 class Parser {
 public:
-    unordered_set<string> names;
-    unordered_set<EncodedValue> values;
+    string *keys;
+    Encoding *values;
 
 public:
     Parser(Value&);
-
-private:
-    void loadNames(Value&);
-    void loadValues(Value&);
 };
 
-#endif
+void loadNames(unordered_set<string>, Value&);
+void loadValues(unordered_set<Encoding>, Value&);
 
+#endif

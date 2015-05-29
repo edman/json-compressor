@@ -1,6 +1,6 @@
 
-#ifndef __ENCODEDVALUE_HPP__
-#define __ENCODEDVALUE_HPP__
+#ifndef __Encoding_HPP__
+#define __Encoding_HPP__
 
 #include "rapidjson/document.h"
 
@@ -14,8 +14,9 @@ using namespace rapidjson;
 
 enum types { kNull, kFalse, kTrue, kObject, kArray, kString, kInt, kDouble };
 
-class EncodedValue {
+class Encoding {
 public:
+    int keyi;
     types type;
     // { "String", "Int", "Double" };
     string vstring;
@@ -24,7 +25,7 @@ public:
 
 public:
     /* Constructors */
-    EncodedValue(Value&);
+    Encoding(Value&);
     /* Initialization functions */
     void init(types t) { type = t; if (hasValue()) cout << "Value expected" << endl; }
     void init(types t, string v) { type = t; vstring = v; }
@@ -38,14 +39,14 @@ public:
     bool isDouble() const { return type == kDouble; }
 
     /* Operators */
-    bool operator==(const EncodedValue &enc) const;
-    friend ostream& operator<<(ostream &o, const EncodedValue &enc);
+    bool operator==(const Encoding &enc) const;
+    friend ostream& operator<<(ostream &o, const Encoding &enc);
 };
 
 
 namespace std {
-    template<> struct hash<EncodedValue> {
-        size_t operator()(const EncodedValue& enc) const {
+    template<> struct hash<Encoding> {
+        size_t operator()(const Encoding& enc) const {
             size_t h1 = hash<int>()(enc.type), h2;
             if (!enc.hasValue())
                 return h1;
@@ -61,4 +62,3 @@ namespace std {
 }
 
 #endif
-
