@@ -9,10 +9,10 @@ using namespace std;
 using namespace rapidjson;
 using namespace sdsl;
 
-int counter = 0;
+static int counter = 0;
 
-SuccinctTree::SuccinctTree(Value &document) {
-    bv = bit_vector(100, 0);
+SuccinctTree::SuccinctTree(Value &document, int size) {
+    bv = bit_vector(2 * (size + 1), 0);
 
     counter = 0;
     documentDfs(document);

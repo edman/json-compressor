@@ -14,11 +14,10 @@ class SuccinctTree {
     public:
         int N;
         bit_vector bv;
-        bp_support_sada<> tree;
 
     public:
         SuccinctTree() {}
-        SuccinctTree(Value&);
+        SuccinctTree(Value&, int size);
 
     private:
         void documentDfs(Value&);
