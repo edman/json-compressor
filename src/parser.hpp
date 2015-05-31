@@ -2,26 +2,36 @@
 #ifndef __PARSER_HPP__
 #define __PARSER_HPP__
 
+#include "succinct_tree.hpp"
+#include "jvalue.hpp"
 #include "rapidjson/document.h"
-
-#include "encoding.hpp"
 #include <iostream>
-#include <unordered_set>
+#include <map>
 #include <string>
 
 using namespace std;
 using namespace rapidjson;
 
+struct code {
+    int name;
+    int value;
+};
+
 class Parser {
 public:
-    string *keys;
-    Encoding *values;
+    SuccinctTree tree;
+    string *names;
+    Jvalue *values;
+    code *codes;
+    int namen, valuen, coden;
 
 public:
     Parser(Value&);
+    ~Parser();
 };
 
-void loadNames(unordered_set<string>, Value&);
-void loadValues(unordered_set<Encoding>, Value&);
+template <typename T> T* mapToArray(map<T, int> &mmap);
+void loadNames(map<string, int> &nameMap, Value &d, int &n);
+void loadValues(map<Jvalue, int> &valueMap, Value &d, int &n);
 
 #endif
