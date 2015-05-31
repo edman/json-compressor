@@ -17,6 +17,7 @@ class SuccinctTree {
         bp_support_sada<> tree;
 
     public:
+        SuccinctTree() {}
         SuccinctTree(Value&);
 
     private:
