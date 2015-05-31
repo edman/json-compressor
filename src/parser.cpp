@@ -12,14 +12,13 @@
 using namespace std;
 using namespace rapidjson;
 
-Parser::Parser(Value &d) {
-    // Construct a tree from the json sctructure
-    tree = SuccinctTree(d);
+static int counter;
 
+Parser::Parser(Value &d) {
     // Load JSON names and values in a hash table
     map<string, int> nameMap;
     map<Jvalue, int> valueMap;
-    int n = 0;
+    int n = 0; counter = 0;
     loadNames(nameMap, d, n);
     loadValues(valueMap, d, (n = 0, n));
 
@@ -29,12 +28,45 @@ Parser::Parser(Value &d) {
     namen = nameMap.size();
     valuen = valueMap.size();
 
+    // Construct a tree from the json sctructure
+    tree = SuccinctTree(d, counter);
+
     // Create the list of encodings from the Json file
+    counter = 0;
+    codes = new encode[tree.N];
+    loadCodes(d, nameMap, valueMap);
 }
 
 Parser::~Parser() {
     delete[] names;
     delete[] values;
+}
+
+int type_of(Value &d) {
+    if (d.GetType() != 6) return d.GetType();
+    return d.IsInt() ? 6 : 7;
+}
+
+void Parser::loadCodes(Value &d, map<string, int> nameMap, map<Jvalue, int> valueMap) {
+    if (d.IsObject()) {
+        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
+            int name = nameMap[it->name.GetString()];
+            int type = type_of(it->value);
+            int value = (type >= 5 ? valueMap[Jvalue(it->value)] : -1);
+            codes[counter++] = encode(name, type, value);
+
+            loadCodes(it->value, nameMap, valueMap);
+        }
+    }
+    else if (d.IsArray())
+        for (auto it = d.Begin(); it != d.End(); ++it) {
+            int name = -1;
+            int type = type_of(*it);
+            int value = (type >= 5 ? valueMap[Jvalue(*it)] : -1);
+            codes[counter++] = encode(name, type, value);
+
+            loadCodes(*it, nameMap, valueMap);
+        }
 }
 
 template <typename T> T* mapToArray(map<T, int> &mmap) {
@@ -49,13 +81,16 @@ template <typename T> T* mapToArray(map<T, int> &mmap) {
 void loadNames(map<string, int> &nameMap, Value &d, int &n) {
     if (d.IsObject())
         for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
+            counter++;
             string name = it->name.GetString();
             if (nameMap.find(name) == nameMap.end())
                 nameMap[name] = n++;
             loadNames(nameMap, it->value, n);
         }
-    if (d.IsArray()) for (auto it = d.Begin(); it != d.End(); ++it)
+    if (d.IsArray()) for (auto it = d.Begin(); it != d.End(); ++it) {
+        counter++;
         loadNames(nameMap, *it, n);
+    }
 }
 
 void loadValues(map<Jvalue, int> &valueMap, Value &d, int &n) {
