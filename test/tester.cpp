@@ -7,7 +7,6 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/filereadstream.h"
-#include "../src/bla.hpp"
 #include "../src/succinct_tree.hpp"
 #include "../src/parser.hpp"
 
@@ -17,20 +16,34 @@ using namespace rapidjson;
 Document wow(int k = 1);
 
 TEST(SuccinctTreeTest, DocumentDFS) {
-    Document d = wow();
+    Document d = wow(2);
     SuccinctTree tree(d);
+
+    ASSERT_EQ(tree.N, 8);
+    int t[] = {1,1,0,1,1,0,1,1,0,1,0,1,0,1,0,0,0,0};
+    for (int i = 0; i < 18; ++i)
+        ASSERT_EQ(tree.bv[i], t[i]);
 }
 
 TEST(ParserTest, NamesAndValues) {
     Document d = wow(2);
     Parser p(d);
 
-    cout << "names# " << p.names.size() << endl;
-    for (auto i = p.names.begin(); i != p.names.end(); ++i)
-        cout << *i << "|"; cout << endl;
-    cout << "values# " << p.values.size() << endl;
-    for (auto i = p.values.begin(); i != p.values.end(); ++i)
-        cout << *i << "|"; cout << endl;
+    ASSERT_EQ(p.namen, 4);
+    string names[] = {"foo", "st", "name", "grades"};
+    for (int i = 0; i < 4; ++i)
+        ASSERT_EQ(p.names[i], names[i]);
+
+    ASSERT_EQ(p.valuen, 6);
+    for (int i = 0; i < p.valuen; ++i)
+        cout << p.values[i] << "|"; cout << endl;
+
+    // cout << "names# " << names.size() << endl;
+    // for (auto i = p.names.begin(); i != p.names.end(); ++i)
+    //     cout << *i << "|"; cout << endl;
+    // cout << "values# " << p.values.size() << endl;
+    // for (auto i = p.values.begin(); i != p.values.end(); ++i)
+    //     cout << *i << "|"; cout << endl;
 }
 
 TEST(RapidJsonTest, ReadingStuff) {
