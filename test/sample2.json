@@ -2,6 +2,6 @@
     "foo": "bar",
     "st": {
         "name": "George",
-        "grades": [100, 92, 93, 87]
+        "grades": [100, 92, 93, 87.8]
     }
 }

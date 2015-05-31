@@ -17,7 +17,7 @@ Document wow(int k = 1);
 
 TEST(SuccinctTreeTest, DocumentDFS) {
     Document d = wow(2);
-    SuccinctTree tree(d);
+    SuccinctTree tree(d, 18);
 
     ASSERT_EQ(tree.N, 8);
     int t[] = {1,1,0,1,1,0,1,1,0,1,0,1,0,1,0,0,0,0};
@@ -25,9 +25,14 @@ TEST(SuccinctTreeTest, DocumentDFS) {
         ASSERT_EQ(tree.bv[i], t[i]);
 }
 
-TEST(ParserTest, NamesAndValues) {
+TEST(ParserTest, TreeNamesAndValues) {
     Document d = wow(2);
     Parser p(d);
+
+    ASSERT_EQ(p.tree.N, 8);
+    int t[] = {1,1,0,1,1,0,1,1,0,1,0,1,0,1,0,0,0,0};
+    for (int i = 0; i < 18; ++i)
+        ASSERT_EQ(p.tree.bv[i], t[i]);
 
     ASSERT_EQ(p.namen, 4);
     string names[] = {"foo", "st", "name", "grades"};
@@ -35,6 +40,8 @@ TEST(ParserTest, NamesAndValues) {
         ASSERT_EQ(p.names[i], names[i]);
 
     ASSERT_EQ(p.valuen, 6);
+    for (int i = 0; i < p.namen; ++i)
+        cout << p.names[i] << "|"; cout << endl;
     for (int i = 0; i < p.valuen; ++i)
         cout << p.values[i] << "|"; cout << endl;
 
