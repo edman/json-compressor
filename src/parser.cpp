@@ -28,23 +28,19 @@ Parser::Parser(Value &d) {
     namen = nameMap.size();
     valuen = valueMap.size();
 
-    // Construct a tree from the json sctructure
-    tree = SuccinctTree(d, counter);
+    // Construct a tree from the JSON sctructure
+    size = counter;
+    tree = SuccinctTree(d, size);
 
-    // Create the list of encodings from the Json file
+    // Create the list of encodings from the JSON file
     counter = 0;
-    codes = new encode[tree.N];
+    codes = new encode[size];
     loadCodes(d, nameMap, valueMap);
 }
 
 Parser::~Parser() {
     delete[] names;
     delete[] values;
-}
-
-int type_of(Value &d) {
-    if (d.GetType() != 6) return d.GetType();
-    return d.IsInt() ? 6 : 7;
 }
 
 void Parser::loadCodes(Value &d, map<string, int> nameMap, map<Jvalue, int> valueMap) {
@@ -67,6 +63,11 @@ void Parser::loadCodes(Value &d, map<string, int> nameMap, map<Jvalue, int> valu
 
             loadCodes(*it, nameMap, valueMap);
         }
+}
+
+int type_of(Value &d) {
+    if (d.GetType() != 6) return d.GetType();
+    return d.IsInt() ? 6 : 7;
 }
 
 template <typename T> T* mapToArray(map<T, int> &mmap) {
@@ -106,4 +107,10 @@ void loadValues(map<Jvalue, int> &valueMap, Value &d, int &n) {
     }
 }
 
+ostream& operator<<(ostream &o, const encode &e) {
+    o<<"("<<e.name<<","<<e.type;
+    return (e.type >= 5 ? o<<","<<e.value : o)<<")";
+}
+
 #endif
+
