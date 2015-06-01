@@ -25,6 +25,9 @@ public:
 public:
     /* Constructors */
     Jvalue() {}
+    Jvalue(types t, string v): type(t), vstring(v) {}
+    Jvalue(types t, int v): type(t), vint(v) {}
+    Jvalue(types t, double v): type(t), vdouble(v) {}
     // Jvalue(Jvalue &a) { *this = a; cout << "Jvalue construct" << endl; }
     Jvalue(Value&);
     // ~Jvalue() { cout << * this << " encoding destruct" << endl; }
@@ -43,6 +46,7 @@ public:
     /* Operators */
     Jvalue operator=(const Jvalue &enc);
     bool operator==(const Jvalue &enc) const;
+    bool operator!=(const Jvalue &rhs) const { return !(*this == rhs); }
     bool operator<(const Jvalue& rhs) const;
     friend ostream& operator<<(ostream &o, const Jvalue &enc);
 };

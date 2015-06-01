@@ -25,6 +25,7 @@ class SuccinctTree {
         int size() const;
 
         bool operator==(const SuccinctTree &rhs) const;
+        bool operator!=(const SuccinctTree &rhs) const { return !(*this == rhs); }
 
     private:
         void documentDfs(Value&);

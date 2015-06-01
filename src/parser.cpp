@@ -100,12 +100,25 @@ void loadValues(map<Jvalue, int> &valueMap, Value &d, int &n) {
             loadValues(valueMap, it->value, n);
     else if (d.IsArray()) for (auto it = d.Begin(); it != d.End(); ++it)
         loadValues(valueMap, *it, n);
-    else {
+    else if (d.IsString() || d.IsNumber()) {
         Jvalue value(d);
         if (valueMap.find(value) == valueMap.end())
             valueMap[value] = n++;
     }
 }
+
+bool Parser::operator==(const Parser &rhs) const {
+    if (size != rhs.size || namen != rhs.namen || valuen != rhs.valuen || tree != rhs.tree)
+        return false;
+    for (int i = 0; i < size; ++i)
+        if (codes[i] != rhs.codes[i]) return false;
+    for (int i = 0; i < namen; ++i)
+        if (names[i] != rhs.names[i]) return false;
+    for (int i = 0; i < valuen; ++i)
+        if (values[i] != rhs.values[i]) return false;
+    return true;
+}
+
 
 ostream& operator<<(ostream &o, const encode &e) {
     o<<"("<<e.name<<","<<e.type;
