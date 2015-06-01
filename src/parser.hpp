@@ -31,6 +31,10 @@ public:
 
 public:
     Parser(Value&);
+    Parser(int size, int namen, int valuen, SuccinctTree tree, encode *codes,
+            string *names, Jvalue *values): size(size), namen(namen),
+            valuen(valuen), tree(tree), codes(codes), names(names),
+            values(values) { }
     ~Parser();
 
     void loadCodes(Value &d, map<string, int> nameMap, map<Jvalue, int> valueMap);
