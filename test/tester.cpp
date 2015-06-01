@@ -15,6 +15,7 @@ using namespace std;
 using namespace rapidjson;
 
 Document wow(int k = 1);
+void print_parser(Parser &p);
 
 TEST(RapidJsonTest, ReadingStuff) {
     // 1. Parse a JSON string into DOM.
@@ -56,17 +57,13 @@ TEST(ParserTest, TreeNamesAndValues) {
     for (int i = 0; i < 18; ++i)
         ASSERT_EQ(p.tree.bv[i], t[i]);
 
-    cout << "size " <<p.namen<<endl;;
     ASSERT_EQ(p.namen, 4);
     string names[] = {"foo", "st", "name", "grades"};
     for (int i = 0; i < 4; ++i)
         ASSERT_EQ(p.names[i], names[i]);
 
     ASSERT_EQ(p.valuen, 6);
-    for (int i = 0; i < p.namen; ++i)
-        cout << p.names[i] << "|"; cout << endl;
-    for (int i = 0; i < p.valuen; ++i)
-        cout << p.values[i] << "|"; cout << endl;
+    // print_parser(p);
 }
 
 TEST(ParserTest, Dblp) {
@@ -74,39 +71,13 @@ TEST(ParserTest, Dblp) {
     Document d = wow(3);
     Parser p(d);
 
-    cout << "tree: " << p.tree.bv << endl;
-    cout << "names: ";
-    for (int i = 0; i < p.namen; ++i)
-        cout << p.names[i] << "|"; cout << endl;
-    cout << "values: ";
-    for (int i = 0; i < p.valuen; ++i)
-        cout << p.values[i] << "|"; cout << endl;
-    cout << "codes: " << p.size;
-    for (int i = 0; i < p.size; ++i)
-        cout << p.codes[i] << "|"; cout << endl;
-}
-
-TEST(Serialization, fstream) {
-    ofstream mfile;
-    mfile.open("test/tfile.bin", ios::binary);
-    mfile << 387;
-    mfile << "mom said I'm a grown man";
-    mfile.close();
-
-    ifstream ofile;
-    ofile.open("test/tfile.bin", ios::binary);
-    int i;
-    ofile >> i;
-    ofile.close();
-    ASSERT_EQ(i, 387);
-    cout << "h.. " << i << " " << sizeof(double) << endl;
+    // print_parser(p);
 }
 
 TEST(Serialization, get_size) {
     Document d = wow(2);
     Parser p(d);
     int size = get_size(p);
-    // cout << "get_size: "<< size << endl;
     ASSERT_EQ(size, 153);
 
     ASSERT_EQ(p.tree.size_in_bytes(), 3);
@@ -116,16 +87,76 @@ TEST(Serialization, SuccinctTree) {
     Document d = wow(2);
     int size = 8;
     SuccinctTree s(d, size);
-    cout << s<<endl;;
 
     char *p = s.to_char_array();
     for (int i = 0; i < s.size(); ++i)
         ASSERT_EQ(s.bv[i], (p[i/8] & (1 << (7-(i%8))) ? 1:0));
-        // cout << (p[i/8] & (1 << (7-(i%8))) ? 1:0); cout << endl;
 
     SuccinctTree sa(p, s.size());
-    cout << sa<< endl;;
+    delete[] p;
     ASSERT_EQ(sa, s);
+
+    // cout << s<<endl;;
+    // cout << sa<< endl;;
+}
+
+TEST(Serialization, IntAndString) {
+    int v = 10;
+    StreamType res;
+    serialize(v, res);
+
+    EXPECT_EQ(sizeof(uint32_t), res.size());
+    EXPECT_EQ(res, std::vector<uint8_t>({0xA, 0, 0, 0}));
+
+    string s = "mom sent me home";
+    serialize(s, res);
+
+    ofstream mfile;
+    mfile.open("test/tfile.bin", ios::binary);
+    mfile.write((char*) &res[0], res.size());
+    mfile.close();
+
+    ifstream ifile;
+    ifile.open("test/tfile.bin", ios::binary);
+
+    ifile.seekg(0, ifile.end);
+    long size = ifile.tellg();
+    ifile.seekg(0);
+    StreamType stream(size);
+    ifile.read((char*) &stream[0], size);
+    ifile.close();
+
+    StreamType::const_iterator it = stream.begin();
+    int i = deserialize<int>(it, stream.end());
+    string t = deserialize<string>(it, stream.end());
+    ASSERT_EQ(i, v);
+    ASSERT_EQ(s, t);
+}
+
+TEST(Serialization, SaveLoadFile) {
+    // string fn = "test/tfile.bin";
+    for (int i = 1; i <= 3; ++i) {
+        Document d = wow(i);
+        Parser p(d);
+
+        save_to_file(p, "test/tfile.bin");
+        Parser pa = load_from_file("test/tfile.bin");
+        ASSERT_EQ(p, pa);
+    }
+}
+
+
+void print_parser(Parser &p) {
+    cout << "tree: " << p.tree << endl;
+    cout << "names: ";
+    for (int i = 0; i < p.namen; ++i)
+        cout << p.names[i] << "|"; cout << endl;
+    cout << "values: ";
+    for (int i = 0; i < p.valuen; ++i)
+        cout << p.values[i] << "|"; cout << endl;
+    cout << "codes: ";
+    for (int i = 0; i < p.size; ++i)
+        cout << p.codes[i] << "|"; cout << endl;
 }
 
 Document wow(int k) {
