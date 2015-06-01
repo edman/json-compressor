@@ -16,12 +16,21 @@ class SuccinctTree {
         bit_vector bv;
 
     public:
-        SuccinctTree() {}
-        SuccinctTree(Value&, int size);
+        SuccinctTree() { N=0; }
+        SuccinctTree(Value&, int doc_size);
+        SuccinctTree(char *p, int size_in_bits);
+
+        char* to_char_array() const;
+        int size_in_bytes() const;
+        int size() const;
+
+        bool operator==(const SuccinctTree &rhs) const;
 
     private:
         void documentDfs(Value&);
 };
+
+ostream& operator<<(ostream &o, const SuccinctTree &t);
 
 #endif
 
