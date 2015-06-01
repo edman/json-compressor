@@ -38,11 +38,12 @@ TEST(RapidJsonTest, ReadingStuff) {
 
 TEST(SuccinctTreeTest, DocumentDFS) {
     Document d = wow(2);
-    SuccinctTree tree(d, 18);
+    SuccinctTree tree(d, 8);
 
     ASSERT_EQ(tree.N, 8);
+    ASSERT_EQ(tree.size(), 18);
     int t[] = {1,1,0,1,1,0,1,1,0,1,0,1,0,1,0,0,0,0};
-    for (int i = 0; i < 18; ++i)
+    for (int i = 0; i < tree.size(); ++i)
         ASSERT_EQ(tree.bv[i], t[i]);
 }
 
@@ -105,12 +106,26 @@ TEST(Serialization, get_size) {
     Document d = wow(2);
     Parser p(d);
     int size = get_size(p);
-    cout << "get_size: "<< size << endl;
+    // cout << "get_size: "<< size << endl;
+    ASSERT_EQ(size, 153);
 
-    cout << "codes: ";
-    for (int i = 0; i < p.size; ++i)
-        cout << p.codes[i] << "|"; cout << endl;
+    ASSERT_EQ(p.tree.size_in_bytes(), 3);
+}
 
+TEST(Serialization, SuccinctTree) {
+    Document d = wow(2);
+    int size = 8;
+    SuccinctTree s(d, size);
+    cout << s<<endl;;
+
+    char *p = s.to_char_array();
+    for (int i = 0; i < s.size(); ++i)
+        ASSERT_EQ(s.bv[i], (p[i/8] & (1 << (7-(i%8))) ? 1:0));
+        // cout << (p[i/8] & (1 << (7-(i%8))) ? 1:0); cout << endl;
+
+    SuccinctTree sa(p, s.size());
+    cout << sa<< endl;;
+    ASSERT_EQ(sa, s);
 }
 
 Document wow(int k) {
