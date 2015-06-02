@@ -37,12 +37,17 @@ public:
             values(values) { }
     ~Parser();
 
-    void loadCodes(Value &d, map<string, int> nameMap, map<Jvalue, int> valueMap);
+    void loadInfo(Value&, map<string, int>&, map<Jvalue, int>&,
+            vector<encode>&);
+    void loadCodes(Value&, map<string, int>&, map<Jvalue, int>&);
 
     bool operator==(const Parser &rhs) const;
 };
 
+int resolveName(const string&, map<string, int>&, int&);
+int resolveValue(Value&, map<Jvalue, int>&, int&);
 int type_of(Value &d);
+encode* vectorToArray(vector<encode>&);
 template <typename T> T* mapToArray(map<T, int> &mmap);
 void loadNames(map<string, int> &nameMap, Value &d, int &n);
 void loadValues(map<Jvalue, int> &valueMap, Value &d, int &n);
