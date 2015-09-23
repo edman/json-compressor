@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 
+
 using namespace std;
 using namespace rapidjson;
 
@@ -40,6 +41,13 @@ public:
     void loadCodes(Value &d, map<string, int> nameMap, map<Jvalue, int> valueMap);
 
     bool operator==(const Parser &rhs) const;
+
+	#ifdef COMPRESS
+	void zlibCompressN(map<string, int> *, ofstream *);
+	void zlibCompressV(map<Jvalue, int> *, ofstream *);
+	void zlibDecompressN(ifstream *, map<string, int> *);
+	void zlibDecompressV(ifstream *, map<Jvalue, int> *);
+	#endif
 };
 
 int type_of(Value &d);

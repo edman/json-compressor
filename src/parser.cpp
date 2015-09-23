@@ -9,6 +9,18 @@
 #include <iostream>
 #include <map>
 
+#ifdef COMPRESS
+#include <fstream>
+#include <sstream>
+/* Requires boost. */
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/serialization/map.hpp>
+#endif
+
 using namespace std;
 using namespace rapidjson;
 
@@ -17,7 +29,9 @@ static int counter;
 Parser::Parser(Value &d) {
     // Load JSON names and values in a hash table
     map<string, int> nameMap;
+    map<string, int> newMap;
     map<Jvalue, int> valueMap;
+    map<Jvalue, int> newMap2;
     int n = 0; counter = 0;
     loadNames(nameMap, d, n);
     loadValues(valueMap, d, (n = 0, n));
@@ -36,12 +50,91 @@ Parser::Parser(Value &d) {
     counter = 0;
     codes = new encode[size];
     loadCodes(d, nameMap, valueMap);
+
+	#ifdef COMPRESS
+	/* Compress the constructed arrays using zlib. */
+	ofstream nameOfs("./output.zlib.name", std::ios::binary);
+	ofstream valueOfs("./output.zlib.value", std::ios::binary);
+	zlibCompressN(&nameMap, &nameOfs);
+	zlibCompressV(&valueMap, &valueOfs);
+	/* TODO: Loading data from ifstream, still not resolved yet. */
+
+	/* Decompression part. */
+	ifstream nameIfs("./output.zlib.name", std::ios::binary);
+	ifstream valueIfs("./output.zlib.value", std::ios::binary);
+	zlibDecompressN(&nameIfs, &newMap);
+	zlibDecompressV(&valueIfs, &newMap2);
+
+	if(nameMap == newMap) std::cout << "T1" << std::endl;
+	if(valueMap == newMap2) std::cout << "T2" << std::endl;
+	else
+	{
+		for(auto it = newMap2.cbegin(); it != newMap2.cend(); ++it)
+		{
+			std::cout << it->first.type << " " << it->second << std::endl;
+		}
+	}
+	#endif
 }
 
 Parser::~Parser() {
     delete[] names;
     delete[] values;
 }
+
+#ifdef COMPRESS
+void Parser::zlibCompressN(map<string, int> *m, ofstream *f)
+{
+	stringstream ss;
+	boost::archive::text_oarchive oarch(ss);
+	boost::iostreams::filtering_istreambuf is;
+	oarch << *m;
+	std::cout << ss.str() << std::endl;
+	is.push(boost::iostreams::zlib_compressor());
+	is.push(ss);
+	boost::iostreams::copy(is, *f);
+	f->close();
+}
+
+/* TODO: Need to serialize Jvalue. */
+void Parser::zlibCompressV(map<Jvalue, int> *m, ofstream *f)
+{
+        stringstream ss;
+	boost::archive::text_oarchive oarch(ss);
+        boost::iostreams::filtering_istreambuf is;
+	oarch << *m;
+	std::cout << ss.str() << std::endl;
+        is.push(boost::iostreams::zlib_compressor());
+        is.push(ss);
+	boost::iostreams::copy(is, *f);
+        f->close();
+}
+
+void Parser::zlibDecompressN(ifstream *f, map<string, int> *m)
+{
+	stringstream ss;
+	boost::iostreams::filtering_istreambuf is;
+	is.push(boost::iostreams::zlib_decompressor());
+	is.push(*f);
+	boost::iostreams::copy(is, ss);
+	boost::archive::text_iarchive iarch(ss);
+	iarch >> *m;
+	std::cout << ss.str() << std::endl;
+}
+
+void Parser::zlibDecompressV(ifstream *f, map<Jvalue, int> *m)
+{
+	stringstream ss;
+	boost::iostreams::filtering_istreambuf is;
+	is.push(boost::iostreams::zlib_decompressor());
+	is.push(*f);
+	boost::iostreams::copy(is, ss);
+	boost::archive::text_iarchive iarch(ss);
+	iarch >> *m;
+	std::cout << ss.str() << std::endl;
+}
+
+#endif
 
 void Parser::loadCodes(Value &d, map<string, int> nameMap, map<Jvalue, int> valueMap) {
     if (d.IsObject()) {

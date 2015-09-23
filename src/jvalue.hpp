@@ -8,6 +8,13 @@
 #include <unordered_set>
 #include <string>
 #include <vector>
+#include <utility>
+
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/utility.hpp>
 
 using namespace std;
 using namespace rapidjson;
@@ -31,6 +38,62 @@ public:
     // Jvalue(Jvalue &a) { *this = a; cout << "Jvalue construct" << endl; }
     Jvalue(Value&);
     // ~Jvalue() { cout << * this << " encoding destruct" << endl; }
+
+    /* Serialization. */
+    friend class boost::serialization::access;
+    template<class Archive> void save(Archive &ar, const unsigned int) const
+    {
+    	pair<int, string> pi;
+    	ar << boost::serialization::base_object<pair<int, string> >(pi);
+    	if(type == kString)
+    	{
+    		pi = make_pair(type, vstring);
+    		ar << pi;
+    	}
+    	else if(type == kInt)
+    	{
+    		pi = make_pair(type, vint);
+    		ar << pi;
+    	}
+    	else if(type == kDouble)
+    	{
+    		pi = make_pair(type, vdouble);
+    		ar << pi;
+    	}
+    	else if(type < kNull || type > kDouble)
+    	{
+    		
+    	}
+    	else
+    	{
+    		pi = make_pair(type, 0);
+    		ar << pi;
+    	}
+    }
+    template<class Archive> void load(Archive &ar, const unsigned int)
+    {
+    	pair<int, string> pi;
+    	ar >> boost::serialization::base_object<pair<int, string> >(pi);
+    	ar >> pi;
+    	type = (types)pi.first;
+    	if(type == kString)
+    	{
+    		vstring = pi.second;
+    	}
+    	else if(type == kInt)
+    	{
+		vint = stoi(pi.second);
+    	}
+    	else if(type == kDouble)
+    	{
+    		vdouble = stof(pi.second);
+    	}
+    }
+    template<class Archive> void serialize(Archive &ar, const unsigned int file_version)
+    {
+    	boost::serialization::split_member(ar, *this, file_version);
+    }
+
     /* Initialization functions */
     void init(types t) { type = t; if (hasValue()) cout << "Value expected" << endl; }
     void init(types t, string v) { type = t; vstring = v; }
