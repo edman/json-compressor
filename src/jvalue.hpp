@@ -44,21 +44,20 @@ public:
     template<class Archive> void save(Archive &ar, const unsigned int) const
     {
     	pair<int, string> pi;
-    	ar << boost::serialization::base_object<pair<int, string> >(pi);
     	if(type == kString)
     	{
     		pi = make_pair(type, vstring);
-    		ar << pi;
+    		ar & pi;
     	}
     	else if(type == kInt)
     	{
-    		pi = make_pair(type, vint);
-    		ar << pi;
+    		pi = make_pair(type, std::to_string(vint));
+    		ar & pi;
     	}
     	else if(type == kDouble)
     	{
-    		pi = make_pair(type, vdouble);
-    		ar << pi;
+    		pi = make_pair(type, std::to_string(vdouble));
+    		ar & pi;
     	}
     	else if(type < kNull || type > kDouble)
     	{
@@ -67,14 +66,13 @@ public:
     	else
     	{
     		pi = make_pair(type, 0);
-    		ar << pi;
+    		ar & pi;
     	}
     }
     template<class Archive> void load(Archive &ar, const unsigned int)
     {
     	pair<int, string> pi;
-    	ar >> boost::serialization::base_object<pair<int, string> >(pi);
-    	ar >> pi;
+    	ar & pi;
     	type = (types)pi.first;
     	if(type == kString)
     	{
