@@ -2,35 +2,29 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
+#include "rapidjson/filereadstream.h"
+#include "parser.hpp"
 
-#include <sdsl/suffix_arrays.hpp>
 #include <fstream>
+#include <cstdio>
 
 using namespace std;
 using namespace rapidjson;
 using namespace sdsl;
 
 int main(int argc, char *argv[]) {
-    // 1. Parse a JSON string into DOM.
-    const char* json = "{\"project\":\"rapidjson\",\"stars\":10}";
     Document d;
-    d.Parse(json);
-
-    // 2. Modify it by DOM.
-    Value& s = d["stars"];
-    s.SetInt(s.GetInt() + 1);
-
-    // 3. Stringify the DOM
-    StringBuffer buffer;
-    Writer<StringBuffer> writer(buffer);
-    d.Accept(writer);
-
-    // Output {"project":"rapidjson","stars":11}
-    cout << buffer.GetString() << endl;
-
-    csa_wt<> fm_index;
-    construct_im(fm_index, "mississippi!", 1);
-    cout << "'si' occurs " << count(fm_index,"si") << " times.\n";
+	FILE *fp = fopen(argv[1], "r");
+	unsigned long len;
+	fseek(fp, 0L, SEEK_END);
+	len = ftell(fp);
+	fseek(fp, 0L, SEEK_SET);
+	char *rb = new char[len];
+	fread(rb, 1, len, fp);
+	std::cout << "Original size of the file: " << len << std::endl;
+	d.Parse(rb);
+	Parser qn(d);
+	fclose(fp);
 
     return 0;
 }

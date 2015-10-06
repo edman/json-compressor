@@ -29,6 +29,15 @@ public:
     encode *codes;
     string *names;
     Jvalue *values;
+    sdsl::bit_vector treeBv;
+
+    class ParseStreams
+    {
+    public:
+    	sdsl::bit_vector nameBv, stringBv, numBv, boolBv;
+    	/* TODO: How to consider different types of either int or double? */
+    	std::stringstream nameStr, stringStr, numStr;
+    };
 
 public:
     Parser(Value&);
@@ -38,22 +47,14 @@ public:
             values(values) { }
     ~Parser();
 
-    void loadCodes(Value &d, map<string, int> nameMap, map<Jvalue, int> valueMap);
-
     bool operator==(const Parser &rhs) const;
 
-	#ifdef COMPRESS
-	void zlibCompressN(map<string, int> *, ofstream *);
-	void zlibCompressV(map<Jvalue, int> *, ofstream *);
-	void zlibDecompressN(ifstream *, map<string, int> *);
-	void zlibDecompressV(ifstream *, map<Jvalue, int> *);
-	#endif
+	void zlibCompress(Parser::ParseStreams &);
+	void docParse(Parser::ParseStreams &pst, Value &d, sdsl::bit_vector &b, int &n);
 };
 
 int type_of(Value &d);
 template <typename T> T* mapToArray(map<T, int> &mmap);
-void loadNames(map<string, int> &nameMap, Value &d, int &n);
-void loadValues(map<Jvalue, int> &valueMap, Value &d, int &n);
 
 ostream& operator<<(ostream &o, const encode &e);
 

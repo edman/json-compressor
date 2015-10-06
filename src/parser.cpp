@@ -9,7 +9,6 @@
 #include <iostream>
 #include <map>
 
-#ifdef COMPRESS
 #include <fstream>
 #include <sstream>
 /* Requires boost. */
@@ -18,98 +17,73 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
-#include <boost/serialization/map.hpp>
-#endif
+#include <boost/serialization/string.hpp>
 
 using namespace std;
 using namespace rapidjson;
 
-static int counter;
+/* TODO
+For now, we have just used a plain "bit vector" to store the structure of a tree.
+However, to link between the plain tree representation and the relevant stringstream, we need to use more bits to differentiate them.
+Fortunately, SDSL provides something called "int vector" which supports rank/select queries.
+Since there are finite types, I think converting the bit vector to that does not harm anything but to support queries in efficient way. */
 
 Parser::Parser(Value &d) {
-    // Load JSON names and values in a hash table
-    map<string, int> nameMap;
-    map<string, int> newMap;
-    map<Jvalue, int> valueMap;
-    map<Jvalue, int> newMap2;
-    int n = 0; counter = 0;
-    loadNames(nameMap, d, n);
-    loadValues(valueMap, d, (n = 0, n));
+	int n = 0;
+	ParseStreams pst;
 
-    // Copy the maps to arrays
-    names = mapToArray(nameMap);
-    values = mapToArray(valueMap);
-    namen = nameMap.size();
-    valuen = valueMap.size();
+	/* Load relevant values. */
+	docParse(pst, d, treeBv, n);
+	/* Store the tree into a file, using serialization function. */
+	std::ofstream treeBvs("./output.tree");
+	treeBv.serialize(treeBvs);
+	treeBvs.close();
+	/* Store remaining bit vectors. */
+	//Not implemented yet.
+	/* Compress the stream. */
+	zlibCompress(pst);
 
-    // Construct a tree from the JSON sctructure
-    size = counter;
-    tree = SuccinctTree(d, size);
-
-    // Create the list of encodings from the JSON file
-    counter = 0;
-    codes = new encode[size];
-    loadCodes(d, nameMap, valueMap);
-
-	#ifdef COMPRESS
-	/* Compress the constructed arrays using zlib. */
-	ofstream nameOfs("./output.zlib.name", std::ios::binary);
-	ofstream valueOfs("./output.zlib.value", std::ios::binary);
-	zlibCompressN(&nameMap, &nameOfs);
-	zlibCompressV(&valueMap, &valueOfs);
-	/* TODO: Loading data from ifstream, still not resolved yet. */
-
+	#ifdef DECOMPRESS
 	/* Decompression part. */
 	ifstream nameIfs("./output.zlib.name", std::ios::binary);
 	ifstream valueIfs("./output.zlib.value", std::ios::binary);
 	zlibDecompressN(&nameIfs, &newMap);
 	zlibDecompressV(&valueIfs, &newMap2);
-
-	if(nameMap == newMap) std::cout << "T1" << std::endl;
-	if(valueMap == newMap2) std::cout << "T2" << std::endl;
-	else
-	{
-		for(auto it = newMap2.cbegin(); it != newMap2.cend(); ++it)
-		{
-			std::cout << it->first.type << " " << it->second << std::endl;
-		}
-	}
 	#endif
 }
 
 Parser::~Parser() {
-    delete[] names;
-    delete[] values;
+
 }
 
-#ifdef COMPRESS
-void Parser::zlibCompressN(map<string, int> *m, ofstream *f)
+void Parser::zlibCompress(Parser::ParseStreams &pst)
 {
-	stringstream ss;
-	boost::archive::text_oarchive oarch(ss);
+	std::ofstream nameSos("./output.zlib.name"), numSos("./output.zlib.num"), stringSos("./output.zlib.str");
 	boost::iostreams::filtering_istreambuf is;
-	oarch << *m;
-	std::cout << ss.str() << std::endl;
+
+	/* Do the sequence for each string or bit vector. */
+	/* For the name. */
+	/* Process the zlib compression. */
 	is.push(boost::iostreams::zlib_compressor());
-	is.push(ss);
-	boost::iostreams::copy(is, *f);
-	f->close();
+	is.push(pst.nameStr);
+	/* Save the content to the file. */
+	boost::iostreams::copy(is, nameSos);
+	nameSos.close();
+
+	/* For the number. */
+	is.push(boost::iostreams::zlib_compressor());
+	is.push(pst.numStr);
+	boost::iostreams::copy(is, numSos);
+	numSos.close();
+
+	/* For the string. */
+	is.push(boost::iostreams::zlib_compressor());
+	is.push(pst.stringStr);
+	boost::iostreams::copy(is, stringSos);
+	stringSos.close();
 }
 
-/* TODO: Need to serialize Jvalue. */
-void Parser::zlibCompressV(map<Jvalue, int> *m, ofstream *f)
-{
-        stringstream ss;
-	boost::archive::text_oarchive oarch(ss);
-        boost::iostreams::filtering_istreambuf is;
-	oarch << *m;
-	std::cout << ss.str() << std::endl;
-        is.push(boost::iostreams::zlib_compressor());
-        is.push(ss);
-	boost::iostreams::copy(is, *f);
-        f->close();
-}
-
+#ifdef NOT_FIXED
 void Parser::zlibDecompressN(ifstream *f, map<string, int> *m)
 {
 	stringstream ss;
@@ -119,7 +93,6 @@ void Parser::zlibDecompressN(ifstream *f, map<string, int> *m)
 	boost::iostreams::copy(is, ss);
 	boost::archive::text_iarchive iarch(ss);
 	iarch >> *m;
-	std::cout << ss.str() << std::endl;
 }
 
 void Parser::zlibDecompressV(ifstream *f, map<Jvalue, int> *m)
@@ -131,32 +104,8 @@ void Parser::zlibDecompressV(ifstream *f, map<Jvalue, int> *m)
 	boost::iostreams::copy(is, ss);
 	boost::archive::text_iarchive iarch(ss);
 	iarch >> *m;
-	std::cout << ss.str() << std::endl;
 }
-
 #endif
-
-void Parser::loadCodes(Value &d, map<string, int> nameMap, map<Jvalue, int> valueMap) {
-    if (d.IsObject()) {
-        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-            int name = nameMap[it->name.GetString()];
-            int type = type_of(it->value);
-            int value = (type >= 5 ? valueMap[Jvalue(it->value)] : -1);
-            codes[counter++] = encode(name, type, value);
-
-            loadCodes(it->value, nameMap, valueMap);
-        }
-    }
-    else if (d.IsArray())
-        for (auto it = d.Begin(); it != d.End(); ++it) {
-            int name = -1;
-            int type = type_of(*it);
-            int value = (type >= 5 ? valueMap[Jvalue(*it)] : -1);
-            codes[counter++] = encode(name, type, value);
-
-            loadCodes(*it, nameMap, valueMap);
-        }
-}
 
 int type_of(Value &d) {
     if (d.GetType() != 6) return d.GetType();
@@ -172,32 +121,95 @@ template <typename T> T* mapToArray(map<T, int> &mmap) {
     return a;
 }
 
-void loadNames(map<string, int> &nameMap, Value &d, int &n) {
-    if (d.IsObject())
-        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-            counter++;
-            string name = it->name.GetString();
-            if (nameMap.find(name) == nameMap.end())
-                nameMap[name] = n++;
-            loadNames(nameMap, it->value, n);
-        }
-    if (d.IsArray()) for (auto it = d.Begin(); it != d.End(); ++it) {
-        counter++;
-        loadNames(nameMap, *it, n);
-    }
-}
-
-void loadValues(map<Jvalue, int> &valueMap, Value &d, int &n) {
-    if (d.IsObject())
-        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it)
-            loadValues(valueMap, it->value, n);
-    else if (d.IsArray()) for (auto it = d.Begin(); it != d.End(); ++it)
-        loadValues(valueMap, *it, n);
-    else if (d.IsString() || d.IsNumber()) {
-        Jvalue value(d);
-        if (valueMap.find(value) == valueMap.end())
-            valueMap[value] = n++;
-    }
+void Parser::docParse(Parser::ParseStreams &pst, Value &d, sdsl::bit_vector &b, int &n)
+{
+	if(d.IsObject())
+	{
+		b.resize(n + 2);
+		b[n] = 1;
+		std::cout << n << " 1 " << "OBJECT" << std::endl;
+		n++;
+		/* Explicit resizing required. FIXME? */
+		for(auto it = d.MemberBegin(); it != d.MemberEnd(); it++)
+		{
+			b.resize(n + 2);
+			b[n] = 1;
+			/* Concatenate the name. */
+			std::cout << n << " 1 " << it->name.GetString() << std::endl;
+			pst.nameStr << it->name.GetString();
+			/* Get the length of name and mark the last bit as 1. */
+			int i = strlen(it->name.GetString());
+			pst.nameBv.resize(pst.nameBv.size() + i);
+			pst.nameBv[pst.nameBv.size() - 1] = 1;
+			n++;
+			docParse(pst, it->value, b, n);
+		}
+		std::cout << n << " 0 " << "OBJEND" << std::endl;
+		n++;
+	}
+	else if(d.IsArray())
+	{
+		b.resize(n + 2);
+		b[n] = 1;
+		std::cout << n << " 1 " << "ARRAY" << std::endl;
+		n++;
+		/* Explicit resizing required. FIXME? */
+		for(auto it = d.Begin(); it != d.End(); it++)
+		{
+			b.resize(n + 2);
+			b[n] = 1;
+			/* TODO: How to deal with this case? One possible solution is to add a NULL character and put 1 in the bit vector. */
+			std::cout << n << " 1 " << "ARRELE" << std::endl;
+			pst.nameStr << "\a"; //This sequence is not used in the specification.
+			pst.nameBv.resize(pst.nameBv.size() + 2);
+			pst.nameBv[pst.nameBv.size() - 1] = 1;
+			n++;
+			docParse(pst, *it, b, n);
+		}
+		std::cout << n << " 0 " << "ARREND" << std::endl;
+		n++;
+	}
+	else if(d.IsString())
+	{
+		std::cout << n << " 0 " << d.GetString() << std::endl;
+		/* Concatenate the string. */
+		pst.stringStr << d.GetString();
+		/* Get the length of string and mark the last bit as 1. */
+		int i = strlen(d.GetString());
+		pst.stringBv.resize(pst.stringBv.size() + i);
+		pst.stringBv[pst.stringBv.size() - 1] = 1;
+		n++;
+	}
+	else if(d.IsNumber())
+	{
+		std::cout << n << " 0 " << d.GetDouble() << std::endl;
+		std::string tmp;
+		tmp = std::to_string(d.GetDouble());
+		/* Concatenate the number, as in form of stringstream. */
+		pst.numStr << tmp;
+		int i = strlen(tmp.c_str());
+		pst.numBv.resize(pst.numBv.size() + i);
+		pst.numBv[pst.numBv.size() - 1] = 1;
+		n++;
+	}
+	else if(d.IsBool())
+	{
+		std::cout << n << " 0 " << d.GetBool() << std::endl;
+		/* Modifying the bit vector is enough. */
+		pst.boolBv.resize(pst.boolBv.size() + 1);
+		pst.boolBv[pst.boolBv.size() - 1] = d.GetBool();
+		n++;
+	}
+	else if(d.IsNull())
+	{
+		std::cout << n << " 0 " << "NULL" << std::endl;
+		/* TODO! How to mark NULL? */
+		n++;
+	}
+	else
+	{
+		std::cout << "WTFF" << std::endl;
+	}
 }
 
 bool Parser::operator==(const Parser &rhs) const {
