@@ -39,6 +39,7 @@ public:
     Jvalue(Value&);
     // ~Jvalue() { cout << * this << " encoding destruct" << endl; }
 
+	#ifdef OLD
     /* Serialization. */
     friend class boost::serialization::access;
     template<class Archive> void save(Archive &ar, const unsigned int) const
@@ -91,6 +92,7 @@ public:
     {
     	boost::serialization::split_member(ar, *this, file_version);
     }
+	#endif
 
     /* Initialization functions */
     void init(types t) { type = t; if (hasValue()) cout << "Value expected" << endl; }
