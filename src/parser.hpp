@@ -25,12 +25,17 @@ class Parser {
 public:
     int size, namen, valuen;
     SuccinctTree tree;
+
+    vector<string> namess;  // added for new algorithm. delete the fields below
+    vector<Jvalue> valuess;
+
     encode *codes;
     string *names;
     Jvalue *values;
 
 public:
     Parser(Value&);
+    Parser(Value&, char);
     Parser(int size, int namen, int valuen, SuccinctTree tree, encode *codes,
             string *names, Jvalue *values): size(size), namen(namen),
             valuen(valuen), tree(tree), codes(codes), names(names),
@@ -39,6 +44,7 @@ public:
 
     void loadInfo(Value&, map<string, int>&, map<Jvalue, int>&,
             vector<encode>&);
+    void loadInfo(Value&);
     void loadCodes(Value&, map<string, int>&, map<Jvalue, int>&);
 
     bool operator==(const Parser &rhs) const;

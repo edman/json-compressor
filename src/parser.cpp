@@ -14,8 +14,23 @@ using namespace rapidjson;
 
 static int counter;
 
+Parser::Parser(Value &d, char c) {
+    cout << ".. start new parser" << endl;
+
+    // Load names and values arrays
+    loadInfo(d);
+    size = namess.size();
+    cout << ".. load info" << endl;
+
+    cout << "array size " << namess.size() << " " << valuess.size() << endl;
+
+    // Construct a tree from the JSON sctructure
+    tree = SuccinctTree(d, size);
+    cout << ".. construct tree" << endl;
+}
+
 Parser::Parser(Value &d) {
-    cout << ".. start" << endl;
+    cout << ".. start old parser" << endl;
     // Load JSON names and values in a hash table
     map<string, int> nameMap;
     map<Jvalue, int> valueMap;
@@ -59,6 +74,24 @@ Parser::~Parser() {
     delete[] codes;
     delete[] names;
     delete[] values;
+}
+
+void Parser::loadInfo(Value &d) {
+    if (d.IsObject()) {
+        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
+            namess.push_back(it->name.GetString());
+            valuess.push_back(Jvalue(it->value));
+
+            loadInfo(it->value);
+        }
+    }
+    else if (d.IsArray())
+        for (auto it = d.Begin(); it != d.End(); ++it) {
+            namess.push_back("");
+            valuess.push_back(Jvalue(*it));
+
+            loadInfo(*it);
+        }
 }
 
 void Parser::loadInfo(Value &d, map<string, int> &nameMap,

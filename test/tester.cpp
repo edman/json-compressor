@@ -94,7 +94,7 @@ TEST(SerializationTest, get_size) {
     Document d = wow(2);
     Parser p(d);
     int size = get_size(p);
-    ASSERT_EQ(size, 153);
+    ASSERT_EQ(153, size);
 
     ASSERT_EQ(p.tree.size_in_bytes(), 3);
 }
