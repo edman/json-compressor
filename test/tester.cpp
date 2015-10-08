@@ -150,7 +150,8 @@ TEST(SerializationTest, IntAndString) {
 }
 
 TEST(SerializationTest, ParserSize) {
-    for (int i = 5; i <= 9; ++i) {
+    // for (int i = 5; i <= 9; ++i) {
+    for (int i = 1; i <= 1; ++i) {
             // cout << "start" << endl;
         Document d = wow(i);
             // cout << "loaded with rapidjson" << endl;
