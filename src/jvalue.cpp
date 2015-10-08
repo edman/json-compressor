@@ -23,6 +23,10 @@ Jvalue::Jvalue(Value& d) {
         init(kFalse);
     else if (d.IsNull())
         init(kNull);
+    else if (d.IsObject())
+        init(kObject);
+    else if (d.IsArray())
+        init(kArray);
 }
 
 Jvalue Jvalue::operator=(const Jvalue &rhs) {
