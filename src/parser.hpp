@@ -4,6 +4,7 @@
 
 #include "succinct_tree.hpp"
 #include "jvalue.hpp"
+#include "bitmap_index.hpp"
 #include "rapidjson/document.h"
 #include <iostream>
 #include <map>
@@ -26,8 +27,8 @@ public:
     int size, namen, valuen;
     SuccinctTree tree;
 
-    vector<string> namess;  // added for new algorithm. delete the fields below
-    vector<Jvalue> valuess;
+    BitmapIndex<string> namess; // added for new algorithm. delete fields below
+    BitmapIndex<Jvalue> valuess;
 
     encode *codes;
     string *names;

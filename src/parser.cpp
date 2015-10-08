@@ -79,16 +79,16 @@ Parser::~Parser() {
 void Parser::loadInfo(Value &d) {
     if (d.IsObject()) {
         for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-            namess.push_back(it->name.GetString());
-            valuess.push_back(Jvalue(it->value));
+            namess.insert(it->name.GetString());
+            valuess.insert(Jvalue(it->value));
 
             loadInfo(it->value);
         }
     }
     else if (d.IsArray())
         for (auto it = d.Begin(); it != d.End(); ++it) {
-            namess.push_back("");
-            valuess.push_back(Jvalue(*it));
+            namess.insert("");
+            valuess.insert(Jvalue(*it));
 
             loadInfo(*it);
         }
