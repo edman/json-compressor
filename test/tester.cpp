@@ -21,12 +21,10 @@ bool dot1 = false, dobt1 = false;
 
 long long tick(string msg="time", bool bt=false);
 Document wow2(int k = 1);
-void print_parser2(Parser &p);
 
 char fn[100];
 
 Document wow(int k = 1);
-void print_parser(Parser &p);
 void filename(int k, char *fin=fn);
 void filenamec(int k, char *fin=fn);
 void filenameh(int k, char *fin=fn);
@@ -64,22 +62,28 @@ TEST(SuccinctTreeTest, DocumentDFS) {
         ASSERT_EQ(tree.bv[i], t[i]);
 }
 
-TEST(ParserTest, TreeNamesAndValues) {
+TEST(ParserTest, Tree) {
     Document d = wow(2);
     Parser p(d);
 
-   ASSERT_EQ(p.tree.N, 8);
+    ASSERT_EQ(p.tree.N, 8);
     int t[] = {1,1,0,1,1,0,1,1,0,1,0,1,0,1,0,0,0,0};
     for (int i = 0; i < 18; ++i)
         ASSERT_EQ(p.tree.bv[i], t[i]);
+}
 
-    ASSERT_EQ(p.namen, 4);
-    string names[] = {"foo", "st", "name", "grades"};
-    for (int i = 0; i < 4; ++i)
-        ASSERT_EQ(p.names[i], names[i]);
+TEST(ParserTest, NamesAndValues) {
+    Document d = wow(2);
+    Parser p(d);
 
-    ASSERT_EQ(p.valuen, 6);
-    // print_parser(p);
+    int n = 8;
+    ASSERT_EQ(n, p.namess.size());
+
+    string names[] = {"foo", "st", "name", "grades", "", "", "", ""};
+    for (int i = 0; i < n; ++i)
+        ASSERT_EQ(names[i], p.namess[i]);
+
+    // ASSERT_EQ(p.valuen, 6);
 }
 
 TEST(ParserTest, Dblp) {
@@ -93,10 +97,13 @@ TEST(ParserTest, Dblp) {
 TEST(SerializationTest, get_size) {
     Document d = wow(2);
     Parser p(d);
-    int size = get_size(p);
-    ASSERT_EQ(153, size);
 
-    ASSERT_EQ(p.tree.size_in_bytes(), 3);
+    ASSERT_EQ(3, get_size(p.tree));
+    ASSERT_EQ(39, get_size(p.namess));
+    ASSERT_EQ(57, get_size(p.valuess));
+    ASSERT_EQ(103, get_size(p));
+
+    ASSERT_EQ(4, get_size(p.namess.bv));
 }
 
 TEST(SerializationTest, SuccinctTree) {
@@ -151,7 +158,7 @@ TEST(SerializationTest, IntAndString) {
 
 TEST(SerializationTest, ParserSize) {
     // for (int i = 5; i <= 9; ++i) {
-    for (int i = 1; i <= 1; ++i) {
+    for (int i = 0; i <= 0; ++i) {
             // cout << "start" << endl;
         Document d = wow(i);
             // cout << "loaded with rapidjson" << endl;
@@ -165,19 +172,28 @@ TEST(SerializationTest, ParserSize) {
     }
 }
 
+TEST(SerializationTest, ParserDeserialization) {
+    // for (int i = 5; i <= 9; ++i) {
+    for (int i = 5; i <= 9; ++i) {
+            // cout << "start" << endl;
+        Document d = wow(i);
+            // cout << "loaded with rapidjson" << endl;
+        Parser p(d);
+            // cout << "constructed parser" << endl;
+        filenamec(i);
+        save_to_file(p, string(fn));
 
-void print_parser(Parser &p) {
-    cout << "tree: " << p.tree << endl;
-    cout << "names: ";
-    for (int i = 0; i < p.namen; ++i)
-        cout << p.names[i] << "|"; cout << endl;
-    cout << "values: ";
-    for (int i = 0; i < p.valuen; ++i)
-        cout << p.values[i] << "|"; cout << endl;
-    cout << "codes: ";
-    for (int i = 0; i < p.size; ++i)
-        cout << p.codes[i] << "|"; cout << endl;
+        tick();
+        Parser loaded = load_from_file(string(fn));
+        long long dur = tick();
+        EXPECT_EQ(p.size, loaded.size);
+        EXPECT_EQ(p.tree, loaded.tree);
+        EXPECT_EQ(p.namess, loaded.namess);
+        EXPECT_EQ(p.valuess, loaded.valuess);
+        ASSERT_EQ(p, loaded);
+    }
 }
+
 
 long filesize(int k) {
     char fn[100];
@@ -251,30 +267,22 @@ void log_parser_size(Parser &obj, long long dur, int k) {
     mfile << fn << endl;
     mfile << "original size (bytes): " << orig << endl;
 
-    long header, tree, codes, names, values;
+    long header, tree, names, values;
     // size of header
-    size_t s = 0, b = 0;
-    s += 3 * sizeof(int);
-    header = s-b;
+    size_t s = sizeof(int);
+    header = s;
     // size of tree
-    s += get_size(obj.tree);
-    tree = s-b; b = s;
-    // size of encodes, names, and values
-    for (int i = 0; i < obj.size; ++i)
-        s += get_size(obj.codes[i]);
-    codes = s-b; b = s;
-    for (int i = 0; i < obj.namen; ++i)
-        s += get_size(obj.names[i]);
-    names = s-b; b = s;
-    // mfile << ".." << i << ": "<< get_size(obj.values[i]) << endl;;}
-    for (int i = 0; i < obj.valuen; ++i)
-        s += get_size(obj.values[i]);
-    values = s-b;
-
+    tree = get_size(obj.tree);
+    s += tree;
+    // size of names
+    names = get_size(obj.namess);
+    s += names;
+    // size of values
+    values = get_size(obj.valuess);
+    s += values;
 
     write_formatted(mfile, ".header", header, s);
     write_formatted(mfile, ".tree", tree, s);
-    write_formatted(mfile, ".codes", codes, s);
     write_formatted(mfile, ".names", names, s);
     write_formatted(mfile, ".values", values, s);
     mfile << "Total " << s << endl;
