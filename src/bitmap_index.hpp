@@ -12,10 +12,12 @@ template <class T>
 class BitmapIndex {
 public:
     int byte_size = 0;
-    vector<T> values;
     bit_vector bv;
+    vector<T> values;
 
 public:
+    BitmapIndex() {}  // default constructor
+    BitmapIndex(int bs, bit_vector b, vector<T> v): byte_size(bs), bv(b) { values.assign(v.begin(), v.end()); }
     void insert(T elem);
     void loadBitvector();
 
