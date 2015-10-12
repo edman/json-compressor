@@ -12,68 +12,22 @@
 using namespace std;
 using namespace rapidjson;
 
-static int counter;
-
-Parser::Parser(Value &d, char c) {
-    cout << ".. start new parser" << endl;
+Parser::Parser(Value &d, bool debug) {
+    if (debug) cout << ".. start new parser" << endl;
 
     // Load names and values arrays
     loadInfo(d);
+    namess.loadBitvector();
+    valuess.loadBitvector();
+
     size = namess.size();
-    cout << ".. load info" << endl;
+    if (debug) cout << ".. load info" << endl;
 
-    cout << "array size " << namess.size() << " " << valuess.size() << endl;
+    if (debug) cout << "array size " << namess.size() << " " << valuess.size() << endl;
 
     // Construct a tree from the JSON sctructure
     tree = SuccinctTree(d, size);
-    cout << ".. construct tree" << endl;
-}
-
-Parser::Parser(Value &d) {
-    cout << ".. start old parser" << endl;
-    // Load JSON names and values in a hash table
-    map<string, int> nameMap;
-    map<Jvalue, int> valueMap;
-
-    vector<encode> cn;
-    namen = 0, valuen = 0;
-    loadInfo(d, nameMap, valueMap, cn);
-    cout << ".. load info" << endl;
-
-    // int n = 0; counter = 0;
-    // loadNames(nameMap, d, n);
-    // loadValues(valueMap, d, (n = 0, n));
-    // cout << ".. load values" << endl;
-
-    // Copy the vector and maps to arrays
-    codes = vectorToArray(cn);
-    names = mapToArray(nameMap);
-    values = mapToArray(valueMap);
-    size = cn.size();
-    // namen = nameMap.size();
-    // valuen = valueMap.size();
-    cout << ".. copy vector and maps to arrays" << endl;
-
-    // Construct a tree from the JSON sctructure
-    // size = counter;
-    tree = SuccinctTree(d, size);
-    cout << ".. construct tree" << endl;
-
-    cout << ".. (size) " << size;
-    cout << ".. (namen) " << namen;
-    cout << ".. (valuen) " << valuen << endl;;
-
-    // // Create the list of encodings from the JSON file
-    // counter = 0;
-    // codes = new encode[size];
-    // loadCodes(d, nameMap, valueMap);
-    // cout << ".. load codes" << endl;
-}
-
-Parser::~Parser() {
-    delete[] codes;
-    delete[] names;
-    delete[] values;
+    if (debug) cout << ".. construct tree" << endl;
 }
 
 void Parser::loadInfo(Value &d) {
@@ -91,77 +45,6 @@ void Parser::loadInfo(Value &d) {
             valuess.insert(Jvalue(*it));
 
             loadInfo(*it);
-        }
-}
-
-void Parser::loadInfo(Value &d, map<string, int> &nameMap,
-        map<Jvalue, int> &valueMap, vector<encode> &cn) {
-    if (d.IsObject()) {
-        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-            int name = resolveName(it->name.GetString(), nameMap, namen);
-            int type = type_of(it->value);
-            int value = (type >= 5 ? resolveValue(it->value, valueMap, valuen) : -1);
-            cn.push_back(encode(name, type, value));
-
-            loadInfo(it->value, nameMap, valueMap, cn);
-        }
-    }
-    else if (d.IsArray())
-        for (auto it = d.Begin(); it != d.End(); ++it) {
-            int name = -1;
-            int type = type_of(*it);
-            int value = (type >= 5 ? resolveValue(*it, valueMap, valuen) : -1);
-            cn.push_back(encode(name, type, value));
-
-            loadInfo(*it, nameMap, valueMap, cn);
-        }
-
-    // // load names
-    // if (d.IsObject())
-    //     for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-    //         counter++;
-    //         string name = it->name.GetString();
-    //         if (nameMap.find(name) == nameMap.end())
-    //             nameMap[name] = n++;
-    //         loadNames(nameMap, it->value, n);
-    //     }
-    // if (d.IsArray()) for (auto it = d.Begin(); it != d.End(); ++it) {
-    //     counter++;
-    //     loadNames(nameMap, *it, n);
-    // }
-    //
-    // // load values
-    // if (d.IsObject())
-    //     for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it)
-    //         loadValues(valueMap, it->value, n);
-    // else if (d.IsArray()) for (auto it = d.Begin(); it != d.End(); ++it)
-    //     loadValues(valueMap, *it, n);
-    // else if (d.IsString() || d.IsNumber()) {
-    //     Jvalue value(d);
-    //     if (valueMap.find(value) == valueMap.end())
-    //         valueMap[value] = n++;
-    // }
-}
-
-void Parser::loadCodes(Value &d, map<string, int> &nameMap, map<Jvalue, int> &valueMap) {
-    if (d.IsObject()) {
-        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-            int name = nameMap[it->name.GetString()];
-            int type = type_of(it->value);
-            int value = (type >= 5 ? valueMap[Jvalue(it->value)] : -1);
-            codes[counter++] = encode(name, type, value);
-
-            loadCodes(it->value, nameMap, valueMap);
-        }
-    }
-    else if (d.IsArray())
-        for (auto it = d.Begin(); it != d.End(); ++it) {
-            int name = -1;
-            int type = type_of(*it);
-            int value = (type >= 5 ? valueMap[Jvalue(*it)] : -1);
-            codes[counter++] = encode(name, type, value);
-
-            loadCodes(*it, nameMap, valueMap);
         }
 }
 
@@ -205,46 +88,18 @@ template <typename T> T* mapToArray(map<T, int> &mmap) {
     return a;
 }
 
-void loadNames(map<string, int> &nameMap, Value &d, int &n) {
-    if (d.IsObject())
-        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-            counter++;
-            string name = it->name.GetString();
-            if (nameMap.find(name) == nameMap.end())
-                nameMap[name] = n++;
-            loadNames(nameMap, it->value, n);
-        }
-    if (d.IsArray()) for (auto it = d.Begin(); it != d.End(); ++it) {
-        counter++;
-        loadNames(nameMap, *it, n);
-    }
-}
-
-void loadValues(map<Jvalue, int> &valueMap, Value &d, int &n) {
-    if (d.IsObject())
-        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it)
-            loadValues(valueMap, it->value, n);
-    else if (d.IsArray()) for (auto it = d.Begin(); it != d.End(); ++it)
-        loadValues(valueMap, *it, n);
-    else if (d.IsString() || d.IsNumber()) {
-        Jvalue value(d);
-        if (valueMap.find(value) == valueMap.end())
-            valueMap[value] = n++;
-    }
-}
-
 bool Parser::operator==(const Parser &rhs) const {
-    if (size != rhs.size || namen != rhs.namen || valuen != rhs.valuen || tree != rhs.tree)
-        return false;
-    for (int i = 0; i < size; ++i)
-        if (codes[i] != rhs.codes[i]) return false;
-    for (int i = 0; i < namen; ++i)
-        if (names[i] != rhs.names[i]) return false;
-    for (int i = 0; i < valuen; ++i)
-        if (values[i] != rhs.values[i]) return false;
-    return true;
+    return size == rhs.size
+            && tree == rhs.tree
+            && namess == rhs.namess
+            && valuess == rhs.valuess;
 }
 
+ostream& operator<<(ostream &o, const Parser &p) {
+    o<<"Tree "<<p.tree<<endl;
+    o<<"Names "<<p.namess<<endl;
+    return o<<"Values "<<p.valuess<<endl;
+}
 
 ostream& operator<<(ostream &o, const encode &e) {
     o<<"("<<e.name<<","<<e.type;

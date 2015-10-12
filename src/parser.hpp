@@ -24,29 +24,16 @@ struct encode {
 
 class Parser {
 public:
-    int size, namen, valuen;
+    int size;
     SuccinctTree tree;
-
-    BitmapIndex<string> namess; // added for new algorithm. delete fields below
+    BitmapIndex<string> namess;
     BitmapIndex<Jvalue> valuess;
 
-    encode *codes;
-    string *names;
-    Jvalue *values;
-
 public:
-    Parser(Value&);
-    Parser(Value&, char);
-    Parser(int size, int namen, int valuen, SuccinctTree tree, encode *codes,
-            string *names, Jvalue *values): size(size), namen(namen),
-            valuen(valuen), tree(tree), codes(codes), names(names),
-            values(values) { }
-    ~Parser();
+    Parser(Value &d, bool debug=false);
+    Parser(int s, SuccinctTree st, BitmapIndex<string> nm, BitmapIndex<Jvalue> vl): size(s), tree(st), namess(nm), valuess(vl) {}
 
-    void loadInfo(Value&, map<string, int>&, map<Jvalue, int>&,
-            vector<encode>&);
-    void loadInfo(Value&);
-    void loadCodes(Value&, map<string, int>&, map<Jvalue, int>&);
+    void loadInfo(Value &d);
 
     bool operator==(const Parser &rhs) const;
 };
@@ -56,10 +43,7 @@ int resolveValue(Value&, map<Jvalue, int>&, int&);
 int type_of(Value &d);
 encode* vectorToArray(vector<encode>&);
 template <typename T> T* mapToArray(map<T, int> &mmap);
-void loadNames(map<string, int> &nameMap, Value &d, int &n);
-void loadValues(map<Jvalue, int> &valueMap, Value &d, int &n);
 
 ostream& operator<<(ostream &o, const encode &e);
 
 #endif
-
