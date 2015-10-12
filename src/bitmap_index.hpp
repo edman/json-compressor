@@ -10,7 +10,7 @@ using namespace sdsl;
 
 template <class T>
 class BitmapIndex {
-private:
+public:
     int byte_size = 0;
     vector<T> values;
     bit_vector bv;
@@ -19,7 +19,15 @@ public:
     void insert(T elem);
     void loadBitvector();
 
-    size_t size() { return values.size(); }
+    size_t size() const { return values.size(); }
+
+    bool operator==(const BitmapIndex &rhs) const;
+    T operator [](int i) const { return values[i]; }
+    T & operator [](int i) { return values[i]; }
+
 };
+
+template <class T>
+ostream& operator<<(ostream &o, const BitmapIndex<T> &b);
 
 #endif

@@ -27,10 +27,30 @@ void BitmapIndex<T>::loadBitvector() {
     }
 }
 
+template <class T>
+bool BitmapIndex<T>::operator==(const BitmapIndex<T> &rhs) const {
+    if (size() != rhs.size()) return false;
+    for (int i = 0; i < size(); ++i) if (values[i] != rhs.values[i])
+        return false;
+    return bv == rhs.bv;
+}
+
+template <class T>
+ostream& operator<<(ostream &o, const BitmapIndex<T> &b) {
+    o<<"("<<b.byte_size<<",";
+    o<<b.bv<<",";
+    o<<"{";
+    for (auto it : b.values) o<<"'"<<it<<"',";
+    o<<"}";
+    return o<<endl;
+}
+
 
 /* Explicit instantiation of needed template classes */
 template class BitmapIndex<string>;
 template class BitmapIndex<Jvalue>;
 
-#endif
+template ostream& operator<< (ostream &o, const BitmapIndex<string> &b);
+template ostream& operator<< (ostream &o, const BitmapIndex<Jvalue> &b);
 
+#endif
