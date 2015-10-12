@@ -19,6 +19,7 @@ class SuccinctTree {
         SuccinctTree() { N=0; }
         SuccinctTree(Value&, int doc_size);
         SuccinctTree(char *p, int size_in_bits);
+        SuccinctTree(int n, bit_vector b): N(n), bv(b) {}
 
         char* to_char_array() const;
         int size_in_bytes() const;

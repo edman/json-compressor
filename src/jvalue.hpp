@@ -25,6 +25,7 @@ public:
 public:
     /* Constructors */
     Jvalue() {}
+    Jvalue(types t): type(t) {}
     Jvalue(types t, string v): type(t), vstring(v) {}
     Jvalue(types t, int v): type(t), vint(v) {}
     Jvalue(types t, double v): type(t), vdouble(v) {}

@@ -70,4 +70,3 @@ ostream& operator<<(ostream &o, const SuccinctTree &t) {
 }
 
 #endif
-
