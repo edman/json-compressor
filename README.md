@@ -37,13 +37,14 @@ Compressor*.
 #### <a name="build"></a>Build
 
 Install SDSL in your system globally.
+
 ```sh
 git clone https://github.com/simongog/sdsl-lite.git
 cd sdsl-lite
 ./install.sh /user/local
 ```
 
-The required libraries are already included in the project. Considering you
+Other required libraries are already included in the project. Considering you
 have `g++` installed all you need to do to compile *Json Compressor* is to run
 from the project root directory.
 
@@ -54,4 +55,9 @@ $ make
 
 #### <a name="tests"></a>Tests
 
-Similarly
+Similarly, test can be built and run with
+
+```sh
+$ make test
+```
+
