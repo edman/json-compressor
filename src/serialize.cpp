@@ -7,6 +7,7 @@
 #include "util.hpp"
 #include <numeric>
 #include <string>
+#include <vector>
 #include <iostream>
 
 using namespace std;
@@ -24,8 +25,12 @@ namespace detail {
             size_t s = sizeof(int);
             // size of tree
             s += get_size(obj.tree);
-            // size of BitmapIndexes
+            // size of names table
+            s += sizeof(int);
             s += get_size(obj.namess);
+            // size of names list
+            s += get_size(obj.nameList);
+            // size of values BitmapIndex
             s += get_size(obj.valuess);
             return s;
         }
@@ -75,6 +80,16 @@ namespace detail {
         }
     };
 
+    template <class T>
+    struct get_size_helper<vector<T>> {
+        static size_t value(const vector<T> &obj) {
+            size_t s = 0;
+            for (auto it = obj.begin(); it != obj.end(); it++)
+                s += get_size(*it);
+            return s;
+        }
+    };
+
     /**
      * Specialization for any remaining type, simply use the value of
      * sizeof()
@@ -97,6 +112,8 @@ template size_t get_size<SuccinctTree>(const SuccinctTree&);
 template size_t get_size<BitmapIndex<string>>(const BitmapIndex<string>&);
 template size_t get_size<BitmapIndex<Jvalue>>(const BitmapIndex<Jvalue>&);
 template size_t get_size<Jvalue>(const Jvalue&);
+template size_t get_size<vector<string>>(const vector<string>&);
+template size_t get_size<vector<int>>(const vector<int>&);
 template size_t get_size<string>(const string&);
 template size_t get_size<size_t>(const size_t&);
 template size_t get_size<int>(const int&);
@@ -121,8 +138,12 @@ namespace detail {
             serializer(obj.size, res);
             // store the tree
             serializer(obj.tree, res);
-            // store bitmap indexes for names and values
+            // store name table
+            serializer((int) obj.namess.size(), res);
             serializer(obj.namess, res);
+            // store name list
+            serializer(obj.nameList, res);
+            // store bitmap indexes for names and values
             serializer(obj.valuess, res);
         }
     };
@@ -186,6 +207,14 @@ namespace detail {
     };
 
     template <class T>
+    struct serialize_helper<vector<T>> {
+        static void apply(const vector<T> &obj, StreamType::iterator &res) {
+            for (auto it = obj.begin(); it != obj.end(); it++)
+                serializer(*it, res);
+        }
+    };
+
+    template <class T>
     struct serialize_helper {
         static void apply(const T& obj, StreamType::iterator& res) {
             const uint8_t* ptr = reinterpret_cast<const uint8_t*>(&obj);
@@ -207,6 +236,7 @@ void serialize(const T &obj, StreamType &res) {
     size_t size = get_size(obj);
     res.resize(res.size() + size);
 
+
     StreamType::iterator it = res.begin() + offset;
     detail::serializer(obj,it);
     assert(res.begin() + offset + size == it);
@@ -218,6 +248,8 @@ template void serialize<SuccinctTree>(const SuccinctTree&, StreamType&);
 template void serialize<BitmapIndex<string>>(const BitmapIndex<string>&, StreamType&);
 template void serialize<BitmapIndex<Jvalue>>(const BitmapIndex<Jvalue>&, StreamType&);
 template void serialize<Jvalue>(const Jvalue&, StreamType&);
+template void serialize<vector<string>>(const vector<string>&, StreamType&);
+template void serialize<vector<int>>(const vector<int>&, StreamType&);
 template void serialize<string>(const string&, StreamType&);
 template void serialize<size_t>(const size_t&, StreamType&);
 template void serialize<int>(const int&, StreamType&);
@@ -311,7 +343,6 @@ namespace detail {
         }
     };
 
-
     template <>
     struct deserialize_helper<Jvalue> {
         static Jvalue apply(StreamType::const_iterator& begin,
@@ -325,6 +356,17 @@ namespace detail {
         }
     };
 
+    template <class T>
+    struct deserialize_helper<vector<T>> {
+        static vector<T> apply(int size, StreamType::const_iterator& begin,
+                StreamType::const_iterator end) {
+            vector<T> v; v.reserve(size);
+            for (int i = 0; i < size; i++)
+                v.push_back(deserialize_helper<T>::apply(begin, end));
+            return v;
+        }
+    };
+
     template <>
     struct deserialize_helper<Parser> {
         static Parser apply(StreamType::const_iterator& begin,
@@ -333,13 +375,15 @@ namespace detail {
             int size = deserialize_helper<int>::apply(begin, end);
             // recover the succinct tree
             SuccinctTree st = deserialize_helper<SuccinctTree>::apply(size, begin, end);
-
-            // recover names
-            BitmapIndex<string> namess = deserialize_helper<BitmapIndex<string>>::apply(size, begin, end);
+            // recover names table
+            int namessSize = deserialize_helper<int>::apply(begin, end);
+            vector<string> namess = deserialize_helper<vector<string>>::apply(namessSize, begin, end);
+            // recover names list
+            vector<int> nameList = deserialize_helper<vector<int>>::apply(size, begin, end);
             // recover values
             BitmapIndex<Jvalue> valuess = deserialize_helper<BitmapIndex<Jvalue>>::apply(size, begin, end);
 
-            return Parser(size, st, namess, valuess);
+            return Parser(size, st, namess, nameList, valuess);
         }
     };
 
@@ -373,6 +417,8 @@ template SuccinctTree deserialize(int, StreamType::const_iterator&, const Stream
 template BitmapIndex<string> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template BitmapIndex<Jvalue> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template Jvalue deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
+template vector<string> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
+template vector<int> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template string deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
 template size_t deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
 template int deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
