@@ -19,8 +19,8 @@ OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 CFLAGS := -g -Wall -std=c++11
 LFLAGS := -lsdsl -ldivsufsort -ldivsufsort64
 # LIB := -pthread -L lib -lboost_thread-mt -lboost_filesystem-mt -lboost_system-mt
-LIB := -L $(LIBDIR)
-INC := -I include
+LIB := -L $(LIBDIR) -L /usr/local/lib
+INC := -I include -I /usr/local/include
 
 GTESTDIR := test/gtest-1.7.0
 OBJECTS_NO_MAIN := $(patsubst $(BUILDDIR)/main.o,,$(OBJECTS))
