@@ -7,7 +7,7 @@
 #include "bitmap_index.hpp"
 #include "rapidjson/document.h"
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <string>
 
 using namespace std;
@@ -17,14 +17,16 @@ class Parser {
 public:
     int size;
     SuccinctTree tree;
-    BitmapIndex<string> namess;
+    vector<string> namess;
+    vector<int> nameList;
     BitmapIndex<Jvalue> valuess;
 
 public:
     Parser(Value &d, bool debug=false);
-    Parser(int s, SuccinctTree st, BitmapIndex<string> nm, BitmapIndex<Jvalue> vl): size(s), tree(st), namess(nm), valuess(vl) {}
+    Parser(int s, SuccinctTree st, vector<string> nm, vector<int> nl, BitmapIndex<Jvalue> vl): size(s), tree(st), namess(nm), nameList(nl), valuess(vl) {}
 
-    void loadInfo(Value &d);
+    void loadInfo(Value &d, unordered_map<string, int> &nt);
+    int resolveNameId(const string &n, unordered_map<string, int> &nt);
 
     bool operator==(const Parser &rhs) const;
 };

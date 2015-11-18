@@ -7,6 +7,7 @@
 #include "jvalue.hpp"
 #include "rapidjson/document.h"
 #include <iostream>
+#include <unordered_map>
 #include <map>
 
 using namespace std;
@@ -16,11 +17,11 @@ Parser::Parser(Value &d, bool debug) {
     if (debug) cout << ".. start new parser" << endl;
 
     // Load names and values arrays
-    loadInfo(d);
-    namess.loadBitvector();
+    unordered_map<string, int> nameTable;
+    loadInfo(d, nameTable);
     valuess.loadBitvector();
 
-    size = namess.size();
+    size = valuess.size();
     if (debug) cout << ".. load info" << endl;
 
     if (debug) cout << "array size " << namess.size() << " " << valuess.size() << endl;
@@ -30,22 +31,34 @@ Parser::Parser(Value &d, bool debug) {
     if (debug) cout << ".. construct tree" << endl;
 }
 
-void Parser::loadInfo(Value &d) {
+void Parser::loadInfo(Value &d, unordered_map<string, int> &nameTable) {
     if (d.IsObject()) {
         for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-            namess.insert(it->name.GetString());
+            int nameId = resolveNameId(it->name.GetString(), nameTable);
+            nameList.push_back(nameId);
             valuess.insert(Jvalue(it->value));
 
-            loadInfo(it->value);
+            loadInfo(it->value, nameTable);
         }
     }
     else if (d.IsArray())
         for (auto it = d.Begin(); it != d.End(); ++it) {
-            namess.insert("");
+            nameList.push_back(resolveNameId("", nameTable));
             valuess.insert(Jvalue(*it));
 
-            loadInfo(*it);
+            loadInfo(*it, nameTable);
         }
+}
+
+int Parser::resolveNameId(const string &name, unordered_map<string, int> &nameTable) {
+    auto it = nameTable.find(name);
+    if (it == nameTable.end()) {
+        int nameId = namess.size();
+        nameTable[name] = nameId;
+        namess.push_back(name);
+        return nameId;
+    }
+    return it->second;
 }
 
 int resolveName(const string &name, map<string, int> &nameMap, int &nn) {
@@ -90,7 +103,7 @@ bool Parser::operator==(const Parser &rhs) const {
 
 ostream& operator<<(ostream &o, const Parser &p) {
     o<<"Tree "<<p.tree<<endl;
-    o<<"Names "<<p.namess<<endl;
+    o<<"Names "; for (int i = 0; i < p.namess.size(); i++) o<<i<<":'"<<p.namess[i]<<"'"; o<<endl;
     return o<<"Values "<<p.valuess<<endl;
 }
 
