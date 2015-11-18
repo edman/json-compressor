@@ -75,13 +75,6 @@ namespace detail {
         }
     };
 
-    template <>
-    struct get_size_helper<encode> {
-        static size_t value(const encode &obj) {
-            return (obj.type >= 5 ? 3 : 2) * sizeof(int);
-        }
-    };
-
     /**
      * Specialization for any remaining type, simply use the value of
      * sizeof()
@@ -189,15 +182,6 @@ namespace detail {
             if (obj.isString()) serializer(obj.vstring, res);
             else if (obj.isInt()) serializer(obj.vint, res);
             else if (obj.isDouble()) serializer(obj.vdouble, res);
-        }
-    };
-
-    template <>
-    struct serialize_helper<encode> {
-        static void apply(const encode &obj, StreamType::iterator &res) {
-            serializer(obj.name, res);
-            serializer(obj.type, res);
-            if (obj.type >= 5) serializer(obj.value, res);
         }
     };
 
@@ -338,18 +322,6 @@ namespace detail {
             else if (type == kInt) return Jvalue(type, deserialize_helper<int>::apply(begin, end));
             else if (type == kDouble) return Jvalue(type, deserialize_helper<double>::apply(begin, end));
             return Jvalue(type);
-        }
-    };
-
-    template <>
-    struct deserialize_helper<encode> {
-        static encode apply(StreamType::const_iterator& begin,
-                StreamType::const_iterator end) {
-            int name = -1, type = -1, value = -1;
-            name = deserialize_helper<int>::apply(begin, end);
-            type = deserialize_helper<int>::apply(begin, end);
-            if (type >= 5) value = deserialize_helper<int>::apply(begin, end);
-            return encode(name, type, value);
         }
     };
 

@@ -72,13 +72,6 @@ int type_of(Value &d) {
     return d.IsInt() ? 6 : 7;
 }
 
-encode* vectorToArray(vector<encode> &cn) {
-    encode *c = new encode[cn.size()];
-    for (int i = 0; i < cn.size(); ++i)
-        c[i] = cn[i];
-    return c;
-}
-
 template <typename T> T* mapToArray(map<T, int> &mmap) {
     // Allocate space for array a
     T *a = new T[mmap.size()];
@@ -99,11 +92,6 @@ ostream& operator<<(ostream &o, const Parser &p) {
     o<<"Tree "<<p.tree<<endl;
     o<<"Names "<<p.namess<<endl;
     return o<<"Values "<<p.valuess<<endl;
-}
-
-ostream& operator<<(ostream &o, const encode &e) {
-    o<<"("<<e.name<<","<<e.type;
-    return (e.type >= 5 ? o<<","<<e.value : o)<<")";
 }
 
 #endif
