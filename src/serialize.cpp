@@ -166,7 +166,7 @@ namespace detail {
             p = new char[size];
             bitvector_to_char_array(p, obj);
             serialize_array(p, size, res);
-            delete []p;
+            delete[] p;
         }
     };
 
