@@ -138,13 +138,18 @@ namespace detail {
             serializer(obj.size, res);
             // store the tree
             serializer(obj.tree, res);
+            /* Store this part as a ".tree". */
+            /* Can store_to_file from SDSL be used here? */
             // store name table
             serializer((int) obj.namess.size(), res);
             serializer(obj.namess, res);
+            /* Store this part as a ".namet". */
             // store name list
             serializer(obj.nameList, res);
+            /* Store this part as a ".namel". */
             // store bitmap indexes for names and values
             serializer(obj.valuess, res);
+            /* Store this part as a ".value". */
         }
     };
 
@@ -297,12 +302,14 @@ namespace detail {
                 StreamType::const_iterator end) {
             // int size_in_bits = size_in_bytes * 8;
             // int size_in_bytes = bv_size_in_bytes;
-            char p[size_in_bytes];
+            char *p;
+            p = new char[size_in_bytes];
 
             for (int i = 0; i < size_in_bytes; ++i)
                 p[i] = deserialize_helper<char>::apply(begin, end);
 
             bit_vector bv = char_array_to_bitvector(p, size_in_bits);
+            delete[] p;
             return bv;
         }
     };
