@@ -162,9 +162,11 @@ namespace detail {
     struct serialize_helper<bit_vector> {
         static void apply(const bit_vector &obj, StreamType::iterator &res) {
             int size = bitvector_size_in_bytes(obj);
-            char p[size];
+            char *p;
+            p = new char[size];
             bitvector_to_char_array(p, obj);
             serialize_array(p, size, res);
+            delete []p;
         }
     };
 
