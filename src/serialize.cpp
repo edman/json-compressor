@@ -138,18 +138,13 @@ namespace detail {
             serializer(obj.size, res);
             // store the tree
             serializer(obj.tree, res);
-            /* Store this part as a ".tree". */
-            /* Can store_to_file from SDSL be used here? */
             // store name table
             serializer((int) obj.namess.size(), res);
             serializer(obj.namess, res);
-            /* Store this part as a ".namet". */
             // store name list
             serializer(obj.nameList, res);
-            /* Store this part as a ".namel". */
-            // store bitmap indexes for names and values
+            // store bitmap indexes for values
             serializer(obj.valuess, res);
-            /* Store this part as a ".value". */
         }
     };
 
@@ -167,8 +162,7 @@ namespace detail {
     struct serialize_helper<bit_vector> {
         static void apply(const bit_vector &obj, StreamType::iterator &res) {
             int size = bitvector_size_in_bytes(obj);
-            char *p;
-            p = new char[size];
+            char *p = new char[size];
             bitvector_to_char_array(p, obj);
             serialize_array(p, size, res);
             delete[] p;
@@ -243,7 +237,6 @@ void serialize(const T &obj, StreamType &res) {
     size_t size = get_size(obj);
     res.resize(res.size() + size);
 
-
     StreamType::iterator it = res.begin() + offset;
     detail::serializer(obj,it);
     assert(res.begin() + offset + size == it);
@@ -302,8 +295,7 @@ namespace detail {
                 StreamType::const_iterator end) {
             // int size_in_bits = size_in_bytes * 8;
             // int size_in_bytes = bv_size_in_bytes;
-            char *p;
-            p = new char[size_in_bytes];
+            char *p = new char[size_in_bytes];
 
             for (int i = 0; i < size_in_bytes; ++i)
                 p[i] = deserialize_helper<char>::apply(begin, end);
@@ -370,8 +362,10 @@ namespace detail {
         static vector<T> apply(int size, StreamType::const_iterator& begin,
                 StreamType::const_iterator end) {
             vector<T> v; v.reserve(size);
+
             for (int i = 0; i < size; i++)
                 v.push_back(deserialize_helper<T>::apply(begin, end));
+
             return v;
         }
     };
@@ -439,6 +433,23 @@ void save_to_file(Parser &parser, const string &filename) {
     save_to_file(res, filename);
 }
 
+void save_to_file_split(Parser &parser, const string &filename) {
+    const int nsplit = 5;
+    StreamType res[nsplit];
+    serialize(parser.size, res[0]);                 // header (size)
+    serialize((int) parser.namess.size(), res[0]); // header (name table size)
+    serialize(parser.tree, res[1]); // tree
+    serialize(parser.namess, res[2]); // name table
+    serialize(parser.nameList, res[3]); // name list
+    serialize(parser.valuess, res[4]); // values
+
+    string splitnames[] = {"_header", "_tree", "_table", "_names", "_values"};
+    for (int i = 0; i < nsplit; i++) {
+        string splitname = filename + splitnames[i];
+        save_to_file(res[i], splitname);
+    }
+}
+
 void save_to_file(StreamType &res, const string &filename) {
     ofstream ofile(filename, ios::binary);
     ofile.write((char*) &res[0], res.size());
@@ -454,6 +465,40 @@ Parser load_from_file(const string &filename) {
     ifile.read((char*) &res[0], size);
     ifile.close();
     return deserialize<Parser>(res);
+}
+
+Parser load_from_file_split(const string &filename) {
+    const int nsplit = 5;
+    string splitnames[] = {"_header", "_tree", "_table", "_names", "_values"};
+
+    int psize, namesSize;
+    SuccinctTree st;
+    vector<string> names;
+    vector<int> nameList;
+    BitmapIndex<Jvalue> values;
+
+    for (int i = 0; i < nsplit; i++) {
+        ifstream ifile(filename + splitnames[i], ios::binary);
+        ifile.seekg(0, ifile.end);
+        long size = ifile.tellg();
+        StreamType res(size);
+        ifile.seekg(0);
+        ifile.read((char*) &res[0], size);
+        ifile.close();
+
+        StreamType::const_iterator begin = res.begin(), end = res.end();
+        if (i == 0) {
+            psize = deserialize<int>(begin, end);
+            namesSize = deserialize<int>(begin, end);
+        }
+        else if (i == 1) st = deserialize<SuccinctTree>(psize, begin, end);
+        else if (i == 2) names = deserialize<vector<string>>(namesSize, begin, end);
+                          // return deserialize<Parser>(res);
+        else if (i == 3) nameList = deserialize<vector<int>>(psize, begin, end);
+        else values = deserialize<BitmapIndex<Jvalue>>(psize, begin, end);
+    }
+
+    return Parser(psize, st, names, nameList, values);
 }
 
 #endif

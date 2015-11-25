@@ -177,7 +177,7 @@ TEST(SerializationTest, ParserSize) {
 
 TEST(SerializationTest, ParserDeserialization) {
     // for (int i = 5; i <= 9; ++i) {
-    for (int i = 5; i <= 9; ++i) {
+    for (int i = 5; i <= 5; ++i) {
             // cout << "start" << endl;
         Document d = wow(i);
             // cout << "loaded with rapidjson" << endl;
@@ -197,6 +197,23 @@ TEST(SerializationTest, ParserDeserialization) {
     }
 }
 
+TEST(SplitSerializationTest, ParserDeserialization) {
+    for (int i = 5; i <= 5; ++i) {
+        Document d = wow(i);
+        Parser p(d);
+        filenamec(i);
+        save_to_file_split(p, string(fn));
+
+        tick();
+        Parser loaded = load_from_file_split(string(fn));
+        long long dur = tick();
+        EXPECT_EQ(p.size, loaded.size);
+        EXPECT_EQ(p.tree, loaded.tree);
+        EXPECT_EQ(p.namess, loaded.namess);
+        EXPECT_EQ(p.valuess, loaded.valuess);
+        ASSERT_EQ(p, loaded);
+    }
+}
 
 long filesize(int k) {
     char fn[100];

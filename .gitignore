@@ -9,6 +9,11 @@ bin/*
 test/tfile.bin
 test/*.json_h
 test/*.json_c
+teset/*_header
+teset/*_names
+teset/*_table
+teset/*_tree
+teset/*_values
 
 # Ignore Mac specific files
 .DS_Store
