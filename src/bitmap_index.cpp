@@ -12,7 +12,7 @@ using namespace sdsl;
 template <class T>
 void BitmapIndex<T>::insert(T elem) {
     values.push_back(elem);
-    byte_size += get_size(elem) + 1;
+    byte_size += get_size(elem);
 }
 
 template <class T>
@@ -20,10 +20,10 @@ void BitmapIndex<T>::loadBitvector() {
     // Initialize a bit vector of size byte_size with zeroes
     bv = bit_vector(byte_size, 0);
 
-    int c = 0;
-    for (T elem : values) {
-        c += get_size(elem);
-        bv[c++] = 1;
+    int c = 0, n = values.size();
+    for (int i = 0; i < n - 1; i++) {
+        c += get_size(values[i]);
+        bv[c] = 1;
     }
 }
 

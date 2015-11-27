@@ -189,11 +189,8 @@ namespace detail {
             serializer(obj.bv, res);
 
             // serialize values
-            for (auto it : obj.values) {
+            for (auto it : obj.values)
                 serializer(it, res);
-                // store the null character as a separator
-                serializer('\0', res);
-            }
         }
     };
 
@@ -333,12 +330,9 @@ namespace detail {
 
             // deserialize values vector
             vector<T> values; values.reserve(values_size);
-            for (int i = 0; i < values_size; ++i) {
+            for (int i = 0; i < values_size; ++i)
                 // deserialize a single value
                 values.push_back(deserialize_helper<T>::apply(begin, end));
-                // consume separator character
-                deserialize_helper<char>::apply(begin, end);
-            }
 
             return BitmapIndex<T>(byte_size, bv, values);
         }
