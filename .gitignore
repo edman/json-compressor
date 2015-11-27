@@ -8,12 +8,7 @@ bin/*
 # Test related files
 test/tfile.bin
 test/*.json_h
-test/*.json_c
-teset/*_header
-teset/*_names
-teset/*_table
-teset/*_tree
-teset/*_values
+test/*.json_c*
 
 # Ignore Mac specific files
 .DS_Store
