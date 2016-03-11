@@ -79,14 +79,12 @@ TEST(ParserTest, NamesAndValues) {
     Document d = wow(2);
     Parser p(d);
 
-    int n = 8;
+    int n = 5;
     ASSERT_EQ(n, p.namess.size());
 
-    string names[] = {"foo", "st", "name", "grades", "", "", "", ""};
+    string names[] = {"foo", "st", "name", "grades", ""};
     for (int i = 0; i < n; ++i)
         ASSERT_EQ(names[i], p.namess[i]);
-
-    // ASSERT_EQ(p.valuen, 6);
 }
 
 TEST(ParserTest, Dblp) {
@@ -198,7 +196,7 @@ TEST(SerializationTest, ParserDeserialization) {
 }
 
 TEST(SplitSerializationTest, ParserDeserialization) {
-    for (int i = 5; i <= 5; ++i) {
+    for (int i = 12; i <= 13; ++i) {
         Document d = wow(i);
         Parser p(d);
         filenamec(i);
@@ -230,6 +228,8 @@ void filename(int k, char *fn) {
     sprintf(fn, "test/sample%d.json", k);
     if (k == 10) sprintf(fn, "test/dblp_.json");
     if (k == 11) sprintf(fn, "test/dblp.json");
+    if (k == 12) sprintf(fn, "test/dataset/r1.json");
+    if (k == 13) sprintf(fn, "test/dataset/exi.json");
 }
 
 void filenamec(int k, char *fn) {
