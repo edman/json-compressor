@@ -27,11 +27,11 @@ namespace detail {
             s += get_size(obj.tree);
             // size of names table
             s += sizeof(int);
-            s += get_size(obj.namess);
+            s += get_size(obj.names);
             // size of names list
             s += get_size(obj.nameList);
             // size of values BitmapIndex
-            s += get_size(obj.valuess);
+            s += get_size(obj.values);
             return s;
         }
     };
@@ -139,12 +139,12 @@ namespace detail {
             // store the tree
             serializer(obj.tree, res);
             // store name table
-            serializer((int) obj.namess.size(), res);
-            serializer(obj.namess, res);
+            serializer((int) obj.names.size(), res);
+            serializer(obj.names, res);
             // store name list
             serializer(obj.nameList, res);
             // store bitmap indexes for values
-            serializer(obj.valuess, res);
+            serializer(obj.values, res);
         }
     };
 
@@ -373,14 +373,14 @@ namespace detail {
             // recover the succinct tree
             SuccinctTree st = deserialize_helper<SuccinctTree>::apply(size, begin, end);
             // recover names table
-            int namessSize = deserialize_helper<int>::apply(begin, end);
-            vector<string> namess = deserialize_helper<vector<string>>::apply(namessSize, begin, end);
+            int namesSize = deserialize_helper<int>::apply(begin, end);
+            vector<string> names = deserialize_helper<vector<string>>::apply(namesSize, begin, end);
             // recover names list
             vector<int> nameList = deserialize_helper<vector<int>>::apply(size, begin, end);
             // recover values
-            BitmapIndex<Jvalue> valuess = deserialize_helper<BitmapIndex<Jvalue>>::apply(size, begin, end);
+            BitmapIndex<Jvalue> values = deserialize_helper<BitmapIndex<Jvalue>>::apply(size, begin, end);
 
-            return Parser(size, st, namess, nameList, valuess);
+            return Parser(size, st, names, nameList, values);
         }
     };
 
@@ -431,11 +431,11 @@ void save_to_file_split(Parser &parser, const string &filename) {
     const int nsplit = 5;
     StreamType res[nsplit];
     serialize(parser.size, res[0]);                 // header (size)
-    serialize((int) parser.namess.size(), res[0]); // header (name table size)
+    serialize((int) parser.names.size(), res[0]); // header (name table size)
     serialize(parser.tree, res[1]); // tree
-    serialize(parser.namess, res[2]); // name table
+    serialize(parser.names, res[2]); // name table
     serialize(parser.nameList, res[3]); // name list
-    serialize(parser.valuess, res[4]); // values
+    serialize(parser.values, res[4]); // values
 
     string splitnames[] = {"_header", "_tree", "_table", "_names", "_values"};
     for (int i = 0; i < nsplit; i++) {

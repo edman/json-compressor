@@ -83,10 +83,10 @@ void log_parser_size(Parser &obj, const char *fn, long orig) {
     namel = get_size(obj.nameList);
     s += namel;
     // size of names
-    names = get_size(obj.namess);
+    names = get_size(obj.names);
     s += names;
     // size of values
-    values = get_size(obj.valuess);
+    values = get_size(obj.values);
     s += values;
 
     write_formatted(mfile, ".header", header, s);

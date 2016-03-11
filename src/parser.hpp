@@ -17,13 +17,13 @@ class Parser {
 public:
     int size;
     SuccinctTree tree;
-    vector<string> namess;
+    vector<string> names;
     vector<int> nameList;
-    BitmapIndex<Jvalue> valuess;
+    BitmapIndex<Jvalue> values;
 
 public:
     Parser(Value &d, bool debug=false);
-    Parser(int s, SuccinctTree st, vector<string> nm, vector<int> nl, BitmapIndex<Jvalue> vl): size(s), tree(st), namess(nm), nameList(nl), valuess(vl) {}
+    Parser(int s, SuccinctTree st, vector<string> nm, vector<int> nl, BitmapIndex<Jvalue> vl): size(s), tree(st), names(nm), nameList(nl), values(vl) {}
 
     void loadInfo(Value &d, unordered_map<string, int> &nt);
     int resolveNameId(const string &n, unordered_map<string, int> &nt);

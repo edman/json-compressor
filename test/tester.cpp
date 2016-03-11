@@ -80,11 +80,11 @@ TEST(ParserTest, NamesAndValues) {
     Parser p(d);
 
     int n = 5;
-    ASSERT_EQ(n, p.namess.size());
+    ASSERT_EQ(n, p.names.size());
 
     string names[] = {"foo", "st", "name", "grades", ""};
     for (int i = 0; i < n; ++i)
-        ASSERT_EQ(names[i], p.namess[i]);
+        ASSERT_EQ(names[i], p.names[i]);
 }
 
 TEST(ParserTest, Dblp) {
@@ -100,11 +100,11 @@ TEST(SerializationTest, get_size) {
     Parser p(d);
 
     ASSERT_EQ(3, get_size(p.tree));
-    // ASSERT_EQ(39, get_size(p.namess));
-    ASSERT_EQ(57, get_size(p.valuess));
+    // ASSERT_EQ(39, get_size(p.names));
+    ASSERT_EQ(57, get_size(p.values));
     ASSERT_EQ(103, get_size(p));
 
-    // ASSERT_EQ(4, get_size(p.namess.bv));
+    // ASSERT_EQ(4, get_size(p.names.bv));
 }
 
 TEST(SerializationTest, SuccinctTree) {
@@ -189,8 +189,8 @@ TEST(SerializationTest, ParserDeserialization) {
         long long dur = tick();
         EXPECT_EQ(p.size, loaded.size);
         EXPECT_EQ(p.tree, loaded.tree);
-        EXPECT_EQ(p.namess, loaded.namess);
-        EXPECT_EQ(p.valuess, loaded.valuess);
+        EXPECT_EQ(p.names, loaded.names);
+        EXPECT_EQ(p.values, loaded.values);
         ASSERT_EQ(p, loaded);
     }
 }
@@ -207,8 +207,8 @@ TEST(SplitSerializationTest, ParserDeserialization) {
         long long dur = tick();
         EXPECT_EQ(p.size, loaded.size);
         EXPECT_EQ(p.tree, loaded.tree);
-        EXPECT_EQ(p.namess, loaded.namess);
-        EXPECT_EQ(p.valuess, loaded.valuess);
+        EXPECT_EQ(p.names, loaded.names);
+        EXPECT_EQ(p.values, loaded.values);
         ASSERT_EQ(p, loaded);
     }
 }
@@ -295,10 +295,10 @@ void log_parser_size(Parser &obj, long long dur, int k) {
     tree = get_size(obj.tree);
     s += tree;
     // size of names
-    names = get_size(obj.namess);
+    names = get_size(obj.names);
     s += names;
     // size of values
-    values = get_size(obj.valuess);
+    values = get_size(obj.values);
     s += values;
 
     write_formatted(mfile, ".header", header, s);
