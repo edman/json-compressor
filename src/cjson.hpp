@@ -1,6 +1,6 @@
 
-#ifndef __PARSER_HPP__
-#define __PARSER_HPP__
+#ifndef __CJSON_HPP__
+#define __CJSON_HPP__
 
 #include "succinct_tree.hpp"
 #include "jvalue.hpp"
@@ -13,7 +13,7 @@
 using namespace std;
 using namespace rapidjson;
 
-class Parser {
+class Cjson {
 public:
     int size;
     SuccinctTree tree;
@@ -22,13 +22,13 @@ public:
     BitmapIndex<Jvalue> values;
 
 public:
-    Parser(Value &d, bool debug=false);
-    Parser(int s, SuccinctTree st, vector<string> nm, vector<int> nl, BitmapIndex<Jvalue> vl): size(s), tree(st), names(nm), nameList(nl), values(vl) {}
+    Cjson(Value &d, bool debug=false);
+    Cjson(int s, SuccinctTree st, vector<string> nm, vector<int> nl, BitmapIndex<Jvalue> vl): size(s), tree(st), names(nm), nameList(nl), values(vl) {}
 
     void loadInfo(Value &d, unordered_map<string, int> &nt);
     int resolveNameId(const string &n, unordered_map<string, int> &nt);
 
-    bool operator==(const Parser &rhs) const;
+    bool operator==(const Cjson &rhs) const;
 };
 
 int resolveName(const string&, map<string, int>&, int&);

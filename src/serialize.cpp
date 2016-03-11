@@ -3,7 +3,7 @@
 #define __SERIALIZE_CPP__
 
 #include "serialize.hpp"
-#include "parser.hpp"
+#include "cjson.hpp"
 #include "util.hpp"
 #include <numeric>
 #include <string>
@@ -19,8 +19,8 @@ namespace detail {
     struct get_size_helper;
 
     template <>
-    struct get_size_helper<Parser> {
-        static size_t value(Parser const&obj) {
+    struct get_size_helper<Cjson> {
+        static size_t value(Cjson const&obj) {
             // size of header
             size_t s = sizeof(int);
             // size of tree
@@ -106,7 +106,7 @@ size_t get_size(const T &obj) {
     return detail::get_size_helper<T>::value(obj);
 }
 
-template size_t get_size<Parser>(const Parser&);
+template size_t get_size<Cjson>(const Cjson&);
 template size_t get_size<bit_vector>(const bit_vector&);
 template size_t get_size<SuccinctTree>(const SuccinctTree&);
 template size_t get_size<BitmapIndex<string>>(const BitmapIndex<string>&);
@@ -132,8 +132,8 @@ namespace detail {
     }
 
     template <>
-    struct serialize_helper<Parser> {
-        static void apply(const Parser &obj, StreamType::iterator &res) {
+    struct serialize_helper<Cjson> {
+        static void apply(const Cjson &obj, StreamType::iterator &res) {
             // store header
             serializer(obj.size, res);
             // store the tree
@@ -239,7 +239,7 @@ void serialize(const T &obj, StreamType &res) {
     assert(res.begin() + offset + size == it);
 }
 
-template void serialize<Parser>(const Parser&, StreamType&);
+template void serialize<Cjson>(const Cjson&, StreamType&);
 template void serialize<bit_vector>(const bit_vector&, StreamType&);
 template void serialize<SuccinctTree>(const SuccinctTree&, StreamType&);
 template void serialize<BitmapIndex<string>>(const BitmapIndex<string>&, StreamType&);
@@ -365,8 +365,8 @@ namespace detail {
     };
 
     template <>
-    struct deserialize_helper<Parser> {
-        static Parser apply(StreamType::const_iterator& begin,
+    struct deserialize_helper<Cjson> {
+        static Cjson apply(StreamType::const_iterator& begin,
                 StreamType::const_iterator end) {
             // recover header
             int size = deserialize_helper<int>::apply(begin, end);
@@ -380,7 +380,7 @@ namespace detail {
             // recover values
             BitmapIndex<Jvalue> values = deserialize_helper<BitmapIndex<Jvalue>>::apply(size, begin, end);
 
-            return Parser(size, st, names, nameList, values);
+            return Cjson(size, st, names, nameList, values);
         }
     };
 
@@ -407,8 +407,8 @@ T deserialize(const StreamType &res) {
     return deserialize<T>(it, res.end());
 }
 
-template Parser deserialize(const StreamType&);
-template Parser deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
+template Cjson deserialize(const StreamType&);
+template Cjson deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
 template bit_vector deserialize(int, int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template SuccinctTree deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template BitmapIndex<string> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
@@ -421,21 +421,21 @@ template size_t deserialize(StreamType::const_iterator&, const StreamType::const
 template int deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
 template double deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
 
-void save_to_file(Parser &parser, const string &filename) {
+void save_to_file(Cjson &cjson, const string &filename) {
     StreamType res;
-    serialize(parser, res);
+    serialize(cjson, res);
     save_to_file(res, filename);
 }
 
-void save_to_file_split(Parser &parser, const string &filename) {
+void save_to_file_split(Cjson &cjson, const string &filename) {
     const int nsplit = 5;
     StreamType res[nsplit];
-    serialize(parser.size, res[0]);                 // header (size)
-    serialize((int) parser.names.size(), res[0]); // header (name table size)
-    serialize(parser.tree, res[1]); // tree
-    serialize(parser.names, res[2]); // name table
-    serialize(parser.nameList, res[3]); // name list
-    serialize(parser.values, res[4]); // values
+    serialize(cjson.size, res[0]);                 // header (size)
+    serialize((int) cjson.names.size(), res[0]); // header (name table size)
+    serialize(cjson.tree, res[1]); // tree
+    serialize(cjson.names, res[2]); // name table
+    serialize(cjson.nameList, res[3]); // name list
+    serialize(cjson.values, res[4]); // values
 
     string splitnames[] = {"_header", "_tree", "_table", "_names", "_values"};
     for (int i = 0; i < nsplit; i++) {
@@ -450,7 +450,7 @@ void save_to_file(StreamType &res, const string &filename) {
     ofile.close();
 }
 
-Parser load_from_file(const string &filename) {
+Cjson load_from_file(const string &filename) {
     ifstream ifile(filename, ios::binary);
     ifile.seekg(0, ifile.end);
     long size = ifile.tellg();
@@ -458,10 +458,10 @@ Parser load_from_file(const string &filename) {
     ifile.seekg(0);
     ifile.read((char*) &res[0], size);
     ifile.close();
-    return deserialize<Parser>(res);
+    return deserialize<Cjson>(res);
 }
 
-Parser load_from_file_split(const string &filename) {
+Cjson load_from_file_split(const string &filename) {
     const int nsplit = 5;
     string splitnames[] = {"_header", "_tree", "_table", "_names", "_values"};
 
@@ -487,12 +487,12 @@ Parser load_from_file_split(const string &filename) {
         }
         else if (i == 1) st = deserialize<SuccinctTree>(psize, begin, end);
         else if (i == 2) names = deserialize<vector<string>>(namesSize, begin, end);
-                          // return deserialize<Parser>(res);
+                          // return deserialize<Cjson>(res);
         else if (i == 3) nameList = deserialize<vector<int>>(psize, begin, end);
         else values = deserialize<BitmapIndex<Jvalue>>(psize, begin, end);
     }
 
-    return Parser(psize, st, names, nameList, values);
+    return Cjson(psize, st, names, nameList, values);
 }
 
 #endif

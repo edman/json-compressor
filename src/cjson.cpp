@@ -1,8 +1,8 @@
 
-#ifndef __PARSER_CPP__
-#define __PARSER_CPP__
+#ifndef __CJSON_CPP__
+#define __CJSON_CPP__
 
-#include "parser.hpp"
+#include "cjson.hpp"
 #include "succinct_tree.hpp"
 #include "jvalue.hpp"
 #include "rapidjson/document.h"
@@ -13,8 +13,8 @@
 using namespace std;
 using namespace rapidjson;
 
-Parser::Parser(Value &d, bool debug) {
-    if (debug) cout << ".. start new parser" << endl;
+Cjson::Cjson(Value &d, bool debug) {
+    if (debug) cout << ".. start new cjson" << endl;
 
     // Load names and values arrays
     unordered_map<string, int> nameTable;
@@ -31,7 +31,7 @@ Parser::Parser(Value &d, bool debug) {
     if (debug) cout << ".. construct tree" << endl;
 }
 
-void Parser::loadInfo(Value &d, unordered_map<string, int> &nameTable) {
+void Cjson::loadInfo(Value &d, unordered_map<string, int> &nameTable) {
     if (d.IsObject()) {
         for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
             int nameId = resolveNameId(it->name.GetString(), nameTable);
@@ -50,7 +50,7 @@ void Parser::loadInfo(Value &d, unordered_map<string, int> &nameTable) {
         }
 }
 
-int Parser::resolveNameId(const string &name, unordered_map<string, int> &nameTable) {
+int Cjson::resolveNameId(const string &name, unordered_map<string, int> &nameTable) {
     auto it = nameTable.find(name);
     if (it == nameTable.end()) {
         int nameId = names.size();
@@ -94,14 +94,14 @@ template <typename T> T* mapToArray(map<T, int> &mmap) {
     return a;
 }
 
-bool Parser::operator==(const Parser &rhs) const {
+bool Cjson::operator==(const Cjson &rhs) const {
     return size == rhs.size
             && tree == rhs.tree
             && names == rhs.names
             && values == rhs.values;
 }
 
-ostream& operator<<(ostream &o, const Parser &p) {
+ostream& operator<<(ostream &o, const Cjson &p) {
     o<<"Tree "<<p.tree<<endl;
     o<<"Names "; for (int i = 0; i < p.names.size(); i++) o<<i<<":'"<<p.names[i]<<"'"; o<<endl;
     return o<<"Values "<<p.values<<endl;

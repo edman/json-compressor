@@ -3,7 +3,7 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/filereadstream.h"
 #include "rapidjson/stringbuffer.h"
-#include "parser.hpp"
+#include "cjson.hpp"
 #include "serialize.hpp"
 
 #include <cstdio>
@@ -13,7 +13,7 @@ using namespace rapidjson;
 using namespace sdsl;
 
 long filesize(const char *);
-void log_parser_size(Parser &, const char *, long);
+void log_cjson_size(Cjson &, const char *, long);
 
 int main(int argc, char *argv[]) {
     // 1. Parse a JSON string into DOM.
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 	fp = fopen(argv[1], "r");
 	FileReadStream is(fp, buf, sizeof(buf));
 	d.ParseStream(is);
-	Parser p(d, true);
+	Cjson p(d, true);
 	fclose(fp);
 	strcpy(fn, argv[1]);
 	strcat(fn, "_c");
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 	strcpy(fn, argv[1]);
 	strcat(fn, "_h");
 	long orig = filesize(argv[1]);
-	log_parser_size(p, fn, orig);
+	log_cjson_size(p, fn, orig);
 
 	delete[] buf;
 
@@ -68,7 +68,7 @@ void write_formatted(ofstream &f, const string &msg, long &a, size_t &b) {
     f << msg << "\t\t(" << (int)((double)a/b*100) << "%)\t\t" << a << endl;
 }
 
-void log_parser_size(Parser &obj, const char *fn, long orig) {
+void log_cjson_size(Cjson &obj, const char *fn, long orig) {
     ofstream mfile(fn, ios::out);
     // original file size
     mfile << "original size (bytes): " << orig << endl;

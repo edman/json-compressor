@@ -9,7 +9,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/filereadstream.h"
 #include "../src/succinct_tree.hpp"
-#include "../src/parser.hpp"
+#include "../src/cjson.hpp"
 #include "../src/serialize.hpp"
 
 using namespace std;
@@ -28,7 +28,7 @@ Document wow(int k = 1);
 void filename(int k, char *fin=fn);
 void filenamec(int k, char *fin=fn);
 void filenameh(int k, char *fin=fn);
-void log_parser_size(Parser&, long long, int);
+void log_cjson_size(Cjson&, long long, int);
 long filesize(int k = 1);
 
 TEST(RapidJsonTest, ReadingStuff) {
@@ -62,10 +62,10 @@ TEST(SuccinctTreeTest, DocumentDFS) {
         ASSERT_EQ(tree.bv[i], t[i]);
 }
 
-TEST(ParserTest, Tree) {
+TEST(CjsonTest, Tree) {
     Document d = wow(2);
     cout << "here 1" << endl;
-    Parser p(d, true);
+    Cjson p(d, true);
 
     cout << "here 2" << endl;
     ASSERT_EQ(p.tree.N, 8);
@@ -75,9 +75,9 @@ TEST(ParserTest, Tree) {
         ASSERT_EQ(p.tree.bv[i], t[i]);
 }
 
-TEST(ParserTest, NamesAndValues) {
+TEST(CjsonTest, NamesAndValues) {
     Document d = wow(2);
-    Parser p(d);
+    Cjson p(d);
 
     int n = 5;
     ASSERT_EQ(n, p.names.size());
@@ -87,17 +87,17 @@ TEST(ParserTest, NamesAndValues) {
         ASSERT_EQ(names[i], p.names[i]);
 }
 
-TEST(ParserTest, Dblp) {
+TEST(CjsonTest, Dblp) {
     // DBLP json file found at http://projects.csail.mit.edu/dnd/DBLP/
     Document d = wow(3);
-    Parser p(d);
+    Cjson p(d);
 
-    // print_parser(p);
+    // print_cjson(p);
 }
 
 TEST(SerializationTest, get_size) {
     Document d = wow(2);
-    Parser p(d);
+    Cjson p(d);
 
     ASSERT_EQ(3, get_size(p.tree));
     // ASSERT_EQ(39, get_size(p.names));
@@ -157,35 +157,35 @@ TEST(SerializationTest, IntAndString) {
     ASSERT_EQ(s, t);
 }
 
-TEST(SerializationTest, ParserSize) {
+TEST(SerializationTest, CjsonSize) {
     // for (int i = 5; i <= 9; ++i) {
     for (int i = 1; i <= 1; ++i) {
             // cout << "start" << endl;
         Document d = wow(i);
             // cout << "loaded with rapidjson" << endl;
         tick();
-        Parser p(d);
+        Cjson p(d);
         long long dur = tick();
-            // cout << "constructed parser" << endl;
+            // cout << "constructed cjson" << endl;
         filenamec(i);
         save_to_file(p, string(fn));
-        log_parser_size(p, dur, i);
+        log_cjson_size(p, dur, i);
     }
 }
 
-TEST(SerializationTest, ParserDeserialization) {
+TEST(SerializationTest, CjsonDeserialization) {
     // for (int i = 5; i <= 9; ++i) {
     for (int i = 5; i <= 5; ++i) {
             // cout << "start" << endl;
         Document d = wow(i);
             // cout << "loaded with rapidjson" << endl;
-        Parser p(d);
-            // cout << "constructed parser" << endl;
+        Cjson p(d);
+            // cout << "constructed cjson" << endl;
         filenamec(i);
         save_to_file(p, string(fn));
 
         tick();
-        Parser loaded = load_from_file(string(fn));
+        Cjson loaded = load_from_file(string(fn));
         long long dur = tick();
         EXPECT_EQ(p.size, loaded.size);
         EXPECT_EQ(p.tree, loaded.tree);
@@ -195,15 +195,15 @@ TEST(SerializationTest, ParserDeserialization) {
     }
 }
 
-TEST(SplitSerializationTest, ParserDeserialization) {
+TEST(SplitSerializationTest, CjsonDeserialization) {
     for (int i = 12; i <= 13; ++i) {
         Document d = wow(i);
-        Parser p(d);
+        Cjson p(d);
         filenamec(i);
         save_to_file_split(p, string(fn));
 
         tick();
-        Parser loaded = load_from_file_split(string(fn));
+        Cjson loaded = load_from_file_split(string(fn));
         long long dur = tick();
         EXPECT_EQ(p.size, loaded.size);
         EXPECT_EQ(p.tree, loaded.tree);
@@ -279,7 +279,7 @@ void write_formatted(ofstream &f, const string &msg, long &a, size_t &b) {
     f << msg << "\t\t(" << (int)((double)a/b*100) << "%)\t\t" << a << endl;
 }
 
-void log_parser_size(Parser &obj, long long dur, int k) {
+void log_cjson_size(Cjson &obj, long long dur, int k) {
     filenameh(k);
     ofstream mfile(fn, ios::out);
     // original file size
