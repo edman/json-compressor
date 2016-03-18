@@ -10,6 +10,7 @@
 #include "rapidjson/filereadstream.h"
 #include "../src/succinct_tree.hpp"
 #include "../src/cjson.hpp"
+#include "../src/traversal.hpp"
 #include "../src/serialize.hpp"
 
 using namespace std;
@@ -21,6 +22,7 @@ bool dot1 = false, dobt1 = false;
 
 long long tick(string msg="time", bool bt=false);
 Document wow2(int k = 1);
+void traversalDfs(Traversal& t);
 
 char fn[100];
 
@@ -170,6 +172,7 @@ TEST(SerializationTest, CjsonSize) {
         filenamec(i);
         save_to_file(p, string(fn));
         log_cjson_size(p, dur, i);
+
     }
 }
 
@@ -187,6 +190,7 @@ TEST(SerializationTest, CjsonDeserialization) {
         tick();
         Cjson loaded = load_from_file(string(fn));
         long long dur = tick();
+        cout << "duration " << dur << endl;
         EXPECT_EQ(p.size, loaded.size);
         EXPECT_EQ(p.tree, loaded.tree);
         EXPECT_EQ(p.names, loaded.names);
@@ -196,7 +200,8 @@ TEST(SerializationTest, CjsonDeserialization) {
 }
 
 TEST(SplitSerializationTest, CjsonDeserialization) {
-    for (int i = 12; i <= 13; ++i) {
+    // for (int i = 12; i <= 13; ++i) { // comment for speed
+    for (int i = 1; i <= 1; ++i) {
         Document d = wow(i);
         Cjson p(d);
         filenamec(i);
@@ -205,12 +210,41 @@ TEST(SplitSerializationTest, CjsonDeserialization) {
         tick();
         Cjson loaded = load_from_file_split(string(fn));
         long long dur = tick();
+        cout << "duration " << dur << endl;
         EXPECT_EQ(p.size, loaded.size);
         EXPECT_EQ(p.tree, loaded.tree);
         EXPECT_EQ(p.names, loaded.names);
         EXPECT_EQ(p.values, loaded.values);
         ASSERT_EQ(p, loaded);
     }
+}
+
+TEST(TraversalTest, Traversal) {
+    Document d = wow(2);
+    Cjson p(d);
+
+    Traversal t(p);
+    cout << "tree " << t.cjson.tree.bv << endl;
+    traversalDfs(t);
+    // cout << "root " << t << endl;
+    // EXPECT_TRUE(t.hasChild());
+    // EXPECT_TRUE(t.goToChild());
+    // cout << "to child " << t << endl;
+    // cout << "current node " << t.getCurrentNode() << endl;
+    // EXPECT_TRUE(t.hasNextSibling());
+}
+
+void traversalDfs(Traversal& t) {
+    cout << "dfs node " << t << " " << t.getCurrentNode() << " ";
+    cout << t.hasChild() << " " << t.hasNextSibling() << " ";
+    cout << t.bp.find_close(t.treeIndex) << " ";
+    cout << endl;
+    if (t.hasChild()) {
+        t.goToChild();
+        traversalDfs(t);
+        t.goToParent();
+    }
+    if (t.goToNextSibling()) traversalDfs(t);
 }
 
 long filesize(int k) {
