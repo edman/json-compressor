@@ -25,20 +25,26 @@ public:
 public:
     /* Constructors */
     Jvalue() {}
-    Jvalue(types t): type(t) {}
+    Jvalue(types t): type(t) { assert(!hasValue()); }
     Jvalue(types t, string v): type(t), vstring(v) {}
     Jvalue(types t, int v): type(t), vint(v) {}
     Jvalue(types t, double v): type(t), vdouble(v) {}
-    // Jvalue(Jvalue &a) { *this = a; cout << "Jvalue construct" << endl; }
     Jvalue(Value&);
-    // ~Jvalue() { cout << * this << " encoding destruct" << endl; }
+
     /* Initialization functions */
-    void init(types t) { type = t; if (hasValue()) cout << "Value expected" << endl; }
+    void init(types t) { type = t; assert(!hasValue()); }
     void init(types t, string v) { type = t; vstring = v; }
     void init(types t, int v) { type = t; vint = v; }
     void init(types t, double v) { type = t; vdouble = v; }
 
     /* Methods */
+    bool isNull() const { return type == kNull; }
+    bool isTrue() const { return type == kTrue; }
+    bool isFalse() const { return type == kFalse; }
+    bool isBoolean() const { return isTrue() || isFalse(); }
+    bool isObject() const { return type == kObject; }
+    bool isArray() const { return type == kArray; }
+
     bool hasValue() const { return type >= kString && type <= kDouble; }
     bool isString() const { return type == kString; }
     bool isInt() const { return type == kInt; }
