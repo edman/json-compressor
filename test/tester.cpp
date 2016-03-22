@@ -9,6 +9,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/filereadstream.h"
 #include "../src/bp_tree.hpp"
+#include "../src/df_tree.hpp"
 #include "../src/cjson.hpp"
 #include "../src/traversal.hpp"
 #include "../src/serialize.hpp"
@@ -60,6 +61,18 @@ TEST(BpTreeTest, DocumentDFS) {
     ASSERT_EQ(tree.N, 8);
     ASSERT_EQ(tree.size(), 18);
     int t[] = {1,1,0,1,1,0,1,1,0,1,0,1,0,1,0,0,0,0};
+    for (int i = 0; i < tree.size(); ++i)
+        ASSERT_EQ(tree.bv[i], t[i]);
+}
+
+TEST(DfTreeTest, DocumentDFS) {
+    Document d = wow(2);
+    DfTree tree(d, 8);
+
+    ASSERT_EQ(tree.N, 8);
+    ASSERT_EQ(tree.size(), 18);
+    int t[] = {1,1,1,0,1,1,0,1,1,1,1,0,0,0,0,0,0,0};
+    cout << "DfTree " << tree << endl;
     for (int i = 0; i < tree.size(); ++i)
         ASSERT_EQ(tree.bv[i], t[i]);
 }
