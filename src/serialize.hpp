@@ -17,10 +17,10 @@ template <class T> T deserialize(const StreamType&);
 
 void save_to_file(StreamType&, const string&);
 
-void save_to_file(Cjson&, const string&);
-void save_to_file_split(Cjson&, const string&);
-Cjson load_from_file(const string&);
-Cjson load_from_file_split(const string&);
+template <class T> void save_to_file(Cjson<T>&, const string&);
+template <class T> void save_to_file_split(Cjson<T>&, const string&);
+template <class T> Cjson<T> load_from_file(const string&);
+template <class T> Cjson<T> load_from_file_split(const string&);
 
 #endif
 

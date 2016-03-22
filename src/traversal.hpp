@@ -11,15 +11,16 @@ using namespace std;
 using namespace rapidjson;
 
 
+template <class SuccinctTree>
 class Traversal {
 public:
-    Cjson cjson;
+    Cjson<SuccinctTree> cjson;
     bp_support_sada<> bp;
     int nodeIndex;
     int treeIndex;
 
 public:
-    Traversal(Cjson &c, int i=0, int t=0): cjson(c), nodeIndex(i), treeIndex(t) { util::init_support(bp, &cjson.tree.bv); }
+    Traversal(Cjson<SuccinctTree> &c, int i=0, int t=0): cjson(c), nodeIndex(i), treeIndex(t) { util::init_support(bp, &cjson.tree.bv); }
     Traversal(Value &d): cjson(d), nodeIndex(0), treeIndex(0) { util::init_support(bp, &cjson.tree.bv); }
 
     TraversalNode getCurrentNode();
@@ -32,6 +33,7 @@ public:
     bool goToNextSibling();
 };
 
-ostream& operator<<(ostream &o, const Traversal &t);
+template <class SuccinctTree>
+ostream& operator<<(ostream &o, const Traversal<SuccinctTree> &t);
 
 #endif

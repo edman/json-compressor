@@ -9,18 +9,21 @@ using namespace std;
 using namespace rapidjson;
 
 
-TraversalNode Traversal::getCurrentNode() {
+template <class SuccinctTree>
+TraversalNode Traversal<SuccinctTree>::getCurrentNode() {
   if (nodeIndex == 0) return TraversalNode("", Jvalue(kObject));
   return TraversalNode(cjson.names[cjson.nameList[nodeIndex - 1]],
       cjson.values[nodeIndex - 1]);
 }
 
-bool Traversal::hasParent() {
+template <class SuccinctTree>
+bool Traversal<SuccinctTree>::hasParent() {
   // true unless tree index is 0
   return treeIndex > 0;
 }
 
-bool Traversal::goToParent() {
+template <class SuccinctTree>
+bool Traversal<SuccinctTree>::goToParent() {
   // no parent to go to
   if (!hasParent()) return false;
   // tree index becomes the open parenthesis that encloses the current
@@ -31,12 +34,14 @@ bool Traversal::goToParent() {
   return true;
 }
 
-bool Traversal::hasChild() {
+template <class SuccinctTree>
+bool Traversal<SuccinctTree>::hasChild() {
   // true if next bit is an open parenthesis
   return treeIndex + 1 < cjson.tree.size() && cjson.tree.bv[treeIndex + 1] == 1;
 }
 
-bool Traversal::goToChild() {
+template <class SuccinctTree>
+bool Traversal<SuccinctTree>::goToChild() {
   // no child to go to
   if (!hasChild()) return false;
   // increment tree index
@@ -47,13 +52,15 @@ bool Traversal::goToChild() {
   return true;
 }
 
-bool Traversal::hasNextSibling() {
+template <class SuccinctTree>
+bool Traversal<SuccinctTree>::hasNextSibling() {
   // true if next bit after closing is an open parenthesis
   int closing = bp.find_close(treeIndex);
   return closing + 1 < cjson.tree.size() && cjson.tree.bv[closing + 1] == 1;
 }
 
-bool Traversal::goToNextSibling() {
+template <class SuccinctTree>
+bool Traversal<SuccinctTree>::goToNextSibling() {
   // no sibling to go to, return false
   if (!hasNextSibling()) return false;
   // tree index becomes the open parenthesis after the current closes
@@ -64,9 +71,15 @@ bool Traversal::goToNextSibling() {
   return true;
 }
 
-ostream& operator<<(ostream &o, const Traversal &t) {
+template <class SuccinctTree>
+ostream& operator<<(ostream &o, const Traversal<SuccinctTree> &t) {
   return o << "(" << t.nodeIndex << "," << t.treeIndex << ")";
 }
 
+
+/* Explicit instantiation of needed template classes and methods */
+template class Traversal<BpTree>;
+
+template ostream& operator<< (ostream&, const Traversal<BpTree>&);
 
 #endif

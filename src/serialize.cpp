@@ -18,9 +18,9 @@ namespace detail {
     template <class T>
     struct get_size_helper;
 
-    template <>
-    struct get_size_helper<Cjson> {
-        static size_t value(Cjson const&obj) {
+    template <class T>
+    struct get_size_helper< Cjson<T> > {
+        static size_t value(Cjson<T> const&obj) {
             // size of header
             size_t s = sizeof(int);
             // size of tree
@@ -54,8 +54,8 @@ namespace detail {
     };
 
     template <>
-    struct get_size_helper<SuccinctTree> {
-        static size_t value(const SuccinctTree &obj) {
+    struct get_size_helper<BpTree> {
+        static size_t value(const BpTree &obj) {
             // return obj.size_in_bytes();
             return get_size(obj.bv);
         }
@@ -106,9 +106,9 @@ size_t get_size(const T &obj) {
     return detail::get_size_helper<T>::value(obj);
 }
 
-template size_t get_size<Cjson>(const Cjson&);
+template size_t get_size< Cjson<BpTree> >(const Cjson<BpTree>&);
 template size_t get_size<bit_vector>(const bit_vector&);
-template size_t get_size<SuccinctTree>(const SuccinctTree&);
+template size_t get_size<BpTree>(const BpTree&);
 template size_t get_size<BitmapIndex<string>>(const BitmapIndex<string>&);
 template size_t get_size<BitmapIndex<Jvalue>>(const BitmapIndex<Jvalue>&);
 template size_t get_size<Jvalue>(const Jvalue&);
@@ -131,9 +131,9 @@ namespace detail {
         for (int i = 0; i < size; ++i) serializer(a[i], res);
     }
 
-    template <>
-    struct serialize_helper<Cjson> {
-        static void apply(const Cjson &obj, StreamType::iterator &res) {
+    template <class T>
+    struct serialize_helper< Cjson<T> > {
+        static void apply(const Cjson<T> &obj, StreamType::iterator &res) {
             // store header
             serializer(obj.size, res);
             // store the tree
@@ -170,8 +170,8 @@ namespace detail {
     };
 
     template <>
-    struct serialize_helper<SuccinctTree> {
-        static void apply(const SuccinctTree &obj, StreamType::iterator &res) {
+    struct serialize_helper<BpTree> {
+        static void apply(const BpTree &obj, StreamType::iterator &res) {
             // char *p = obj.to_char_array();
             // int size = obj.size_in_bytes();
             // serialize_array(p, size, res);
@@ -239,9 +239,9 @@ void serialize(const T &obj, StreamType &res) {
     assert(res.begin() + offset + size == it);
 }
 
-template void serialize<Cjson>(const Cjson&, StreamType&);
+template void serialize< Cjson<BpTree> >(const Cjson<BpTree>&, StreamType&);
 template void serialize<bit_vector>(const bit_vector&, StreamType&);
-template void serialize<SuccinctTree>(const SuccinctTree&, StreamType&);
+template void serialize<BpTree>(const BpTree&, StreamType&);
 template void serialize<BitmapIndex<string>>(const BitmapIndex<string>&, StreamType&);
 template void serialize<BitmapIndex<Jvalue>>(const BitmapIndex<Jvalue>&, StreamType&);
 template void serialize<Jvalue>(const Jvalue&, StreamType&);
@@ -304,14 +304,14 @@ namespace detail {
     };
 
     template <>
-    struct deserialize_helper<SuccinctTree> {
-        static SuccinctTree apply(int doc_size, StreamType::const_iterator& begin,
+    struct deserialize_helper<BpTree> {
+        static BpTree apply(int doc_size, StreamType::const_iterator& begin,
                 StreamType::const_iterator end) {
             int size_in_bits = (doc_size + 1) * 2;
             int size_in_bytes = (size_in_bits + 7) / 8;
 
             bit_vector bv = deserialize_helper<bit_vector>::apply(size_in_bits, size_in_bytes, begin, end);
-            return SuccinctTree(doc_size, bv);
+            return BpTree(doc_size, bv);
        }
     };
 
@@ -364,14 +364,14 @@ namespace detail {
         }
     };
 
-    template <>
-    struct deserialize_helper<Cjson> {
-        static Cjson apply(StreamType::const_iterator& begin,
+    template <class T>
+    struct deserialize_helper< Cjson<T> > {
+        static Cjson<T> apply(StreamType::const_iterator& begin,
                 StreamType::const_iterator end) {
             // recover header
             int size = deserialize_helper<int>::apply(begin, end);
             // recover the succinct tree
-            SuccinctTree st = deserialize_helper<SuccinctTree>::apply(size, begin, end);
+            BpTree st = deserialize_helper<BpTree>::apply(size, begin, end);
             // recover names table
             int namesSize = deserialize_helper<int>::apply(begin, end);
             vector<string> names = deserialize_helper<vector<string>>::apply(namesSize, begin, end);
@@ -380,7 +380,7 @@ namespace detail {
             // recover values
             BitmapIndex<Jvalue> values = deserialize_helper<BitmapIndex<Jvalue>>::apply(size, begin, end);
 
-            return Cjson(size, st, names, nameList, values);
+            return Cjson<T>(size, st, names, nameList, values);
         }
     };
 
@@ -407,10 +407,10 @@ T deserialize(const StreamType &res) {
     return deserialize<T>(it, res.end());
 }
 
-template Cjson deserialize(const StreamType&);
-template Cjson deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
+template Cjson<BpTree> deserialize(const StreamType&);
+template Cjson<BpTree> deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
 template bit_vector deserialize(int, int, StreamType::const_iterator&, const StreamType::const_iterator&);
-template SuccinctTree deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
+template BpTree deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template BitmapIndex<string> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template BitmapIndex<Jvalue> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template Jvalue deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
@@ -421,13 +421,17 @@ template size_t deserialize(StreamType::const_iterator&, const StreamType::const
 template int deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
 template double deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
 
-void save_to_file(Cjson &cjson, const string &filename) {
+template <class T>
+void save_to_file(Cjson<T> &cjson, const string &filename) {
     StreamType res;
     serialize(cjson, res);
     save_to_file(res, filename);
 }
 
-void save_to_file_split(Cjson &cjson, const string &filename) {
+template void save_to_file(Cjson<BpTree>&, const string&);
+
+template <class T>
+void save_to_file_split(Cjson<T> &cjson, const string &filename) {
     const int nsplit = 5;
     StreamType res[nsplit];
     serialize(cjson.size, res[0]);                 // header (size)
@@ -444,13 +448,16 @@ void save_to_file_split(Cjson &cjson, const string &filename) {
     }
 }
 
+template void save_to_file_split(Cjson<BpTree>&, const string&);
+
 void save_to_file(StreamType &res, const string &filename) {
     ofstream ofile(filename, ios::binary);
     ofile.write((char*) &res[0], res.size());
     ofile.close();
 }
 
-Cjson load_from_file(const string &filename) {
+template <class T>
+Cjson<T> load_from_file(const string &filename) {
     ifstream ifile(filename, ios::binary);
     ifile.seekg(0, ifile.end);
     long size = ifile.tellg();
@@ -458,15 +465,18 @@ Cjson load_from_file(const string &filename) {
     ifile.seekg(0);
     ifile.read((char*) &res[0], size);
     ifile.close();
-    return deserialize<Cjson>(res);
+    return deserialize< Cjson<T> >(res);
 }
 
-Cjson load_from_file_split(const string &filename) {
+template Cjson<BpTree> load_from_file(const string&);
+
+template <class T>
+Cjson<T> load_from_file_split(const string &filename) {
     const int nsplit = 5;
     string splitnames[] = {"_header", "_tree", "_table", "_names", "_values"};
 
     int psize, namesSize;
-    SuccinctTree st;
+    BpTree st;
     vector<string> names;
     vector<int> nameList;
     BitmapIndex<Jvalue> values;
@@ -485,15 +495,17 @@ Cjson load_from_file_split(const string &filename) {
             psize = deserialize<int>(begin, end);
             namesSize = deserialize<int>(begin, end);
         }
-        else if (i == 1) st = deserialize<SuccinctTree>(psize, begin, end);
+        else if (i == 1) st = deserialize<BpTree>(psize, begin, end);
         else if (i == 2) names = deserialize<vector<string>>(namesSize, begin, end);
                           // return deserialize<Cjson>(res);
         else if (i == 3) nameList = deserialize<vector<int>>(psize, begin, end);
         else values = deserialize<BitmapIndex<Jvalue>>(psize, begin, end);
     }
 
-    return Cjson(psize, st, names, nameList, values);
+    return Cjson<T>(psize, st, names, nameList, values);
 }
+
+template Cjson<BpTree> load_from_file_split(const string&);
 
 #endif
 

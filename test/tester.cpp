@@ -8,7 +8,7 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/filereadstream.h"
-#include "../src/succinct_tree.hpp"
+#include "../src/bp_tree.hpp"
 #include "../src/cjson.hpp"
 #include "../src/traversal.hpp"
 #include "../src/serialize.hpp"
@@ -22,7 +22,7 @@ bool dot1 = false, dobt1 = false;
 
 long long tick(string msg="time", bool bt=false);
 Document wow2(int k = 1);
-void traversalDfs(Traversal& t);
+template <class T> void traversalDfs(Traversal<T>& t);
 
 char fn[100];
 
@@ -30,7 +30,7 @@ Document wow(int k = 1);
 void filename(int k, char *fin=fn);
 void filenamec(int k, char *fin=fn);
 void filenameh(int k, char *fin=fn);
-void log_cjson_size(Cjson&, long long, int);
+template <class T> void log_cjson_size(Cjson<T>&, long long, int);
 long filesize(int k = 1);
 
 TEST(RapidJsonTest, ReadingStuff) {
@@ -53,9 +53,9 @@ TEST(RapidJsonTest, ReadingStuff) {
     // cout << buffer.GetString() << endl;
 }
 
-TEST(SuccinctTreeTest, DocumentDFS) {
+TEST(BpTreeTest, DocumentDFS) {
     Document d = wow(2);
-    SuccinctTree tree(d, 8);
+    BpTree tree(d, 8);
 
     ASSERT_EQ(tree.N, 8);
     ASSERT_EQ(tree.size(), 18);
@@ -64,10 +64,10 @@ TEST(SuccinctTreeTest, DocumentDFS) {
         ASSERT_EQ(tree.bv[i], t[i]);
 }
 
-TEST(CjsonTest, Tree) {
+TEST(CjsonBpTreeTest, Tree) {
     Document d = wow(2);
     cout << "here 1" << endl;
-    Cjson p(d, true);
+    Cjson<BpTree> p(d, true);
 
     cout << "here 2" << endl;
     ASSERT_EQ(p.tree.N, 8);
@@ -77,9 +77,9 @@ TEST(CjsonTest, Tree) {
         ASSERT_EQ(p.tree.bv[i], t[i]);
 }
 
-TEST(CjsonTest, NamesAndValues) {
+TEST(CjsonBpTreeTest, NamesAndValues) {
     Document d = wow(2);
-    Cjson p(d);
+    Cjson<BpTree> p(d);
 
     int n = 5;
     ASSERT_EQ(n, p.names.size());
@@ -89,17 +89,17 @@ TEST(CjsonTest, NamesAndValues) {
         ASSERT_EQ(names[i], p.names[i]);
 }
 
-TEST(CjsonTest, Dblp) {
+TEST(CjsonBpTreeTest, Dblp) {
     // DBLP json file found at http://projects.csail.mit.edu/dnd/DBLP/
     Document d = wow(3);
-    Cjson p(d);
+    Cjson<BpTree> p(d);
 
     // print_cjson(p);
 }
 
 TEST(SerializationTest, get_size) {
     Document d = wow(2);
-    Cjson p(d);
+    Cjson<BpTree> p(d);
 
     ASSERT_EQ(3, get_size(p.tree));
     // ASSERT_EQ(39, get_size(p.names));
@@ -109,16 +109,16 @@ TEST(SerializationTest, get_size) {
     // ASSERT_EQ(4, get_size(p.names.bv));
 }
 
-TEST(SerializationTest, SuccinctTree) {
+TEST(SerializationTest, BpTree) {
     Document d = wow(2);
     int size = 8;
-    SuccinctTree s(d, size);
+    BpTree s(d, size);
 
     char *p = s.to_char_array();
     for (int i = 0; i < s.size(); ++i)
         ASSERT_EQ(s.bv[i], (p[i/8] & (1 << (7-(i%8))) ? 1:0));
 
-    SuccinctTree sa(p, s.size());
+    BpTree sa(p, s.size());
     delete[] p;
     ASSERT_EQ(sa, s);
 
@@ -166,12 +166,12 @@ TEST(SerializationTest, CjsonSize) {
         Document d = wow(i);
             // cout << "loaded with rapidjson" << endl;
         tick();
-        Cjson p(d);
+        Cjson<BpTree> p(d);
         long long dur = tick();
             // cout << "constructed cjson" << endl;
         filenamec(i);
-        save_to_file(p, string(fn));
-        log_cjson_size(p, dur, i);
+        save_to_file<BpTree>(p, string(fn));
+        log_cjson_size<BpTree>(p, dur, i);
 
     }
 }
@@ -182,13 +182,13 @@ TEST(SerializationTest, CjsonDeserialization) {
             // cout << "start" << endl;
         Document d = wow(i);
             // cout << "loaded with rapidjson" << endl;
-        Cjson p(d);
+        Cjson<BpTree> p(d);
             // cout << "constructed cjson" << endl;
         filenamec(i);
         save_to_file(p, string(fn));
 
         tick();
-        Cjson loaded = load_from_file(string(fn));
+        Cjson<BpTree> loaded = load_from_file<BpTree>(string(fn));
         long long dur = tick();
         cout << "duration " << dur << endl;
         EXPECT_EQ(p.size, loaded.size);
@@ -203,12 +203,12 @@ TEST(SplitSerializationTest, CjsonDeserialization) {
     // for (int i = 12; i <= 13; ++i) { // comment for speed
     for (int i = 1; i <= 1; ++i) {
         Document d = wow(i);
-        Cjson p(d);
+        Cjson<BpTree> p(d);
         filenamec(i);
         save_to_file_split(p, string(fn));
 
         tick();
-        Cjson loaded = load_from_file_split(string(fn));
+        Cjson<BpTree> loaded = load_from_file_split<BpTree>(string(fn));
         long long dur = tick();
         cout << "duration " << dur << endl;
         EXPECT_EQ(p.size, loaded.size);
@@ -221,9 +221,9 @@ TEST(SplitSerializationTest, CjsonDeserialization) {
 
 TEST(TraversalTest, Traversal) {
     Document d = wow(2);
-    Cjson p(d);
+    Cjson<BpTree> p(d);
 
-    Traversal t(p);
+    Traversal<BpTree> t(p);
     cout << "tree " << t.cjson.tree.bv << endl;
     traversalDfs(t);
     // cout << "root " << t << endl;
@@ -234,7 +234,7 @@ TEST(TraversalTest, Traversal) {
     // EXPECT_TRUE(t.hasNextSibling());
 }
 
-void traversalDfs(Traversal& t) {
+template <class T> void traversalDfs(Traversal<T>& t) {
     cout << "dfs node " << t << " " << t.getCurrentNode() << " ";
     cout << t.hasChild() << " " << t.hasNextSibling() << " ";
     cout << t.bp.find_close(t.treeIndex) << " ";
@@ -313,7 +313,8 @@ void write_formatted(ofstream &f, const string &msg, long &a, size_t &b) {
     f << msg << "\t\t(" << (int)((double)a/b*100) << "%)\t\t" << a << endl;
 }
 
-void log_cjson_size(Cjson &obj, long long dur, int k) {
+template <class T>
+void log_cjson_size(Cjson<T> &obj, long long dur, int k) {
     filenameh(k);
     ofstream mfile(fn, ios::out);
     // original file size

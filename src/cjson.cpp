@@ -3,7 +3,8 @@
 #define __CJSON_CPP__
 
 #include "cjson.hpp"
-#include "succinct_tree.hpp"
+#include "bp_tree.hpp"
+#include "df_tree.hpp"
 #include "jvalue.hpp"
 #include "rapidjson/document.h"
 #include <iostream>
@@ -13,7 +14,8 @@
 using namespace std;
 using namespace rapidjson;
 
-Cjson::Cjson(Value &d, bool debug) {
+template <class SuccinctTree>
+Cjson<SuccinctTree>::Cjson(Value &d, bool debug) {
     if (debug) cout << ".. start new cjson" << endl;
 
     // Load names and values arrays
@@ -30,8 +32,8 @@ Cjson::Cjson(Value &d, bool debug) {
     tree = SuccinctTree(d, size);
     if (debug) cout << ".. construct tree" << endl;
 }
-
-void Cjson::loadInfo(Value &d, unordered_map<string, int> &nameTable) {
+template <class SuccinctTree>
+void Cjson<SuccinctTree>::loadInfo(Value &d, unordered_map<string, int> &nameTable) {
     if (d.IsObject()) {
         for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
             int nameId = resolveNameId(it->name.GetString(), nameTable);
@@ -50,7 +52,8 @@ void Cjson::loadInfo(Value &d, unordered_map<string, int> &nameTable) {
         }
 }
 
-int Cjson::resolveNameId(const string &name, unordered_map<string, int> &nameTable) {
+template <class SuccinctTree>
+int Cjson<SuccinctTree>::resolveNameId(const string &name, unordered_map<string, int> &nameTable) {
     auto it = nameTable.find(name);
     if (it == nameTable.end()) {
         int nameId = names.size();
@@ -94,18 +97,26 @@ template <typename T> T* mapToArray(map<T, int> &mmap) {
     return a;
 }
 
-bool Cjson::operator==(const Cjson &rhs) const {
+template <class SuccinctTree>
+bool Cjson<SuccinctTree>::operator==(const Cjson &rhs) const {
     return size == rhs.size
             && tree == rhs.tree
             && names == rhs.names
             && values == rhs.values;
 }
 
-ostream& operator<<(ostream &o, const Cjson &p) {
+template <class SuccinctTree>
+ostream& operator<<(ostream &o, const Cjson<SuccinctTree> &p) {
     o<<"Tree "<<p.tree<<endl;
     o<<"Names "; for (int i = 0; i < p.names.size(); i++) o<<i<<":'"<<p.names[i]<<"'"; o<<endl;
     return o<<"Values "<<p.values<<endl;
 }
 
-#endif
 
+/* Explicit instantiation of needed template classes and methods */
+template class Cjson<BpTree>;
+
+template ostream& operator<< (ostream&, const Cjson<BpTree>&);
+
+
+#endif

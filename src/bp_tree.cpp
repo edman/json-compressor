@@ -1,8 +1,8 @@
 
-#ifndef __SUCCINCTTREE_CPP__
-#define __SUCCINCTTREE_CPP__
+#ifndef __BPTREE_CPP__
+#define __BPTREE_CPP__
 
-#include "succinct_tree.hpp"
+#include "bp_tree.hpp"
 #include "rapidjson/document.h"
 
 using namespace std;
@@ -11,7 +11,7 @@ using namespace sdsl;
 
 static int counter = 0;
 
-SuccinctTree::SuccinctTree(Value &document, int doc_size) {
+BpTree::BpTree(Value &document, int doc_size) {
     N = doc_size;
     bv = bit_vector(size(), 0);
 
@@ -19,14 +19,14 @@ SuccinctTree::SuccinctTree(Value &document, int doc_size) {
     documentDfs(document);
 }
 
-SuccinctTree::SuccinctTree(char *p, int size_in_bits) {
+BpTree::BpTree(char *p, int size_in_bits) {
     bv = bit_vector(size_in_bits, 0);
     for (int i = 0; i < size_in_bits; ++i)
         bv[i] = p[i / 8] & (1 << (7 - (i % 8)));
     N = (size_in_bits - 1) >> 1;
 }
 
-char* SuccinctTree::to_char_array() const {
+char* BpTree::to_char_array() const {
     char *p = new char[size_in_bytes()];
     for (int i = 0; i < size_in_bytes(); ++i)
         p[i] = 0;
@@ -35,15 +35,15 @@ char* SuccinctTree::to_char_array() const {
     return p;
 }
 
-int SuccinctTree::size_in_bytes() const {
+int BpTree::size_in_bytes() const {
     return (N + 1 + 3) / 4;
 }
 
-int SuccinctTree::size() const {
+int BpTree::size() const {
     return N ? (N + 1) * 2 : 0;
 }
 
-void SuccinctTree::documentDfs(Value &d) {
+void BpTree::documentDfs(Value &d) {
     bv[counter++] = 1;
 
     if (d.IsObject())
@@ -56,14 +56,14 @@ void SuccinctTree::documentDfs(Value &d) {
     counter++;
 }
 
-bool SuccinctTree::operator==(const SuccinctTree &rhs) const {
+bool BpTree::operator==(const BpTree &rhs) const {
     if (N != rhs.N) return false;
     for (int i = 0; i < size(); ++i) if (bv[i] != rhs.bv[i]) return false;
     return true;
 }
 
 
-ostream& operator<<(ostream &o, const SuccinctTree &t) {
+ostream& operator<<(ostream &o, const BpTree &t) {
     o<<"("<<t.N<<",";
     for (int i = 0; i < t.size(); ++i) o<<t.bv[i];
     return o<<")";

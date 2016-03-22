@@ -2,7 +2,6 @@
 #ifndef __CJSON_HPP__
 #define __CJSON_HPP__
 
-#include "succinct_tree.hpp"
 #include "jvalue.hpp"
 #include "bitmap_index.hpp"
 #include "rapidjson/document.h"
@@ -13,6 +12,7 @@
 using namespace std;
 using namespace rapidjson;
 
+template <class SuccinctTree>
 class Cjson {
 public:
     int size;

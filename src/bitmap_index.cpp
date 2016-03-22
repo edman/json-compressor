@@ -46,7 +46,7 @@ ostream& operator<<(ostream &o, const BitmapIndex<T> &b) {
 }
 
 
-/* Explicit instantiation of needed template classes */
+/* Explicit instantiation of needed template classes and methods */
 template class BitmapIndex<string>;
 template class BitmapIndex<Jvalue>;
 
