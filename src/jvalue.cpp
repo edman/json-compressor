@@ -1,4 +1,3 @@
-
 #ifndef __JVALUE_CPP__
 #define __JVALUE_CPP__
 
@@ -59,6 +58,11 @@ bool Jvalue::operator <(const Jvalue& rhs) const {
     // Equal type without value => equal
     return false;
 }
+
+
+/* Assignment of static values */
+Jvalue Jvalue::OBJECT = Jvalue(types(kObject));
+
 
 ostream& operator<<(ostream &o, const Jvalue &enc) {
     string t[] = {"Null", "False", "True", "Object", "Array", "String", "Int",

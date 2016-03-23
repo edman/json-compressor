@@ -56,6 +56,10 @@ public:
     bool operator!=(const Jvalue &rhs) const { return !(*this == rhs); }
     bool operator<(const Jvalue& rhs) const;
     friend ostream& operator<<(ostream &o, const Jvalue &enc);
+
+public:
+    /* Static helpers */
+    static Jvalue OBJECT;
 };
 
 
