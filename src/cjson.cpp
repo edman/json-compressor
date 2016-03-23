@@ -115,8 +115,10 @@ ostream& operator<<(ostream &o, const Cjson<SuccinctTree> &p) {
 
 /* Explicit instantiation of needed template classes and methods */
 template class Cjson<BpTree>;
+template class Cjson<DfTree>;
 
 template ostream& operator<< (ostream&, const Cjson<BpTree>&);
+template ostream& operator<< (ostream&, const Cjson<DfTree>&);
 
 
 #endif
