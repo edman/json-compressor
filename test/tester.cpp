@@ -72,20 +72,16 @@ TEST(DfTreeTest, DocumentDFS) {
     ASSERT_EQ(tree.N, 8);
     ASSERT_EQ(tree.size(), 18);
     int t[] = {1,1,1,0,1,1,0,1,1,1,1,0,0,0,0,0,0,0};
-    cout << "DfTree " << tree << endl;
     for (int i = 0; i < tree.size(); ++i)
         ASSERT_EQ(tree.bv[i], t[i]);
 }
 
 TEST(CjsonBpTreeTest, Tree) {
     Document d = wow(2);
-    cout << "here 1" << endl;
     Cjson<BpTree> p(d, true);
 
-    cout << "here 2" << endl;
     ASSERT_EQ(p.tree.N, 8);
     int t[] = {1,1,0,1,1,0,1,1,0,1,0,1,0,1,0,0,0,0};
-    cout << "here 3" << endl;
     for (int i = 0; i < 18; ++i)
         ASSERT_EQ(p.tree.bv[i], t[i]);
 }
@@ -110,16 +106,42 @@ TEST(CjsonBpTreeTest, Dblp) {
     // print_cjson(p);
 }
 
+TEST(CjsonDfTreeTest, NamesAndValues) {
+    Document d = wow(2);
+    Cjson<DfTree> p(d);
+
+    int n = 5;
+    ASSERT_EQ(n, p.names.size());
+
+    string names[] = {"foo", "st", "name", "grades", ""};
+    for (int i = 0; i < n; ++i)
+        ASSERT_EQ(names[i], p.names[i]);
+}
+
+TEST(CjsonDfTreeTest, Dblp) {
+    // DBLP json file found at http://projects.csail.mit.edu/dnd/DBLP/
+    Document d = wow(3);
+    Cjson<DfTree> p(d);
+
+    // print_cjson(p);
+}
+
 TEST(SerializationTest, get_size) {
     Document d = wow(2);
-    Cjson<BpTree> p(d);
+    Cjson<BpTree> pb(d);
 
-    ASSERT_EQ(3, get_size(p.tree));
-    // ASSERT_EQ(39, get_size(p.names));
-    ASSERT_EQ(57, get_size(p.values));
-    ASSERT_EQ(103, get_size(p));
+    ASSERT_EQ(3, get_size(pb.tree));
+    // ASSERT_EQ(39, get_size(pb.names));
+    ASSERT_EQ(57, get_size(pb.values));
+    ASSERT_EQ(103, get_size(pb));
+    // ASSERT_EQ(4, get_size(pb.names.bv));
 
-    // ASSERT_EQ(4, get_size(p.names.bv));
+    Cjson<DfTree> pd(d);
+
+    ASSERT_EQ(3, get_size(pd.tree));
+    // ASSERT_EQ(39, get_size(pd.names));
+    ASSERT_EQ(57, get_size(pd.values));
+    ASSERT_EQ(103, get_size(pd));
 }
 
 TEST(SerializationTest, BpTree) {
@@ -237,8 +259,13 @@ TEST(TraversalTest, Traversal) {
     Cjson<BpTree> p(d);
 
     Traversal<BpTree> t(p);
-    cout << "tree " << t.cjson.tree.bv << endl;
+    cout << "bptree " << t.cjson.tree << endl;
     traversalDfs(t);
+
+    // Cjson<DfTree> pd(d);
+    // Traversal<DfTree> td(p);
+    // cout << "dftree " << td.cjson.tree << endl;
+
     // cout << "root " << t << endl;
     // EXPECT_TRUE(t.hasChild());
     // EXPECT_TRUE(t.goToChild());
