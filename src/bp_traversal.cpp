@@ -1,7 +1,7 @@
-#ifndef __TRAVERSAL_CPP__
-#define __TRAVERSAL_CPP__
+#ifndef __BPTRAVERSAL_CPP__
+#define __BPTRAVERSAL_CPP__
 
-#include "traversal.hpp"
+#include "bp_traversal.hpp"
 #include "bp_tree.hpp"
 #include "jvalue.hpp"
 #include <iostream>
@@ -9,21 +9,18 @@
 using namespace std;
 
 
-template <>
-TraversalNode Traversal<BpTree>::getCurrentNode() {
+TraversalNode BpTraversal::getCurrentNode() {
   if (nodeIndex == 0) return TraversalNode("", Jvalue::OBJECT);
   return TraversalNode(cjson.names[cjson.nameList[nodeIndex - 1]],
       cjson.values[nodeIndex - 1]);
 }
 
-template <>
-bool Traversal<BpTree>::hasParent() {
+bool BpTraversal::hasParent() {
   // true unless tree index is 0
   return treeIndex > 0;
 }
 
-template <>
-bool Traversal<BpTree>::goToParent() {
+bool BpTraversal::goToParent() {
   // no parent to go to
   if (!hasParent()) return false;
   // tree index becomes the open parenthesis that encloses the current
@@ -34,9 +31,8 @@ bool Traversal<BpTree>::goToParent() {
   return true;
 }
 
-template <>
-int Traversal<BpTree>::degree() {
-  int index = treeIndex + 1
+int BpTraversal::degree() {
+  int index = treeIndex + 1;
   int count = 0;
 
   while (index < cjson.tree.size() && cjson.tree.bv[index + 1] == 1) {
@@ -47,14 +43,12 @@ int Traversal<BpTree>::degree() {
   return count;
 }
 
-template <>
-bool Traversal<BpTree>::hasChild() {
+bool BpTraversal::hasChild() {
   // true if next bit is an open parenthesis
   return treeIndex + 1 < cjson.tree.size() && cjson.tree.bv[treeIndex + 1] == 1;
 }
 
-template <>
-bool Traversal<BpTree>::goToChild() {
+bool BpTraversal::goToChild() {
   // no child to go to
   if (!hasChild()) return false;
   // increment tree index
@@ -65,15 +59,13 @@ bool Traversal<BpTree>::goToChild() {
   return true;
 }
 
-template <>
-bool Traversal<BpTree>::hasNextSibling() {
+bool BpTraversal::hasNextSibling() {
   // true if next bit after closing is an open parenthesis
   int closing = bp.find_close(treeIndex);
   return closing + 1 < cjson.tree.size() && cjson.tree.bv[closing + 1] == 1;
 }
 
-template <>
-bool Traversal<BpTree>::goToNextSibling() {
+bool BpTraversal::goToNextSibling() {
   // no sibling to go to, return false
   if (!hasNextSibling()) return false;
   // tree index becomes the open parenthesis after the current closes
@@ -84,5 +76,9 @@ bool Traversal<BpTree>::goToNextSibling() {
   return true;
 }
 
+
+ostream& operator<<(ostream &o, const BpTraversal &t) {
+  return o << "(" << t.nodeIndex << "," << t.treeIndex << ")";
+}
 
 #endif

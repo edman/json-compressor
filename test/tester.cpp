@@ -11,7 +11,7 @@
 #include "../src/bp_tree.hpp"
 #include "../src/df_tree.hpp"
 #include "../src/cjson.hpp"
-#include "../src/traversal.hpp"
+#include "../src/bp_traversal.hpp"
 #include "../src/serialize.hpp"
 
 using namespace std;
@@ -23,7 +23,7 @@ bool dot1 = false, dobt1 = false;
 
 long long tick(string msg="time", bool bt=false);
 Document wow2(int k = 1);
-template <class T> void traversalDfs(Traversal<T>& t);
+template <class T> void traversalDfs(T& t);
 
 char fn[100];
 
@@ -258,7 +258,7 @@ TEST(TraversalTest, Traversal) {
     Document d = wow(2);
     Cjson<BpTree> p(d);
 
-    Traversal<BpTree> t(p);
+    BpTraversal t(p);
     cout << "bptree " << t.cjson.tree << endl;
     traversalDfs(t);
 
@@ -274,7 +274,7 @@ TEST(TraversalTest, Traversal) {
     // EXPECT_TRUE(t.hasNextSibling());
 }
 
-template <class T> void traversalDfs(Traversal<T>& t) {
+template <class T> void traversalDfs(T& t) {
     cout << "dfs node " << t << " " << t.getCurrentNode() << " ";
     cout << t.hasChild() << " " << t.hasNextSibling() << " ";
     cout << t.bp.find_close(t.treeIndex) << " ";
