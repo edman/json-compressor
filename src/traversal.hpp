@@ -27,6 +27,7 @@ public:
     bool hasParent();
     bool goToParent();
     // bool backToParent();
+    int degree();
     bool hasChild();
     bool goToChild();
     bool hasNextSibling();

@@ -35,6 +35,19 @@ bool Traversal<BpTree>::goToParent() {
 }
 
 template <>
+int Traversal<BpTree>::degree() {
+  int index = treeIndex + 1
+  int count = 0;
+
+  while (index < cjson.tree.size() && cjson.tree.bv[index + 1] == 1) {
+    count++;
+    index = bp.find_close(index) + 1;
+  }
+
+  return count;
+}
+
+template <>
 bool Traversal<BpTree>::hasChild() {
   // true if next bit is an open parenthesis
   return treeIndex + 1 < cjson.tree.size() && cjson.tree.bv[treeIndex + 1] == 1;
