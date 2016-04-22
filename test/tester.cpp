@@ -12,6 +12,7 @@
 #include "../src/df_tree.hpp"
 #include "../src/cjson.hpp"
 #include "../src/bp_traversal.hpp"
+#include "../src/df_traversal.hpp"
 #include "../src/serialize.hpp"
 
 using namespace std;
@@ -262,6 +263,11 @@ TEST(TraversalTest, Traversal) {
     cout << "bptree " << t.cjson.tree << endl;
     traversalDfs(t);
 
+    Cjson<DfTree> pd(d);
+    DfTraversal td(pd);
+    cout << "dftree " << td.cjson.tree << endl;
+    traversalDfs(td);
+
     // Cjson<DfTree> pd(d);
     // Traversal<DfTree> td(p);
     // cout << "dftree " << td.cjson.tree << endl;
@@ -277,7 +283,7 @@ TEST(TraversalTest, Traversal) {
 template <class T> void traversalDfs(T& t) {
     cout << "dfs node " << t << " " << t.getCurrentNode() << " ";
     cout << t.hasChild() << " " << t.hasNextSibling() << " ";
-    cout << t.bp.find_close(t.treeIndex) << " ";
+    // cout << t.bp.find_close(t.treeIndex) << " ";
     cout << endl;
     if (t.hasChild()) {
         t.goToChild();
