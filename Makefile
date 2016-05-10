@@ -28,11 +28,16 @@ OBJECTS_NO_MAIN := $(patsubst $(BUILDDIR)/main.o,,$(OBJECTS))
 $(TARGET): $(OBJECTS)
 	@echo " Linking...";
 	$(CC) $^ -o $(TARGET) $(LIB) $(LFLAGS)
-	@echo " Running..."; $(TARGET)
+	# @echo " Running..."; $(TARGET) test/sample4.json
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+
+eval:
+	@echo " Evaluation.."
+	@make
+	@scripts/eval test/sample4.json
 
 clean:
 	@echo " Cleaning...";
