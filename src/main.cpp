@@ -4,53 +4,112 @@
 #include "rapidjson/filereadstream.h"
 #include "rapidjson/stringbuffer.h"
 #include "cjson.hpp"
+#include "bp_tree.hpp"
+#include "df_tree.hpp"
 #include "serialize.hpp"
 
+#include <thread>
+#include <chrono>
 #include <cstdio>
 
 using namespace std;
 using namespace rapidjson;
 using namespace sdsl;
 
+
+void allocate_large_mem() {
+    const int LARGE_MEM = 1000000;
+    void *p = malloc(LARGE_MEM);
+    this_thread::sleep_for(chrono::milliseconds(10));
+    free(p);
+}
+
 long filesize(const char *);
-void log_cjson_size(Cjson &, const char *, long);
+template <class T> void log_cjson_size(Cjson<T> &, const char *, long);
+
+bool check_arguments(int argc, char *argv[]) {
+    if (argc > 2 || argc == 1) {
+        cout << "Usage" << endl;
+        cout << "runner <file.json>" << endl;
+        return false;
+    }
+    return true;
+}
+
+Document rapidjson_document_from_file(char *filename) {
+	FILE *fp;
+	char buf[2 << 16];
+	// char *buf = new char[2 << 16];
+	fp = fopen(filename, "r");
+	FileReadStream is(fp, buf, sizeof(buf));
+    Document d;
+	d.ParseStream(is);
+    fclose(fp);
+
+    return d;
+}
+
+void rapidjson_usage_test(char *filename) {
+    allocate_large_mem();
+	Document d = rapidjson_document_from_file(filename);
+    allocate_large_mem();
+
+    // // 1. Parse a JSON string into DOM.
+    // const char* json = "{\"project\":\"rapidjson\",\"stars\":10}";
+    // Document d;
+    // d.Parse(json);
+    //
+    // // 2. Modify it by DOM.
+    // Value& s = d["stars"];
+    // s.SetInt(s.GetInt() + 2);
+    //
+    // // 3. Stringify the DOM
+    // StringBuffer buffer;
+    // Writer<StringBuffer> writer(buffer);
+    // d.Accept(writer);
+    //
+    // // Output {"project":"rapidjson","stars":12}
+    // cout << buffer.GetString() << endl;
+}
+
+Cjson<BpTree> cjson_from_file(char *filename) {
+    Document d = rapidjson_document_from_file(filename);
+	Cjson<BpTree> p(d, true);
+    return p;
+}
+
+template <class T>
+void cjson_save(Cjson<T> p, char *filename) {
+	char fn[128];
+	strcpy(fn, filename); strcat(fn, "_c");
+	save_to_file(p, fn);
+}
+
+template <class T>
+void cjson_log(Cjson<T> p, char *filename) {
+	char fn[128];
+	strcpy(fn, filename); strcat(fn, "_h");
+	long original_size = filesize(filename);
+	log_cjson_size(p, fn, original_size);
+}
+
+void cjson_usage_test(char *fnarg) {
+    allocate_large_mem();
+	Cjson<BpTree> p = cjson_from_file(fnarg);
+
+    allocate_large_mem();
+    cjson_save(p, fnarg);
+
+    allocate_large_mem();
+    cjson_log(p, fnarg);
+}
 
 int main(int argc, char *argv[]) {
-    // 1. Parse a JSON string into DOM.
-    const char* json = "{\"project\":\"rapidjson\",\"stars\":10}";
-    Document d;
-    d.Parse(json);
+    // Usage => "runner file.json"
+    if (!check_arguments(argc, argv)) { return 1; }
 
-    // 2. Modify it by DOM.
-    Value& s = d["stars"];
-    s.SetInt(s.GetInt() + 1);
-
-    // 3. Stringify the DOM
-    StringBuffer buffer;
-    Writer<StringBuffer> writer(buffer);
-    d.Accept(writer);
-
-    // Output {"project":"rapidjson","stars":11}
-    cout << buffer.GetString() << endl;
-
-
-	FILE *fp;
-	char *buf = new char[2 << 16];
-	char fn[128];
-	fp = fopen(argv[1], "r");
-	FileReadStream is(fp, buf, sizeof(buf));
-	d.ParseStream(is);
-	Cjson p(d, true);
-	fclose(fp);
-	strcpy(fn, argv[1]);
-	strcat(fn, "_c");
-	save_to_file(p, fn);
-	strcpy(fn, argv[1]);
-	strcat(fn, "_h");
-	long orig = filesize(argv[1]);
-	log_cjson_size(p, fn, orig);
-
-	delete[] buf;
+    if (!true) rapidjson_usage_test(argv[1]);
+    else cjson_usage_test(argv[1]);
 
     return 0;
 }
@@ -68,7 +127,9 @@ void write_formatted(ofstream &f, const string &msg, long &a, size_t &b) {
     f << msg << "\t\t(" << (int)((double)a/b*100) << "%)\t\t" << a << endl;
 }
 
-void log_cjson_size(Cjson &obj, const char *fn, long orig) {
+
+template <class T>
+void log_cjson_size(Cjson<T> &obj, const char *fn, long orig) {
     ofstream mfile(fn, ios::out);
     // original file size
     mfile << "original size (bytes): " << orig << endl;
@@ -106,3 +167,4 @@ void log_cjson_size(Cjson &obj, const char *fn, long orig) {
 
     mfile.close();
 }
+
