@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+exec='bin/runner'
+
+outdir='test/results/'
+outfile="$outdir/massif.out"
+csvfile="$outdir/massif.csv"
+vflags='--tool=massif'
+# mflags='--max-snapshots=120 --heap=yes --stacks=yes --time-unit=ms'
+mflags="--heap=yes --stacks=yes --time-unit=ms --massif-out-file=$outfile"
+
+echo "== Running evaluations"
+
+lo=4
+hi=9
+
+echo "== RapidJson"
+for i in `seq $lo $hi`; do
+    echo ".. sample $i"
+
+    # Run valgrind and generate massif output file
+    echo ". valgrind"
+    valgrind $vflags $mflags --massif-out-file=$outfile.$i $exec -r test/sample$i.json
+
+    # Convert the massif file to csv
+    echo ". massif to csv"
+    scripts/massif_to_csv $outfile.$i > $csvfile.$i
+
+    # Plot the csv file in a graph
+    echo ". plot csv"
+    scripts/csv_to_graph $csvfile.$i
+    mv temp-plot.html $outdir/$i.pointer.rapid.plot.html
+done
+
+echo "== CJson"
+for i in `seq $lo $hi`; do
+    echo ".. sample $i"
+
+    # Run valgrind and generate massif output file
+    echo ". valgrind"
+    valgrind $vflags $mflags --massif-out-file=$outfile.$i $exec -c test/sample$i.json
+
+    # Convert the massif file to csv
+    echo ". massif to csv"
+    scripts/massif_to_csv $outfile.$i > $csvfile.$i
+
+    # Plot the csv file in a graph
+    echo ". plot csv"
+    scripts/csv_to_graph $csvfile.$i
+    mv temp-plot.html $outdir/$i.pointer.cjson.plot.html
+done
+

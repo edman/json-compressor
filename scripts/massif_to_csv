@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+from sys import argv
+from msparser import parse_file
+
+data = parse_file(argv[1])
+# from pprint import pprint
+# pprint(data, depth=1)
+
+print("# valgrind --tool=massif", data['desc'], data['cmd'])
+print("id", "time", "heap", "extra", "total_heap", "stack", "total", sep=',')
+for snapshot in data['snapshots']:
+    id = snapshot['id']
+    time = snapshot['time']
+    heap = snapshot['mem_heap']
+    extra = snapshot['mem_heap_extra']
+    total_heap = heap + extra
+    stack = snapshot['mem_stack']
+    total = total_heap + stack
+    print(str(id), time, heap, extra, total_heap, stack, total, sep=',')
+
+
