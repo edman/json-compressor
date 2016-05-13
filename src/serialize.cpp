@@ -98,6 +98,17 @@ namespace detail {
         }
     };
 
+    template <>
+    struct get_size_helper<Jvalue*> {
+        static size_t value(Jvalue *const &obj) {
+            size_t s = sizeof(char);
+            if (obj->isString()) s += get_size(obj->getString());
+            else if (obj->isInt()) s += sizeof(int);
+            else if (obj->isDouble()) s += sizeof(double);
+            return s;
+        }
+    };
+
     template <class T>
     struct get_size_helper<vector<T>> {
         static size_t value(const vector<T> &obj) {
@@ -132,6 +143,7 @@ template size_t get_size<DfTree>(const DfTree&);
 template size_t get_size<BitmapIndex<string>>(const BitmapIndex<string>&);
 template size_t get_size<BitmapIndex<Jvalue>>(const BitmapIndex<Jvalue>&);
 template size_t get_size<Jvalue>(const Jvalue&);
+template size_t get_size<Jvalue*>(Jvalue *const &);
 template size_t get_size<vector<string>>(const vector<string>&);
 template size_t get_size<vector<char*>>(const vector<char*>&);
 template size_t get_size<vector<int>>(const vector<int>&);
@@ -237,12 +249,12 @@ namespace detail {
     };
 
     template <>
-    struct serialize_helper<Jvalue> {
-        static void apply(const Jvalue &obj, StreamType::iterator &res) {
-            serializer((char) obj.type, res);
-            if (obj.isString()) serializer(obj.getString(), res);
-            else if (obj.isInt()) serializer(obj.getInt(), res);
-            else if (obj.isDouble()) serializer(obj.getDouble(), res);
+    struct serialize_helper<Jvalue*> {
+        static void apply(Jvalue *const &obj, StreamType::iterator &res) {
+            serializer((char) obj->type, res);
+            if (obj->isString()) serializer(obj->getString(), res);
+            else if (obj->isInt()) serializer(obj->getInt(), res);
+            else if (obj->isDouble()) serializer(obj->getDouble(), res);
         }
     };
 
@@ -288,7 +300,7 @@ template void serialize<BpTree>(const BpTree&, StreamType&);
 template void serialize<DfTree>(const DfTree&, StreamType&);
 template void serialize<BitmapIndex<string>>(const BitmapIndex<string>&, StreamType&);
 template void serialize<BitmapIndex<Jvalue>>(const BitmapIndex<Jvalue>&, StreamType&);
-template void serialize<Jvalue>(const Jvalue&, StreamType&);
+template void serialize<Jvalue*>(Jvalue *const &, StreamType&);
 template void serialize<vector<string>>(const vector<string>&, StreamType&);
 template void serialize<vector<char*>>(const vector<char*>&, StreamType&);
 template void serialize<vector<int>>(const vector<int>&, StreamType&);
@@ -396,18 +408,18 @@ namespace detail {
             bit_vector bv = deserialize_helper<bit_vector>::apply(bv_size_in_bits, bv_size_in_bytes, begin, end);
 
             // deserialize values vector
-            vector<T> values; values.reserve(values_size);
+            vector<T*> values; values.reserve(values_size);
             for (int i = 0; i < values_size; ++i)
                 // deserialize a single value
-                values.push_back(deserialize_helper<T>::apply(begin, end));
+                values.push_back(deserialize_helper<T*>::apply(begin, end));
 
             return BitmapIndex<T>(byte_size, bv, values);
         }
     };
 
     template <>
-    struct deserialize_helper<Jvalue> {
-        static Jvalue apply(StreamType::const_iterator& begin,
+    struct deserialize_helper<Jvalue*> {
+        static Jvalue* apply(StreamType::const_iterator& begin,
                 StreamType::const_iterator end) {
             types type = static_cast<types>(deserialize_helper<char>::apply(begin, end));
 
@@ -486,7 +498,7 @@ template BpTree deserialize(int, StreamType::const_iterator&, const StreamType::
 template DfTree deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template BitmapIndex<string> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template BitmapIndex<Jvalue> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
-template Jvalue deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
+template Jvalue* deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
 template vector<char*> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template vector<string> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template vector<int> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);

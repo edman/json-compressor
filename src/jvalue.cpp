@@ -10,17 +10,17 @@
 using namespace std;
 using namespace rapidjson;
 
-Jvalue Jvalue::factory(types t) {
-    if (t == types::kNull) return Jvalue::NULL_VAL;
-    else if (t == types::kFalse) return Jvalue::FALSE_VAL;
-    else if (t == types::kTrue) return Jvalue::TRUE_VAL;
-    else if (t == types::kObject) return Jvalue::OBJECT_VAL;
+Jvalue* Jvalue::factory(types t) {
+    if (t == types::kNull) return &Jvalue::NULL_VAL;
+    else if (t == types::kFalse) return &Jvalue::FALSE_VAL;
+    else if (t == types::kTrue) return &Jvalue::TRUE_VAL;
+    else if (t == types::kObject) return &Jvalue::OBJECT_VAL;
     // else if (t == types::kArray)
-    return Jvalue::ARRAY_VAL;
+    return &Jvalue::ARRAY_VAL;
 }
-Jvalue Jvalue::factory(string v) { return Jvalue(v); }
-Jvalue Jvalue::factory(int v) { return Jvalue(v); }
-Jvalue Jvalue::factory(double v) { return Jvalue(v); }
+Jvalue* Jvalue::factory(string v) { return new Jvalue(v); }
+Jvalue* Jvalue::factory(int v) { return new Jvalue(v); }
+Jvalue* Jvalue::factory(double v) { return new Jvalue(v); }
 
 Jvalue::Jvalue(const Jvalue &r) : type(r.type)
     , val(r.isString() ? (void *) string_to_cstr(r.getString())
@@ -28,23 +28,23 @@ Jvalue::Jvalue(const Jvalue &r) : type(r.type)
         : r.isDouble() ? (void *) new double(r.getDouble())
         : nullptr) {}
 
-Jvalue Jvalue::factory(Value &d) {
+Jvalue* Jvalue::factory(Value &d) {
     if (d.IsString())
-        return Jvalue(d.GetString());
+        return new Jvalue(d.GetString());
     else if (d.IsInt())
-        return Jvalue(d.GetInt());
+        return new Jvalue(d.GetInt());
     else if (d.IsDouble())
-        return Jvalue(d.GetDouble());
+        return new Jvalue(d.GetDouble());
     else if (d.IsNull())
-        return Jvalue::NULL_VAL;
+        return &Jvalue::NULL_VAL;
     else if (d.IsFalse())
-        return Jvalue::FALSE_VAL;
+        return &Jvalue::FALSE_VAL;
     else if (d.IsTrue())
-        return Jvalue::TRUE_VAL;
+        return &Jvalue::TRUE_VAL;
     else if (d.IsObject())
-        return Jvalue::OBJECT_VAL;
+        return &Jvalue::OBJECT_VAL;
     // else if (d.IsArray())
-    return Jvalue::ARRAY_VAL;
+    return &Jvalue::ARRAY_VAL;
 }
 
 Jvalue::~Jvalue() {

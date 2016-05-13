@@ -28,11 +28,13 @@ public:
     /* Destructor */
     ~Jvalue();
     /* Static factory methods */
-    static Jvalue factory(Value&);
-    static Jvalue factory(types t);
-    static Jvalue factory(string v);
-    static Jvalue factory(int v);
-    static Jvalue factory(double v);
+    static Jvalue* factory(Value&);
+    static Jvalue* factory(types t);
+    static Jvalue* factory(string v);
+    static Jvalue* factory(int v);
+    static Jvalue* factory(double v);
+    /* Destructor */
+    ~Jvalue();
 
     /* Methods */
     bool isNull() const { return type == types::kNull; }

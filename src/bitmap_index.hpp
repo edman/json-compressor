@@ -13,19 +13,24 @@ class BitmapIndex {
 public:
     int byte_size = 0;
     bit_vector bv;
-    vector<T> values;
+    vector<T*> values;
 
 public:
-    BitmapIndex() {}  // default constructor
-    BitmapIndex(int bs, bit_vector b, vector<T> &v): byte_size(bs), bv(b), values(v) { values.shrink_to_fit(); }
-    void insert(T elem);
+    /* Constructors and destructor */
+    BitmapIndex() {}
+    BitmapIndex(int bs, bit_vector b, vector<T*> &v) : byte_size(bs)
+            , bv(b), values(v) { values.shrink_to_fit(); }
+
+    /* Methods */
+    void insert(T* elem);
     void loadBitvector();
 
     size_t size() const { return values.size(); }
 
+    /* Operators */
     bool operator==(const BitmapIndex &rhs) const;
-    T operator [](int i) const { return values[i]; }
-    T & operator [](int i) { return values[i]; }
+    T operator [](int i) const { return *values[i]; }
+    T & operator [](int i) { return *values[i]; }
 
 };
 

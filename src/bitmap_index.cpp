@@ -10,9 +10,9 @@ using namespace std;
 using namespace sdsl;
 
 template <class T>
-void BitmapIndex<T>::insert(T elem) {
+void BitmapIndex<T>::insert(T* elem) {
     values.push_back(elem);
-    byte_size += get_size(elem);
+    byte_size += get_size(*elem);
 }
 
 template <class T>
@@ -25,7 +25,7 @@ void BitmapIndex<T>::loadBitvector() {
 
     int c = 0, n = values.size();
     for (int i = 0; i < n - 1; i++) {
-        c += get_size(values[i]);
+        c += get_size(*values[i]);
         bv[c] = 1;
     }
 }
@@ -33,7 +33,7 @@ void BitmapIndex<T>::loadBitvector() {
 template <class T>
 bool BitmapIndex<T>::operator==(const BitmapIndex<T> &rhs) const {
     if (size() != rhs.size()) return false;
-    for (int i = 0; i < size(); ++i) if (values[i] != rhs.values[i])
+    for (int i = 0; i < size(); ++i) if (*values[i] != *rhs.values[i])
         return false;
     return bv == rhs.bv;
 }
@@ -43,7 +43,7 @@ ostream& operator<<(ostream &o, const BitmapIndex<T> &b) {
     o<<"("<<b.byte_size<<",";
     o<<b.bv<<",";
     o<<"{";
-    for (auto it : b.values) o<<"'"<<it<<"',";
+    for (auto it : b.values) o<<"'"<<*it<<"',";
     o<<"}";
     return o<<endl;
 }
