@@ -17,7 +17,7 @@ public:
 
 public:
     BitmapIndex() {}  // default constructor
-    BitmapIndex(int bs, bit_vector b, vector<T> v): byte_size(bs), bv(b) { values.assign(v.begin(), v.end()); }
+    BitmapIndex(int bs, bit_vector b, vector<T> &v): byte_size(bs), bv(b), values(v) { values.shrink_to_fit(); }
     void insert(T elem);
     void loadBitvector();
 

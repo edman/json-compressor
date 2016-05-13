@@ -25,8 +25,11 @@ Cjson<SuccinctTree>::Cjson(Value &d, bool debug) {
 
     size = values.size();
     if (debug) cout << ".. load info" << endl;
+    if (debug) cout << "names size " << names.size() << " values size " << values.size() << endl;
 
-    if (debug) cout << "array size " << names.size() << " " << values.size() << endl;
+    // Reduce excess vector capacity
+    names.shrink_to_fit();
+    nameList.shrink_to_fit();
 
     // Construct a tree from the JSON sctructure
     tree = SuccinctTree(d, size);
@@ -64,24 +67,24 @@ int Cjson<SuccinctTree>::resolveNameId(const string &name, unordered_map<string,
     return it->second;
 }
 
-int resolveName(const string &name, map<string, int> &nameMap, int &nn) {
-    auto nameit = nameMap.find(name);
-    if (nameit == nameMap.end()) {
-        nameMap[name] = nn++;
-        return nn - 1;
-    }
-    return nameit->second;
-}
+// int resolveName(const string &name, map<string, int> &nameMap, int &nn) {
+//     auto nameit = nameMap.find(name);
+//     if (nameit == nameMap.end()) {
+//         nameMap[name] = nn++;
+//         return nn - 1;
+//     }
+//     return nameit->second;
+// }
 
-int resolveValue(Value &d, map<Jvalue, int> &valueMap, int &vn) {
-    Jvalue value(d);
-    auto valueit = valueMap.find(value);
-    if (valueit == valueMap.end()) {
-        valueMap[value] = vn++;
-        return vn - 1;
-    }
-    return valueit->second;
-}
+// int resolveValue(Value &d, map<Jvalue, int> &valueMap, int &vn) {
+//     Jvalue value = Jvalue::factory(d);
+//     auto valueit = valueMap.find(value);
+//     if (valueit == valueMap.end()) {
+//         valueMap[value] = vn++;
+//         return vn - 1;
+//     }
+//     return valueit->second;
+// }
 
 int type_of(Value &d) {
     if (d.GetType() != 6) return d.GetType();

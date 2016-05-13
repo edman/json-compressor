@@ -17,6 +17,9 @@ void BitmapIndex<T>::insert(T elem) {
 
 template <class T>
 void BitmapIndex<T>::loadBitvector() {
+    // Reduce excess vector capacity
+    values.shrink_to_fit();
+
     // Initialize a bit vector of size byte_size with zeroes
     bv = bit_vector(byte_size, 0);
 
