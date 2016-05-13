@@ -4,6 +4,7 @@
 #include "rapidjson/filereadstream.h"
 #include "rapidjson/stringbuffer.h"
 #include "cjson.hpp"
+#include "jvalue.hpp"
 #include "bp_tree.hpp"
 #include "df_tree.hpp"
 #include "serialize.hpp"
@@ -16,43 +17,47 @@ using namespace std;
 using namespace rapidjson;
 using namespace sdsl;
 
+int fib(int n) { if (n <= 1) return n; return fib(n - 1) + fib(n - 2); }
 
-void allocate_large_mem() {
-    const int LARGE_MEM = 1000000;
-    void *p = malloc(LARGE_MEM);
-    this_thread::sleep_for(chrono::milliseconds(10));
-    free(p);
+void bebusy() {
+    fib(25);
+    // const int LARGE_MEM = 1000000;
+    // void *p = malloc(LARGE_MEM);
+    // this_thread::sleep_for(chrono::milliseconds(50));
+    // free(p);
 }
 
 long filesize(const char *);
 template <class T> void log_cjson_size(Cjson<T> &, const char *, long);
 
 bool check_arguments(int argc, char *argv[]) {
-    if (argc > 2 || argc == 1) {
+    if (argc > 3 || argc == 1) {
         cout << "Usage" << endl;
-        cout << "runner <file.json>" << endl;
+        cout << "runner [-rc] <file.json>" << endl;
         return false;
     }
     return true;
 }
 
-Document rapidjson_document_from_file(char *filename) {
+Document* rapidjson_document_from_file(char *filename) {
 	FILE *fp;
 	char buf[2 << 16];
 	// char *buf = new char[2 << 16];
 	fp = fopen(filename, "r");
 	FileReadStream is(fp, buf, sizeof(buf));
-    Document d;
-	d.ParseStream(is);
+    Document *d = new Document();
+	d->ParseStream(is);
     fclose(fp);
 
     return d;
 }
 
 void rapidjson_usage_test(char *filename) {
-    allocate_large_mem();
-	Document d = rapidjson_document_from_file(filename);
-    allocate_large_mem();
+    bebusy();
+	Document *d = rapidjson_document_from_file(filename);
+    cout << d << endl;
+    bebusy();
+    // delete d;
 
     // // 1. Parse a JSON string into DOM.
     // const char* json = "{\"project\":\"rapidjson\",\"stars\":10}";
@@ -72,21 +77,22 @@ void rapidjson_usage_test(char *filename) {
     // cout << buffer.GetString() << endl;
 }
 
-Cjson<BpTree> cjson_from_file(char *filename) {
-    Document d = rapidjson_document_from_file(filename);
-	Cjson<BpTree> p(d, true);
+Cjson<BpTree>* cjson_bp_from_file(char *filename) {
+    Document *d = rapidjson_document_from_file(filename);
+	Cjson<BpTree> *p = new Cjson<BpTree>(*d, true);
+    delete d;
     return p;
 }
 
 template <class T>
-void cjson_save(Cjson<T> p, char *filename) {
+void cjson_save(Cjson<T> &p, char *filename) {
 	char fn[128];
 	strcpy(fn, filename); strcat(fn, "_c");
 	save_to_file(p, fn);
 }
 
 template <class T>
-void cjson_log(Cjson<T> p, char *filename) {
+void cjson_log(Cjson<T> &p, char *filename) {
 	char fn[128];
 	strcpy(fn, filename); strcat(fn, "_h");
 	long original_size = filesize(filename);
@@ -94,23 +100,43 @@ void cjson_log(Cjson<T> p, char *filename) {
 }
 
 void cjson_usage_test(char *fnarg) {
-    allocate_large_mem();
-	Cjson<BpTree> p = cjson_from_file(fnarg);
+    bebusy();
+	Cjson<BpTree> *p = cjson_bp_from_file(fnarg);
+    cout << p->values.size() << endl;
+    // for (int i = 0; i < p->values.size(); ++i)
+    //     cout << p->values[i] << endl;
+    bebusy();
 
-    allocate_large_mem();
-    cjson_save(p, fnarg);
+    // cout << "names SIZE " << get_size(p->names) << " " << p->names.size() << endl;
+    // cout << "namelist SIZE " << get_size(p->nameList) << " " << p->nameList.size() << endl;
+    // cout << "values SIZE " << get_size(p->values) << " " << p->values.values.size() << endl;
+    // p->names.clear();
+    // p->nameList.clear();// p->nameList.shrink_to_fit();
+    // cout << "namelist SIZE " << get_size(p->nameList) << " " << p->nameList.capacity() << endl;
+    // p->values.values.clear(); p->values.values.shrink_to_fit();
+    // cout << "values " << get_size(p->values) << " " << p->values.values.capacity() << endl;
 
-    allocate_large_mem();
-    cjson_log(p, fnarg);
+    // delete p;
+
+    // cjson_save(*p, fnarg);
+    //
+    // bebusy();
+    // cjson_log(*p, fnarg);
 }
 
 int main(int argc, char *argv[]) {
     // Usage => "runner file.json"
     if (!check_arguments(argc, argv)) { return 1; }
 
-    if (!true) rapidjson_usage_test(argv[1]);
-    else cjson_usage_test(argv[1]);
+    if (strcmp(argv[1], "-r") == 0) rapidjson_usage_test(argv[2]);
+    else cjson_usage_test(argv[2]);
 
+    bebusy();
+
+    // Right now we have 3 bebusy calls
+    // 1 -> right before json processing begins
+    // 2 -> right after json structure is processed and in memory
+    // 3 -> right before program execution ends
     return 0;
 }
 
