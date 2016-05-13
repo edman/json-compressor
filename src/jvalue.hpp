@@ -16,26 +16,23 @@ enum types { kNull, kFalse, kTrue, kObject, kArray, kString, kInt, kDouble };
 
 class Jvalue {
 public:
-    types type;
+    const types type;
     // { "String", "Int", "Double" };
-    string vstring;
-    int vint;
-    double vdouble;
+    const void *const val;
 
 public:
-    /* Constructors */
-    Jvalue() {}
-    Jvalue(types t): type(t) { assert(!hasValue()); }
-    Jvalue(types t, string v): type(t), vstring(v) {}
-    Jvalue(types t, int v): type(t), vint(v) {}
-    Jvalue(types t, double v): type(t), vdouble(v) {}
-    Jvalue(Value&);
+    /* Explicit copy constructor */
+    Jvalue(const Jvalue &j);
+    /* Static factory methods */
+    static Jvalue factory(Value&);
+    static Jvalue factory(types t);
+    static Jvalue factory(string v);
+    static Jvalue factory(int v);
+    static Jvalue factory(double v);
+    /* Destructor */
+    ~Jvalue();
 
-    /* Initialization functions */
-    void init(types t) { type = t; assert(!hasValue()); }
-    void init(types t, string v) { type = t; vstring = v; }
-    void init(types t, int v) { type = t; vint = v; }
-    void init(types t, double v) { type = t; vdouble = v; }
+    // Jvalue(Value&);
 
     /* Methods */
     bool isNull() const { return type == kNull; }
@@ -49,9 +46,12 @@ public:
     bool isString() const { return type == kString; }
     bool isInt() const { return type == kInt; }
     bool isDouble() const { return type == kDouble; }
+    string getString() const { return *((string*) val); }
+    int getInt() const { return *((int*) val); }
+    double getDouble() const { return *((double*) val); }
 
     /* Operators */
-    Jvalue operator=(const Jvalue &enc);
+    // Jvalue operator=(const Jvalue &enc);
     bool operator==(const Jvalue &enc) const;
     bool operator!=(const Jvalue &rhs) const { return !(*this == rhs); }
     bool operator<(const Jvalue& rhs) const;
@@ -59,7 +59,22 @@ public:
 
 public:
     /* Static helpers */
-    static Jvalue OBJECT;
+    static Jvalue NULL_VAL;
+    static Jvalue FALSE_VAL;
+    static Jvalue TRUE_VAL;
+    static Jvalue OBJECT_VAL;
+    static Jvalue ARRAY_VAL;
+
+private:
+    /* Constructors */
+    Jvalue(types t) : type(t)
+        , val(nullptr) { assert(!hasValue()); }
+    Jvalue(string v) : type(kString)
+        , val((void*) new string(v)) {}
+    Jvalue(int v) : type(kInt)
+        , val((void*) new int(v)) {}
+    Jvalue(double v) : type(kDouble)
+        , val((void*) new double(v)) {}
 };
 
 
@@ -70,11 +85,11 @@ namespace std {
             if (!enc.hasValue())
                 return h1;
             if (enc.isString())
-                h2 = hash<string>()(enc.vstring);
+                h2 = hash<string>()(enc.getString());
             if (enc.isInt())
-                h2 = hash<int>()(enc.vint);
+                h2 = hash<int>()(enc.getInt());
             if (enc.isDouble())
-                h2 = hash<double>()(enc.vdouble);
+                h2 = hash<double>()(enc.getDouble());
             return h1 ^ (h2 << 1);
         }
     };

@@ -41,7 +41,7 @@ void Cjson<SuccinctTree>::loadInfo(Value &d, unordered_map<string, int> &nameTab
         for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
             int nameId = resolveNameId(it->name.GetString(), nameTable);
             nameList.push_back(nameId);
-            values.insert(Jvalue(it->value));
+            values.insert(Jvalue::factory(it->value));
 
             loadInfo(it->value, nameTable);
         }
@@ -49,7 +49,7 @@ void Cjson<SuccinctTree>::loadInfo(Value &d, unordered_map<string, int> &nameTab
     else if (d.IsArray())
         for (auto it = d.Begin(); it != d.End(); ++it) {
             nameList.push_back(resolveNameId("", nameTable));
-            values.insert(Jvalue(*it));
+            values.insert(Jvalue::factory(*it));
 
             loadInfo(*it, nameTable);
         }

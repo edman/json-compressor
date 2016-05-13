@@ -13,9 +13,9 @@ ostream& operator<<(ostream &o, const TraversalNode &n) {
     else if (n.value.isNull()) o<<"null";
     else if (n.value.isTrue()) o<<"True";
     else if (n.value.isFalse()) o<<"False";
-    else if (n.value.isString()) o<<"\""<<n.value.vstring<<"\"";
-    else if (n.value.isInt()) o<<n.value.vint;
-    else if (n.value.isDouble()) o<<n.value.vdouble;
+    else if (n.value.isString()) o<<"\""<<n.value.getString()<<"\"";
+    else if (n.value.isInt()) o<<n.value.getInt();
+    else if (n.value.isDouble()) o<<n.value.getDouble();
     return o;
 }
 

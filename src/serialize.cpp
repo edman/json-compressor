@@ -83,7 +83,7 @@ namespace detail {
     struct get_size_helper<Jvalue> {
         static size_t value(const Jvalue &obj) {
             size_t s = sizeof(char);
-            if (obj.isString()) s += get_size(obj.vstring);
+            if (obj.isString()) s += get_size(obj.getString());
             else if (obj.isInt()) s += sizeof(int);
             else if (obj.isDouble()) s += sizeof(double);
             return s;
@@ -220,9 +220,9 @@ namespace detail {
     struct serialize_helper<Jvalue> {
         static void apply(const Jvalue &obj, StreamType::iterator &res) {
             serializer((char) obj.type, res);
-            if (obj.isString()) serializer(obj.vstring, res);
-            else if (obj.isInt()) serializer(obj.vint, res);
-            else if (obj.isDouble()) serializer(obj.vdouble, res);
+            if (obj.isString()) serializer(obj.getString(), res);
+            else if (obj.isInt()) serializer(obj.getInt(), res);
+            else if (obj.isDouble()) serializer(obj.getDouble(), res);
         }
     };
 
@@ -380,10 +380,13 @@ namespace detail {
                 StreamType::const_iterator end) {
             types type = static_cast<types>(deserialize_helper<char>::apply(begin, end));
 
-            if (type == kString) return Jvalue(type, deserialize_helper<string>::apply(begin, end));
-            else if (type == kInt) return Jvalue(type, deserialize_helper<int>::apply(begin, end));
-            else if (type == kDouble) return Jvalue(type, deserialize_helper<double>::apply(begin, end));
-            return Jvalue(type);
+            if (type == kString)
+                return Jvalue::factory(deserialize_helper<string>::apply(begin, end));
+            else if (type == kInt)
+                return Jvalue::factory(deserialize_helper<int>::apply(begin, end));
+            else if (type == kDouble)
+                return Jvalue::factory(deserialize_helper<double>::apply(begin, end));
+            return Jvalue::factory(type);
         }
     };
 
