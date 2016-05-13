@@ -16,7 +16,8 @@ SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 # CFLAGS := -g -Wall -std=c++11 -O3
-CFLAGS := -g -Wall -std=c++11
+# the flag -O0 disables all (or most) optimizations
+CFLAGS := -g -Wall -std=c++11 -O0
 LFLAGS := -lsdsl -ldivsufsort -ldivsufsort64
 # LIB := -pthread -L lib -lboost_thread-mt -lboost_filesystem-mt -lboost_system-mt
 LIB := -L $(LIBDIR) -L /usr/local/lib
@@ -37,7 +38,7 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 eval:
 	@echo " Evaluation.."
 	@make
-	@scripts/eval test/sample4.json
+	@scripts/eval
 
 clean:
 	@echo " Cleaning...";
