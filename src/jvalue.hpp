@@ -33,8 +33,6 @@ public:
     static Jvalue* factory(string v);
     static Jvalue* factory(int v);
     static Jvalue* factory(double v);
-    /* Destructor */
-    ~Jvalue();
 
     /* Methods */
     bool isNull() const { return type == types::kNull; }

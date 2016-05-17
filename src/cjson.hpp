@@ -25,6 +25,7 @@ public:
     /* Constructors and destructor */
     Cjson(Value &d, bool debug=false);
     Cjson(int s, SuccinctTree st, vector<char*> nm, vector<int> nl, BitmapIndex<Jvalue> vl): size(s), tree(st), names(nm), nameList(nl), values(vl) {}
+    ~Cjson();
 
     /* Methods */
     void loadInfo(Value &d, unordered_map<string, int> &nt);
