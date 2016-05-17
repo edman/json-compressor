@@ -15,6 +15,19 @@ using namespace std;
 using namespace rapidjson;
 
 template <class SuccinctTree>
+void Cjson<SuccinctTree>::removeValues() {
+    for (auto jvalue : values.values) if (jvalue->hasValue())
+        delete jvalue;
+    values.values.clear();
+}
+
+template <class SuccinctTree>
+Cjson<SuccinctTree>::~Cjson() {
+    for (auto jvalue : values.values) if (jvalue->hasValue())
+        delete jvalue;
+}
+
+template <class SuccinctTree>
 Cjson<SuccinctTree>::Cjson(Value &d, bool debug) {
     if (debug) cout << ".. start new cjson" << endl;
 
@@ -30,11 +43,13 @@ Cjson<SuccinctTree>::Cjson(Value &d, bool debug) {
     // Reduce excess vector capacity
     names.shrink_to_fit();
     nameList.shrink_to_fit();
+    assert(nameList.size() == values.size());
 
     // Construct a tree from the JSON sctructure
     tree = SuccinctTree(d, size);
     if (debug) cout << ".. construct tree" << endl;
 }
+
 template <class SuccinctTree>
 void Cjson<SuccinctTree>::loadInfo(Value &d, unordered_map<string, int> &nameTable) {
     if (d.IsObject()) {

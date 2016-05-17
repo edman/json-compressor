@@ -8,7 +8,6 @@
 #include <iostream>
 
 using namespace std;
-
 using namespace rapidjson;
 
 Jvalue Jvalue::factory(types t) {

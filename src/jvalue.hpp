@@ -42,10 +42,11 @@ public:
     bool isObject() const { return type == kObject; }
     bool isArray() const { return type == kArray; }
 
-    bool hasValue() const { return type >= kString && type <= kDouble; }
     bool isString() const { return type == kString; }
     bool isInt() const { return type == kInt; }
     bool isDouble() const { return type == kDouble; }
+    bool hasValue() const { return type >= kString && type <= kDouble; }
+
     string getString() const { return *((string*) val); }
     int getInt() const { return *((int*) val); }
     double getDouble() const { return *((double*) val); }
