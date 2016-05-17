@@ -11,8 +11,8 @@ mflags="--heap=yes --stacks=yes --time-unit=ms --massif-out-file=$outfile"
 
 echo "== Running evaluations"
 
-lo=4
-hi=9
+lo=1
+hi=1
 
 echo "== RapidJson"
 for i in `seq $lo $hi`; do
@@ -29,10 +29,13 @@ for i in `seq $lo $hi`; do
     # Plot the csv file in a graph
     echo ". plot csv"
     scripts/csv_to_graph $csvfile.$i
-    mv temp-plot.html $outdir/$i.pointer.rapid.plot.html
+    mv temp-plot.html $outdir/$i.rapid.html
 done
 
 echo "== CJson"
+git checkout templating
+make clean
+make
 for i in `seq $lo $hi`; do
     echo ".. sample $i"
 
@@ -47,6 +50,27 @@ for i in `seq $lo $hi`; do
     # Plot the csv file in a graph
     echo ". plot csv"
     scripts/csv_to_graph $csvfile.$i
-    mv temp-plot.html $outdir/$i.pointer.cjson.plot.html
+    mv temp-plot.html $outdir/$i.cjson.html
+done
+
+echo "== CJson bitmap pointer"
+git checkout bitmappointer
+make clean
+make
+for i in `seq $lo $hi`; do
+    echo ".. sample $i"
+
+    # Run valgrind and generate massif output file
+    echo ". valgrind"
+    valgrind $vflags $mflags --massif-out-file=$outfile.$i $exec -c test/sample$i.json
+
+    # Convert the massif file to csv
+    echo ". massif to csv"
+    scripts/massif_to_csv $outfile.$i > $csvfile.$i
+
+    # Plot the csv file in a graph
+    echo ". plot csv"
+    scripts/csv_to_graph $csvfile.$i
+    mv temp-plot.html $outdir/$i.pointer.cjson.html
 done
 
