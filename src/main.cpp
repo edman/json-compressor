@@ -55,7 +55,7 @@ Document* rapidjson_document_from_file(char *filename) {
 void rapidjson_usage_test(char *filename) {
     bebusy();
 	Document *d = rapidjson_document_from_file(filename);
-    cout << d << endl;
+    // cout << d << endl;
     bebusy();
     // delete d;
 
@@ -102,10 +102,20 @@ void cjson_log(Cjson<T> &p, char *filename) {
 void cjson_usage_test(char *fnarg) {
     bebusy();
 	Cjson<BpTree> *p = cjson_bp_from_file(fnarg);
-    cout << p->values.size() << endl;
+    cout << "values size " << p->values.size() << endl;
+    cout << "NAMES" << endl;
+    for (auto v : p->names) { cout << v << endl; }
+    cout << "END NAMES" << endl;
+    cout << "VALUES" << endl;
+    for (int i = 0; i < p->values.size(); ++i) { cout << &p->values[i] << " " << p->values[i] << endl; }
+    cout << "END VALUES" << endl;
+    // p->removeValues();
+    // cout << "values size after " << p->values.size() << endl;
     // for (int i = 0; i < p->values.size(); ++i)
     //     cout << p->values[i] << endl;
     bebusy();
+
+    // delete p;
 
     // cout << "names SIZE " << get_size(p->names) << " " << p->names.size() << endl;
     // cout << "namelist SIZE " << get_size(p->nameList) << " " << p->nameList.size() << endl;
@@ -115,8 +125,6 @@ void cjson_usage_test(char *fnarg) {
     // cout << "namelist SIZE " << get_size(p->nameList) << " " << p->nameList.capacity() << endl;
     // p->values.values.clear(); p->values.values.shrink_to_fit();
     // cout << "values " << get_size(p->values) << " " << p->values.values.capacity() << endl;
-
-    // delete p;
 
     // cjson_save(*p, fnarg);
     //
