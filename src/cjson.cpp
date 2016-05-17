@@ -16,15 +16,7 @@ using namespace rapidjson;
 
 template <class SuccinctTree>
 void Cjson<SuccinctTree>::removeValues() {
-    for (auto jvalue : values.values) if (jvalue->hasValue())
-        delete jvalue;
     values.values.clear();
-}
-
-template <class SuccinctTree>
-Cjson<SuccinctTree>::~Cjson() {
-    for (auto jvalue : values.values) if (jvalue->hasValue())
-        delete jvalue;
 }
 
 template <class SuccinctTree>
