@@ -16,7 +16,8 @@ for snapshot in data['snapshots']:
     extra = snapshot['mem_heap_extra']
     total_heap = heap + extra
     stack = snapshot['mem_stack']
-    total = total_heap + stack
+    # total = total_heap + stack
+    total = heap + stack
     print(str(id), time, heap, extra, total_heap, stack, total, sep=',')
 
 
