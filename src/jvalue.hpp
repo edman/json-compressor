@@ -4,6 +4,7 @@
 
 #include "rapidjson/document.h"
 
+#include <cstring>
 #include <iostream>
 #include <unordered_set>
 #include <string>
@@ -47,7 +48,7 @@ public:
     bool isDouble() const { return type == kDouble; }
     bool hasValue() const { return type >= kString && type <= kDouble; }
 
-    string getString() const { return *((string*) val); }
+    string getString() const { return string((char*) val); }
     int getInt() const { return *((int*) val); }
     double getDouble() const { return *((double*) val); }
 
@@ -68,10 +69,8 @@ public:
 
 private:
     /* Constructors */
-    Jvalue(types t) : type(t)
-        , val(nullptr) { assert(!hasValue()); }
     Jvalue(string v) : type(kString)
-        , val((void*) new string(v)) {}
+        , val((void*) new char[v.size() + 1]) { strcpy((char*) val, v.c_str()); }
     Jvalue(int v) : type(kInt)
         , val((void*) new int(v)) {}
     Jvalue(double v) : type(kDouble)
