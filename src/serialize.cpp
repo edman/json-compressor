@@ -380,11 +380,11 @@ namespace detail {
                 StreamType::const_iterator end) {
             types type = static_cast<types>(deserialize_helper<char>::apply(begin, end));
 
-            if (type == kString)
+            if (type == types::kString)
                 return Jvalue::factory(deserialize_helper<string>::apply(begin, end));
-            else if (type == kInt)
+            else if (type == types::kInt)
                 return Jvalue::factory(deserialize_helper<int>::apply(begin, end));
-            else if (type == kDouble)
+            else if (type == types::kDouble)
                 return Jvalue::factory(deserialize_helper<double>::apply(begin, end));
             return Jvalue::factory(type);
         }

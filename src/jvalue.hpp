@@ -24,29 +24,27 @@ public:
 public:
     /* Explicit copy constructor */
     Jvalue(const Jvalue &j);
+    /* Destructor */
+    ~Jvalue();
     /* Static factory methods */
     static Jvalue factory(Value&);
     static Jvalue factory(types t);
     static Jvalue factory(string v);
     static Jvalue factory(int v);
     static Jvalue factory(double v);
-    /* Destructor */
-    ~Jvalue();
-
-    // Jvalue(Value&);
 
     /* Methods */
-    bool isNull() const { return type == kNull; }
-    bool isTrue() const { return type == kTrue; }
-    bool isFalse() const { return type == kFalse; }
+    bool isNull() const { return type == types::kNull; }
+    bool isTrue() const { return type == types::kTrue; }
+    bool isFalse() const { return type == types::kFalse; }
     bool isBoolean() const { return isTrue() || isFalse(); }
-    bool isObject() const { return type == kObject; }
-    bool isArray() const { return type == kArray; }
+    bool isObject() const { return type == types::kObject; }
+    bool isArray() const { return type == types::kArray; }
 
-    bool isString() const { return type == kString; }
-    bool isInt() const { return type == kInt; }
-    bool isDouble() const { return type == kDouble; }
-    bool hasValue() const { return type >= kString && type <= kDouble; }
+    bool isString() const { return type == types::kString; }
+    bool isInt() const { return type == types::kInt; }
+    bool isDouble() const { return type == types::kDouble; }
+    bool hasValue() const { return type >= types::kString && type <= types::kDouble; }
 
     string getString() const { return string((char*) val); }
     int getInt() const { return *((int*) val); }
@@ -69,19 +67,20 @@ public:
 
 private:
     /* Constructors */
-    Jvalue(string v) : type(kString)
+    Jvalue(types t) : type(t), val(nullptr) {}
+    Jvalue(string v) : type(types::kString)
         , val((void*) new char[v.size() + 1]) { strcpy((char*) val, v.c_str()); }
-    Jvalue(int v) : type(kInt)
+    Jvalue(int v) : type(types::kInt)
         , val((void*) new int(v)) {}
-    Jvalue(double v) : type(kDouble)
+    Jvalue(double v) : type(types::kDouble)
         , val((void*) new double(v)) {}
-};
+} __attribute__ ((packed));
 
 
 namespace std {
     template<> struct hash<Jvalue> {
         size_t operator()(const Jvalue& enc) const {
-            size_t h1 = hash<int>()(enc.type), h2;
+            size_t h1 = hash<char>()(static_cast<char>(enc.type)), h2;
             if (!enc.hasValue())
                 return h1;
             if (enc.isString())
