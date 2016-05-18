@@ -12,7 +12,7 @@ mflags="--heap=yes --stacks=yes --time-unit=ms --massif-out-file=$outfile"
 echo "== Running evaluations"
 
 lo=1
-hi=1
+hi=12
 
 echo "== RapidJson"
 for i in `seq $lo $hi`; do
@@ -33,7 +33,7 @@ for i in `seq $lo $hi`; do
 done
 
 echo "== CJson"
-git checkout templating
+git checkout char
 make clean
 make
 for i in `seq $lo $hi`; do

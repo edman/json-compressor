@@ -103,12 +103,16 @@ void cjson_usage_test(char *fnarg) {
     bebusy();
 	Cjson<BpTree> *p = cjson_bp_from_file(fnarg);
     cout << "values size " << p->values.size() << endl;
-    cout << "NAMES" << endl;
-    for (auto v : p->names) { cout << v << endl; }
-    cout << "END NAMES" << endl;
-    cout << "VALUES" << endl;
-    for (int i = 0; i < p->values.size(); ++i) { cout << &p->values[i] << " " << p->values[i] << endl; }
-    cout << "END VALUES" << endl;
+    cout << "jvalue " << sizeof(Jvalue) << endl;
+    cout << "types " << sizeof(const types) << endl;
+    cout << "void* " << sizeof(const void *const) << endl;
+    // cout << "NAMES" << endl;
+    // for (auto v : p->names) { cout << v << endl; }
+    // cout << "END NAMES" << endl;
+    // cout << "VALUES" << endl;
+    // for (int i = 0; i < p->values.size(); ++i) { cout << &p->values[i] << " " << p->values[i] << endl; }
+    // cout << "END VALUES" << endl;
+    // bebusy();
     // p->removeValues();
     // cout << "values size after " << p->values.size() << endl;
     // for (int i = 0; i < p->values.size(); ++i)
