@@ -13,7 +13,7 @@
 using namespace std;
 using namespace rapidjson;
 
-enum types { kNull, kFalse, kTrue, kObject, kArray, kString, kInt, kDouble };
+enum class types : char { kNull, kFalse, kTrue, kObject, kArray, kString, kInt, kDouble };
 
 class Jvalue {
 public:
