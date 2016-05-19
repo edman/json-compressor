@@ -110,9 +110,12 @@ template <typename T> T* mapToArray(map<T, int> &mmap) {
 
 template <class SuccinctTree>
 bool Cjson<SuccinctTree>::operator==(const Cjson &rhs) const {
+    if (names.size() != rhs.names.size()) return false;
+    for (int i = 0; i < names.size(); ++i)
+        if (strcmp(names[i], rhs.names[i])) return false;
     return size == rhs.size
             && tree == rhs.tree
-            && names == rhs.names
+            // && names == rhs.names
             && values == rhs.values;
 }
 

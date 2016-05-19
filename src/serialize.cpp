@@ -91,7 +91,7 @@ namespace detail {
     struct get_size_helper<Jvalue> {
         static size_t value(const Jvalue &obj) {
             size_t s = sizeof(char);
-            if (obj.isString()) s += get_size(obj.getString());
+            if (obj.isString()) s += get_size(obj.getCStr());
             else if (obj.isInt()) s += sizeof(int);
             else if (obj.isDouble()) s += sizeof(double);
             return s;
@@ -184,7 +184,7 @@ namespace detail {
     struct serialize_helper<char*> {
         static void apply(char *const &obj, StreamType::iterator &res) {
             // store each char of the char array
-            for (char *cur = obj; cur; cur++) { serializer(*cur, res); }
+            for (char *cur = obj; *cur; cur++) { serializer(*cur, res); }
             // store the null character in the end
             serializer('\0', res);
         }

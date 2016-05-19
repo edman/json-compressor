@@ -48,6 +48,7 @@ public:
     bool hasValue() const { return type >= types::kString && type <= types::kDouble; }
 
     string getString() const { return string((char*) val); }
+    char *const getCStr() const { return (char*) val; }
     int getInt() const { return *((int*) val); }
     double getDouble() const { return *((double*) val); }
 

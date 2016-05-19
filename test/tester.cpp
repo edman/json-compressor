@@ -2,6 +2,7 @@
 #include "gtest/gtest.h"
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <chrono>
 #include <iostream>
 #include "rapidjson/document.h"
@@ -133,16 +134,16 @@ TEST(SerializationTest, get_size) {
 
     ASSERT_EQ(3, get_size(pb.tree));
     // ASSERT_EQ(39, get_size(pb.names));
-    ASSERT_EQ(57, get_size(pb.values));
-    ASSERT_EQ(103, get_size(pb));
+    ASSERT_EQ(48, get_size(pb.values));
+    ASSERT_EQ(111, get_size(pb));
     // ASSERT_EQ(4, get_size(pb.names.bv));
 
     Cjson<DfTree> pd(d);
 
     ASSERT_EQ(3, get_size(pd.tree));
     // ASSERT_EQ(39, get_size(pd.names));
-    ASSERT_EQ(57, get_size(pd.values));
-    ASSERT_EQ(103, get_size(pd));
+    ASSERT_EQ(48, get_size(pd.values));
+    ASSERT_EQ(111, get_size(pd));
 }
 
 TEST(SerializationTest, BpTree) {
@@ -198,17 +199,19 @@ TEST(SerializationTest, IntAndString) {
 TEST(SerializationTest, CjsonSize) {
     // for (int i = 5; i <= 9; ++i) {
     for (int i = 1; i <= 1; ++i) {
-            // cout << "start" << endl;
+            cout << "start" << endl;
         Document d = wow(i);
-            // cout << "loaded with rapidjson" << endl;
+            cout << "loaded with rapidjson" << endl;
         tick();
         Cjson<BpTree> p(d);
         long long dur = tick();
-            // cout << "constructed cjson" << endl;
+            cout << "constructed cjson" << endl;
         filenamec(i);
+            cout << "filenamec" << endl;
         save_to_file<BpTree>(p, string(fn));
+            cout << "save to file" << endl;
         log_cjson_size<BpTree>(p, dur, i);
-
+            cout << "log cjson size" << endl;
     }
 }
 
@@ -229,7 +232,8 @@ TEST(SerializationTest, CjsonDeserialization) {
         cout << "duration " << dur << endl;
         EXPECT_EQ(p.size, loaded.size);
         EXPECT_EQ(p.tree, loaded.tree);
-        EXPECT_EQ(p.names, loaded.names);
+        for (int i = 0; i < p.names.size(); ++i)
+            EXPECT_EQ(strcmp(p.names[i], loaded.names[i]), 0);
         EXPECT_EQ(p.values, loaded.values);
         ASSERT_EQ(p, loaded);
     }
@@ -249,7 +253,8 @@ TEST(SplitSerializationTest, CjsonDeserialization) {
         cout << "duration " << dur << endl;
         EXPECT_EQ(p.size, loaded.size);
         EXPECT_EQ(p.tree, loaded.tree);
-        EXPECT_EQ(p.names, loaded.names);
+        for (int i = 0; i < p.names.size(); ++i)
+            EXPECT_EQ(strcmp(p.names[i], loaded.names[i]), 0);
         EXPECT_EQ(p.values, loaded.values);
         ASSERT_EQ(p, loaded);
     }
