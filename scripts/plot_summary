@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+import plotly as py
+import plotly.graph_objs as go
+import pandas as pd
+
+# Read massif data from csv format
+summary_file = 'test/results/summmary.csv'
+df = pd.read_csv(summary_file, skipinitialspace=True)
+# print(df.head())
+
+x_axis = df['#input']
+
+# Create traces
+originalTrace = go.Scatter(x=x_axis,
+                           y=df['#original'],  # Data
+                           mode='lines+markers',
+                           name='original')   # Additional options
+cjsonTrace = go.Scatter(x=x_axis,
+                        y=df['#cjson'],
+                        mode='lines+markers',
+                        name='cjson')
+pointerTrace = go.Scatter(x=x_axis,
+                          y=df['#pointer'],
+                          mode='lines+markers',
+                          name='pointer')
+rapidTrace = go.Scatter(x=x_axis,
+                        y=df['#rapid'],
+                        mode='lines+markers',
+                        name='rapid')
+
+# Plot and embed in ipython notebook!
+data = [rapidTrace, pointerTrace, cjsonTrace, originalTrace]
+py.offline.plot(data, auto_open=False)
+
