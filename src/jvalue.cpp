@@ -23,10 +23,10 @@ Jvalue Jvalue::factory(int v) { return Jvalue(v); }
 Jvalue Jvalue::factory(double v) { return Jvalue(v); }
 
 Jvalue::Jvalue(const Jvalue &r) : type(r.type)
-    , val(r.isString() ? (void *) new char[r.getString().size() + 1]
+    , val(r.isString() ? (void *) string_to_cstr(r.getString())
         : r.isInt() ? (void *) new int(r.getInt())
         : r.isDouble() ? (void *) new double(r.getDouble())
-        : nullptr) { if (r.isString()) strcpy((char*) val, (char*) r.val); }
+        : nullptr) {}
 
 Jvalue Jvalue::factory(Value &d) {
     if (d.IsString())

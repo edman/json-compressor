@@ -2,6 +2,7 @@
 #ifndef __JVALUE_HPP__
 #define __JVALUE_HPP__
 
+#include "util.hpp"
 #include "rapidjson/document.h"
 
 #include <cstring>
@@ -68,8 +69,10 @@ public:
 private:
     /* Constructors */
     Jvalue(types t) : type(t), val(nullptr) {}
+    Jvalue(char *v) : type(types::kString)
+        , val(cstr_copy(v)) {}
     Jvalue(string v) : type(types::kString)
-        , val((void*) new char[v.size() + 1]) { strcpy((char*) val, v.c_str()); }
+        , val(string_to_cstr(v)) {}
     Jvalue(int v) : type(types::kInt)
         , val((void*) new int(v)) {}
     Jvalue(double v) : type(types::kDouble)
