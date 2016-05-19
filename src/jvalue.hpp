@@ -14,7 +14,7 @@
 using namespace std;
 using namespace rapidjson;
 
-enum class types : char { kNull, kFalse, kTrue, kObject, kArray, kString, kInt, kDouble };
+enum class types : unsigned char { kNull, kFalse, kTrue, kObject, kArray, kString, kInt, kDouble };
 
 class Jvalue {
 public:
@@ -83,7 +83,7 @@ private:
 namespace std {
     template<> struct hash<Jvalue> {
         size_t operator()(const Jvalue& enc) const {
-            size_t h1 = hash<char>()(static_cast<char>(enc.type)), h2;
+            size_t h1 = hash<unsigned char>()(static_cast<unsigned char>(enc.type)), h2;
             if (!enc.hasValue())
                 return h1;
             if (enc.isString())
