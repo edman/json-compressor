@@ -6,6 +6,7 @@
 #include "bp_tree.hpp"
 #include "df_tree.hpp"
 #include "jvalue.hpp"
+#include "util.hpp"
 #include "rapidjson/document.h"
 #include <iostream>
 #include <unordered_map>
@@ -68,7 +69,7 @@ int Cjson<SuccinctTree>::resolveNameId(const string &name, unordered_map<string,
     if (it == nameTable.end()) {
         int nameId = names.size();
         nameTable[name] = nameId;
-        names.push_back(name);
+        names.push_back(string_to_cstr(name));
         return nameId;
     }
     return it->second;
