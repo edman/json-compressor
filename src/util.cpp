@@ -3,6 +3,7 @@
 #define __UTIL_CPP__
 
 #include "util.hpp"
+#include <cstring>
 
 using namespace std;
 using namespace sdsl;
@@ -21,6 +22,18 @@ bit_vector char_array_to_bitvector(char *p, int size_in_bits) {
     for (int i = 0; i < size_in_bits; ++i)
         bv[i] = p[i / 8] & (1 << (7 - (i % 8)));
     return bv;
+}
+
+char* string_to_cstr(const string &s) {
+    char *p = new char[s.size() + 1];
+    strcpy(p, s.c_str());
+    return p;
+}
+
+char* cstr_copy(const char *const cstr) {
+    char *p = new char[strlen(cstr) + 1];
+    strcpy(p, cstr);
+    return p;
 }
 
 #endif
