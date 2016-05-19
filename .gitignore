@@ -12,6 +12,7 @@ test/*.json_c*
 test/*/*.json_h
 test/*/*.json_c*
 test/results
+test/inputs
 
 # Ignore Mac specific files
 .DS_Store
