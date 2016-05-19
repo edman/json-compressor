@@ -12,36 +12,38 @@ mflags="--heap=yes --stacks=yes --time-unit=ms --massif-out-file=$outfile"
 echo "== Running evaluations"
 
 lo=1
-hi=12
+hi=5
 
-echo "== RapidJson"
-for i in `seq $lo $hi`; do
-    echo ".. sample $i"
-
-    # Run valgrind and generate massif output file
-    echo ". valgrind"
-    valgrind $vflags $mflags --massif-out-file=$outfile.$i $exec -r test/sample$i.json
-
-    # Convert the massif file to csv
-    echo ". massif to csv"
-    scripts/massif_to_csv $outfile.$i > $csvfile.$i
-
-    # Plot the csv file in a graph
-    echo ". plot csv"
-    scripts/csv_to_graph $csvfile.$i
-    mv temp-plot.html $outdir/$i.rapid.html
-done
+# echo "== RapidJson"
+# for i in `seq $lo $hi`; do
+#     echo ".. input $i"
+#
+#     # Run valgrind and generate massif output file
+#     echo ". valgrind"
+#     # valgrind $vflags $mflags --massif-out-file=$outfile.$i $exec -r test/sample$i.json
+#     valgrind $vflags $mflags --massif-out-file=$outfile.$i $exec -r test/inputs/input$i.json
+#
+#     # Convert the massif file to csv
+#     echo ". massif to csv"
+#     scripts/massif_to_csv $outfile.$i > $csvfile.$i
+#
+#     # Plot the csv file in a graph
+#     echo ". plot csv"
+#     scripts/csv_to_graph $csvfile.$i
+#     mv temp-plot.html $outdir/$i.rapid.html
+# done
 
 echo "== CJson"
 git checkout char
 make clean
 make
 for i in `seq $lo $hi`; do
-    echo ".. sample $i"
+    echo ".. input $i"
 
     # Run valgrind and generate massif output file
     echo ". valgrind"
-    valgrind $vflags $mflags --massif-out-file=$outfile.$i $exec -c test/sample$i.json
+    # valgrind $vflags $mflags --massif-out-file=$outfile.$i $exec -c test/sample$i.json
+    valgrind $vflags $mflags --massif-out-file=$outfile.$i $exec -c test/inputs/input$i.json
 
     # Convert the massif file to csv
     echo ". massif to csv"
@@ -58,11 +60,12 @@ git checkout bitmappointer
 make clean
 make
 for i in `seq $lo $hi`; do
-    echo ".. sample $i"
+    echo ".. input $i"
 
     # Run valgrind and generate massif output file
     echo ". valgrind"
-    valgrind $vflags $mflags --massif-out-file=$outfile.$i $exec -c test/sample$i.json
+    # valgrind $vflags $mflags --massif-out-file=$outfile.$i $exec -c test/sample$i.json
+    valgrind $vflags $mflags --massif-out-file=$outfile.$i $exec -c test/inputs/input$i.json
 
     # Convert the massif file to csv
     echo ". massif to csv"
