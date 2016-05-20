@@ -21,6 +21,7 @@ using namespace std::chrono;
 using namespace rapidjson;
 
 high_resolution_clock::time_point t1, t2, bt1, bt2;
+bool timerStarted = false;
 bool dot1 = false, dobt1 = false;
 
 long long tick(string msg="time", bool bt=false);
@@ -29,7 +30,7 @@ template <class T> void traversalDfs(T& t);
 
 char fn[100];
 
-Document wow(int k = 1);
+Document wow(int k = 1, bool input = false);
 void filename(int k, char *fin=fn);
 void filenamec(int k, char *fin=fn);
 void filenameh(int k, char *fin=fn);
@@ -285,11 +286,37 @@ TEST(TraversalTest, Traversal) {
     // EXPECT_TRUE(t.hasNextSibling());
 }
 
+TEST(TraversalTime, Cjson) {
+    for (int i = 1; i <= 10; ++i) {
+        Document d = wow(i, true);
+        cout << endl << "=== (input " << i << " " << fn << ") ===" << endl;
+
+        cout << "= dftree begin traversal" << endl;
+        Cjson<DfTree> pd(d);
+        DfTraversal td(pd);
+
+        tick();
+        traversalDfs(td);
+        long long dur = tick("dftree time");
+
+        cout << "= bptree begin traversal" << endl;
+        Cjson<BpTree> p(d);
+        BpTraversal t(p);
+
+        tick();
+        traversalDfs(t);
+        dur = tick("bptree time");
+    }
+}
+
+TEST(TraversalTime, Rapid) {
+}
+
 template <class T> void traversalDfs(T& t) {
-    cout << "dfs node " << t << " " << t.getCurrentNode() << " ";
-    cout << t.hasChild() << " " << t.hasNextSibling() << " ";
-    // cout << t.bp.find_close(t.treeIndex) << " ";
-    cout << endl;
+    // cout << "dfs node " << t << " " << t.getCurrentNode() << " ";
+    // cout << t.hasChild() << " " << t.hasNextSibling() << " ";
+    // // cout << t.bp.find_close(t.treeIndex) << " ";
+    // cout << endl;
     if (t.hasChild()) {
         t.goToChild();
         traversalDfs(t);
@@ -307,6 +334,10 @@ long filesize(int k) {
     long size = ifile.tellg();
     ifile.close();
     return size;
+}
+
+void input_filename(int k, char *fn) {
+    sprintf(fn, "test/inputs/input%d.json", k);
 }
 
 void filename(int k, char *fn) {
@@ -327,14 +358,12 @@ void filenameh(int k, char *fn) {
     sprintf(fn, "%s_h", fn);
 }
 
-Document wow(int k) {
+Document rapid_from_file(char *filename) {
     Document d;
-    char fn[100];
-    filename(k, fn);
-    FILE *fp = fopen(fn, "r");
-    if (!fp) sprintf(fn, "../%s", fn), fp = fopen(fn, "r");
+    FILE *fp = fopen(filename, "r");
+    if (!fp) sprintf(filename, "../%s", filename), fp = fopen(filename, "r");
     if (!fp) {
-        cout << "line: " << fn << endl;
+        cout << "line: " << filename << endl;
         cout << "Sample file not found\n";
         return d;
     }
@@ -358,6 +387,12 @@ Document wow(int k) {
     // cout << buffer.GetString() << endl;
 
     return d;
+}
+
+Document wow(int k, bool input) {
+    if (input) input_filename(k, fn);
+    else filename(k, fn);
+    return rapid_from_file(fn);
 }
 
 void write_formatted(ofstream &f, const string &msg, long &a, size_t &b) {
@@ -408,22 +443,19 @@ void log_cjson_size(Cjson<T> &obj, long long dur, int k) {
 }
 
 long long tick(string msg, bool bt) {
-    high_resolution_clock::time_point *ts, *te;
-    bool *do1;
-    bt ? (ts = &bt1, te = &bt2, do1 = &dobt1) : (ts = &t1, te = &t2, do1 = &dot1);
-    *do1 ^= 1;
-    if (*do1) {
-        cout << "Timer start..." << endl;
-        *ts = high_resolution_clock::now();
-        return duration_cast<milliseconds>(*te - *ts).count();
+    timerStarted = !timerStarted;
+    if (timerStarted) {
+        cout << ".. timer start" << endl;
+        t1 = high_resolution_clock::now();
+        // return duration_cast<milliseconds>(t1 - t2).count();
+        return duration_cast<nanoseconds>(t1 - t2).count();
     }
     else {
-        *te = high_resolution_clock::now();
-        // auto tot_time = duration_cast<microseconds>(*te - *ts).count();
-        auto tot_time = duration_cast<milliseconds>(*te - *ts).count();
-        cout << msg << ": " << tot_time << " millis" << endl;
+        t2 = high_resolution_clock::now();
+        // auto tot_time = duration_cast<milliseconds>(t2 - t1).count();
+        // cout << msg << ": " << tot_time << " millis" << endl;
+        auto tot_time = duration_cast<nanoseconds>(t2 - t1).count();
+        cout << ".. " << msg << ": " << tot_time << " nanos" << endl;
         return tot_time;
     }
 }
-
-
