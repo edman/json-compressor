@@ -5,7 +5,7 @@ import plotly.graph_objs as go
 import pandas as pd
 
 # Read massif data from csv format
-summary_file = 'test/results/summmary.csv'
+summary_file = 'test/inputs/summmary.csv'
 df = pd.read_csv(summary_file, skipinitialspace=True)
 # print(df.head())
 
@@ -31,5 +31,5 @@ rapidTrace = go.Scatter(x=x_axis,
 
 # Plot and embed in ipython notebook!
 data = [rapidTrace, pointerTrace, cjsonTrace, originalTrace]
-py.offline.plot(data, auto_open=False)
+py.offline.plot(data, auto_open=True)
 
