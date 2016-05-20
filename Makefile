@@ -11,6 +11,7 @@ SRCDIR := src
 BUILDDIR := build
 LIBDIR := lib
 TARGET := bin/runner
+TESTER := bin/tester
 
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
@@ -42,7 +43,7 @@ eval:
 
 clean:
 	@echo " Cleaning...";
-	$(RM) -r $(BUILDDIR) $(TARGET) bin/tester
+	$(RM) -r $(BUILDDIR) $(TARGET) $(TESTER)
 
 # Tests
 $(BUILDDIR)/gtest-all.o: $(GTESTDIR)/src/gtest-all.cc
@@ -59,16 +60,17 @@ $(LIBDIR)/gtest_main.a: $(BUILDDIR)/gtest_main.o $(BUILDDIR)/gtest-all.o
 	@echo " Creating gtest library archive..."
 	ar -rv $(LIBDIR)/gtest_main.a $(BUILDDIR)/gtest-all.o $(BUILDDIR)/gtest_main.o
 
-bin/tester: $(OBJECTS_NO_MAIN) test/tester.cpp $(LIBDIR)/gtest_main.a
+$(TESTER): $(OBJECTS_NO_MAIN) test/tester.cpp $(LIBDIR)/gtest_main.a
 	@echo " Building tests...";
 	$(CC) $(CFLAGS) -isystem ${GTESTDIR}/include $(INC) $(LIB) $(LFLAGS) \
-		-pthread $^ -o bin/tester
+		-pthread $^ -o $(TESTER)
 
-test: bin/tester
+test: $(TESTER)
 	@echo " Running tests..."
-	bin/tester
+	$(TESTER)
 
 run: $(TARGET)
-	@echo " Running..."; $(TARGET)
+	@echo " Running..."
+	$(TARGET)
 
 .PHONY: clean test run
