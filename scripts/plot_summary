@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
+
+def fixM(a):
+    return [x / 10**6 for x in a]
+
 import plotly as py
 import plotly.graph_objs as go
 import pandas as pd
 
 # Read massif data from csv format
-summary_file = 'test/inputs/summmary.csv'
+summary_file = 'test/inputs/summary.csv'
 df = pd.read_csv(summary_file, skipinitialspace=True)
 # print(df.head())
 
@@ -13,23 +17,41 @@ x_axis = df['#input']
 
 # Create traces
 originalTrace = go.Scatter(x=x_axis,
-                           y=df['#original'],  # Data
+                           y=fixM(df['#original']),  # Data
                            mode='lines+markers',
-                           name='original')   # Additional options
+                           name='Original file')   # Additional options
 cjsonTrace = go.Scatter(x=x_axis,
-                        y=df['#cjson'],
+                        y=fixM(df['#cjson']),
                         mode='lines+markers',
-                        name='cjson')
+                        name='Cjson')
 pointerTrace = go.Scatter(x=x_axis,
-                          y=df['#pointer'],
+                          y=fixM(df['#pointer']),
                           mode='lines+markers',
-                          name='pointer')
+                          name='Cjson pointer')
 rapidTrace = go.Scatter(x=x_axis,
-                        y=df['#rapid'],
+                        y=fixM(df['#rapid']),
                         mode='lines+markers',
-                        name='rapid')
+                        name='RapidJson')
+bpTrace = go.Scatter(x=x_axis[:5],
+                     y=fixM(df['#bp'][:5]),
+                     mode='lines+markers',
+                     name='Cjson BP')
 
-# Plot and embed in ipython notebook!
+layout = go.Layout(
+    autosize=False,
+    # width=500, height=500,
+    xaxis=dict(title='SNLI input file',
+               range=[.95, 10.05],
+               tick0=1, dtick=1),
+    yaxis=dict(title='RAM usage (MB)', dtick=50))
+
+# Assemble traces that will be ploted
+# data = [rapidTrace, pointerTrace, cjsonTrace, originalTrace, bpTrace]
 data = [rapidTrace, pointerTrace, cjsonTrace, originalTrace]
-py.offline.plot(data, auto_open=True)
+# Make figure from data and layout
+fig = go.Figure(data=data, layout=layout)
+
+# Generate the plot
+# py.offline.plot(data, auto_open=True)
+py.offline.plot(fig, auto_open=True)
 

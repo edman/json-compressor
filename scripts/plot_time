@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+
+
+def fixM(a):
+    # return [x // 10**3 for x in a]  # micros
+    return [x / 10**6 for x in a]  # milli
+
+import plotly as py
+import plotly.graph_objs as go
+import pandas as pd
+
+# Read massif data from csv format
+time_file = 'test/inputs/time.csv'
+df = pd.read_csv(time_file, skipinitialspace=True)
+# print(df.head())
+
+x_axis = df['#input']
+
+# Create traces
+dfTimeTrace = go.Scatter(x=x_axis,
+                         y=fixM(df['#dftree']),
+                         mode='lines+markers',
+                         name='Cjson DFUDS')
+bpTimeTrace = go.Scatter(x=x_axis,
+                         y=fixM(df['#bptree']),
+                         mode='lines+markers',
+                         name='Cjson BP')
+rapidTimeTrace = go.Scatter(x=x_axis,
+                            y=fixM(df['#rapid']),
+                            mode='lines+markers',
+                            name='RapidJson')
+
+layout = go.Layout(
+    autosize=False,
+    # width=500, height=500,
+    xaxis=dict(title='SNLI input file',
+               range=[.95, 10.05],
+               tick0=1, dtick=1),
+    yaxis=dict(title='Traversal time (ms)'))
+
+
+# Assemble traces that will be ploted
+data = [dfTimeTrace, bpTimeTrace, rapidTimeTrace]
+# Make figure from data and layout
+fig = go.Figure(data=data, layout=layout)
+
+# Generate the plot
+py.offline.plot(fig, auto_open=True)
+
