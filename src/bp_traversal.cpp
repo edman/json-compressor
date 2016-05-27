@@ -11,8 +11,8 @@ using namespace std;
 
 TraversalNode BpTraversal::getCurrentNode() {
   if (nodeIndex == 0) return TraversalNode("", Jvalue::OBJECT_VAL);
-  return TraversalNode(cjson.names[cjson.nameList[nodeIndex - 1]],
-      cjson.values[nodeIndex - 1]);
+  return TraversalNode(cjson->names[cjson->nameList[nodeIndex - 1]],
+      cjson->values[nodeIndex - 1]);
 }
 
 bool BpTraversal::hasParent() {
@@ -25,8 +25,8 @@ bool BpTraversal::goToParent() {
   if (!hasParent()) return false;
   // tree index becomes the open parenthesis that encloses the current
   treeIndex = bp.enclose(treeIndex);
-  // node index is the number of open parenthesis up to the current tree index
-  nodeIndex = bp.rank(treeIndex) - 1;
+  // update node index
+  updateNodeIndexFromTreeIndex();
   // successfully moved to parent, return true
   return true;
 }
@@ -35,7 +35,7 @@ int BpTraversal::degree() {
   int index = treeIndex + 1;
   int count = 0;
 
-  while (index < cjson.tree.size() && cjson.tree.bv[index + 1] == 1) {
+  while (index < cjson->tree.size() && cjson->tree.bv[index + 1] == 1) {
     count++;
     index = bp.find_close(index) + 1;
   }
@@ -45,7 +45,7 @@ int BpTraversal::degree() {
 
 bool BpTraversal::hasChild() {
   // true if next bit is an open parenthesis
-  return treeIndex + 1 < cjson.tree.size() && cjson.tree.bv[treeIndex + 1] == 1;
+  return treeIndex + 1 < cjson->tree.size() && cjson->tree.bv[treeIndex + 1] == 1;
 }
 
 bool BpTraversal::goToChild() {
@@ -59,22 +59,35 @@ bool BpTraversal::goToChild() {
   return true;
 }
 
-bool BpTraversal::hasNextSibling() {
+// Return next sibling index if existent, otherwise return 0
+int BpTraversal::nextSiblingIndex() {
   // true if next bit after closing is an open parenthesis
-  int closing = bp.find_close(treeIndex);
-  return closing + 1 < cjson.tree.size() && cjson.tree.bv[closing + 1] == 1;
+  int siblingIndex = bp.find_close(treeIndex) + 1;
+  return siblingIndex < cjson->tree.size() && cjson->tree.bv[siblingIndex] == 1 ? siblingIndex : 0;
+}
+
+bool BpTraversal::hasNextSibling() {
+  return nextSiblingIndex();
 }
 
 bool BpTraversal::goToNextSibling() {
+  int siblingIndex = nextSiblingIndex();
   // no sibling to go to, return false
-  if (!hasNextSibling()) return false;
+  if (!siblingIndex) return false;
   // tree index becomes the open parenthesis after the current closes
-  treeIndex = bp.find_close(treeIndex) + 1;
-  // increment node index
-  nodeIndex++;
+  treeIndex = siblingIndex;
+  // update node index
+  updateNodeIndexFromTreeIndex();
   // successfully moved to sibling, return true
   return true;
 }
+
+void BpTraversal::updateNodeIndexFromTreeIndex() {
+  // node index is the number of open parenthesis up to the current tree index
+  // (indexed from [0,n-1], so we decrement that value by 1)
+  nodeIndex = bp.rank(treeIndex) - 1;
+}
+
 
 
 ostream& operator<<(ostream &o, const BpTraversal &t) {

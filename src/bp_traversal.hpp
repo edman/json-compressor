@@ -13,14 +13,14 @@ using namespace rapidjson;
 
 class BpTraversal {
 public:
-    Cjson<BpTree> cjson;
+    Cjson<BpTree> *cjson;
     bp_support_sada<> bp;
     int nodeIndex;
     int treeIndex;
 
 public:
-    BpTraversal(Cjson<BpTree> &c, int i=0, int t=0): cjson(c), nodeIndex(i), treeIndex(t) { util::init_support(bp, &cjson.tree.bv); }
-    BpTraversal(Value &d): cjson(d), nodeIndex(0), treeIndex(0) { util::init_support(bp, &cjson.tree.bv); }
+    BpTraversal(Cjson<BpTree> *c, int i=0, int t=0): cjson(c), nodeIndex(i), treeIndex(t) { util::init_support(bp, &cjson->tree.bv); }
+    // BpTraversal(Value &d): cjson(d), nodeIndex(0), treeIndex(0) { util::init_support(bp, &cjson.tree.bv); }
 
     TraversalNode getCurrentNode();
     bool hasParent();
@@ -30,7 +30,11 @@ public:
     bool hasChild();
     bool goToChild();
     bool hasNextSibling();
+    int nextSiblingIndex();
     bool goToNextSibling();
+
+private:
+    void updateNodeIndexFromTreeIndex();
 };
 
 ostream& operator<<(ostream &o, const BpTraversal &t);

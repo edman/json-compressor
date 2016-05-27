@@ -3,6 +3,7 @@
 #define __DFTREE_CPP__
 
 #include "df_tree.hpp"
+#include "jvalue.hpp"
 #include "rapidjson/document.h"
 
 using namespace std;
@@ -16,8 +17,7 @@ DfTree::DfTree(Value &document, int doc_size) {
     bv = bit_vector(size(), 0);
 
     // Artificial first open parenthesis
-    bv[0] = 1;
-    counter = 1;
+    bv[0] = counter = 1;
     documentDfs(document);
 }
 
@@ -48,19 +48,24 @@ int DfTree::size() const {
 void DfTree::documentDfs(Value &d) {
     if (d.IsObject()) {
         for (int i = 0; i < d.MemberCount(); ++i)
-            bv[counter++] = 1;
-        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it)
+            bv[counter++] = 1; // Set a 1 for each child
+        counter++; // Leave a 0 for the current node after its children
+        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
             documentDfs(it->value);
+        }
     }
     else if (d.IsArray()) {
         for (int i = 0; i < d.Size(); ++i)
-            bv[counter++] = 1;
-        for (auto it = d.Begin(); it != d.End(); ++it)
+            bv[counter++] = 1; // Set a 1 for each child
+        counter++; // Leave a 0 for the current node after its children
+        for (auto it = d.Begin(); it != d.End(); ++it) {
             documentDfs(*it);
+        }
     }
-
-    // Leave a 0 in the bit vector to correspond to the current node
-    counter++;
+    else {
+        // not an object nor an array, just leave a 0 in the bit vector
+        counter++;
+    }
 }
 
 bool DfTree::operator==(const DfTree &rhs) const {

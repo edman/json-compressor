@@ -11,11 +11,11 @@ using namespace std;
 
 TraversalNode DfTraversal::getCurrentNode() {
   if (nodeIndex == 0) return TraversalNode("", Jvalue::OBJECT_VAL);
-  return TraversalNode(cjson.names[cjson.nameList[nodeIndex - 1]],
-      cjson.values[nodeIndex - 1]);
+  return TraversalNode(cjson->names[cjson->nameList[nodeIndex - 1]],
+      cjson->values[nodeIndex - 1]);
 }
 
-bool DfTraversal::hasParent() {
+inline bool DfTraversal::hasParent() {
   // true unless tree index is 1
   return treeIndex > 1;
 }
@@ -33,8 +33,9 @@ bool DfTraversal::goToParent() {
   return true;
 }
 
-int DfTraversal::degree() {
-  // if (nodeIndex + 1 == cjson.tree.N)
+inline int DfTraversal::degree() {
+  // close of nodeIndex + 1 corresponds to the 0 bit of the current node
+  // the difference between that 0 bit and treeIndex is the degree
   return select_close(nodeIndex + 1) - treeIndex;
 }
 
@@ -63,31 +64,30 @@ bool DfTraversal::goToChild(int i) {
   return true;
 }
 
-bool DfTraversal::hasNextSibling() {
+// Return next sibling index if existent, otherwise return 0
+int DfTraversal::nextSiblingIndex() {
   // no sibling to go to, return false
-  if (!hasParent()) return false;
+  if (!hasParent()) return 0;
 
   // the open of the previous position corresponds to this node in the parent description
-  int index = bp.find_open(treeIndex - 1);
+  int siblingIndex = bp.find_open(treeIndex - 1);
   // the position before that would correspond to the next sibling
-  index = index - 1;
+  siblingIndex = siblingIndex - 1;
   // as long as we're not at the first artificial bit and it's an open
-  return index > 0 && cjson.tree.bv[index == 1];
+  return siblingIndex > 0 && cjson->tree.bv[siblingIndex] == 1 ? siblingIndex : 0;
+}
+
+bool DfTraversal::hasNextSibling() {
+  return nextSiblingIndex();
 }
 
 bool DfTraversal::goToNextSibling() {
-  // if we have no parent then there's no sibling to go to, return false
-  if (!hasParent()) return false;
-
-  // the open of the previous position corresponds to this node in the parent description
-  int index = bp.find_open(treeIndex - 1);
-  // the position before that would correspond to the next sibling
-  index = index - 1;
-  // as long as we're not at the first artificial bit and it's an open
-  if (index > 0 && cjson.tree.bv[index == 1]) return false;
+  int siblingIndex = nextSiblingIndex();
+  // no sibling to go to, return false
+  if (!siblingIndex) return false;
 
   // sibling index is one position after the close of this open parenthesis
-  treeIndex = bp.find_close(index) + 1;
+  treeIndex = bp.find_close(siblingIndex) + 1;
   // update node index
   updateNodeIndexFromTreeIndex();
 

@@ -15,33 +15,34 @@ using namespace rapidjson;
 
 class DfTraversal {
 public:
-    Cjson<DfTree> cjson;
+    Cjson<DfTree> *cjson;
     bp_support_sada<> bp;
     rank_support_v<0> rank_close;
     select_support_mcl<0> select_close;
     int nodeIndex;
-    int treeIndex;
+    int treeIndex; // first index of current node description
 
 public:
-    DfTraversal(Cjson<DfTree> &c, int i=0, int t=1): cjson(c), nodeIndex(i), treeIndex(t) {
-        util::init_support(bp, &cjson.tree.bv);
-        util::init_support(rank_close, &cjson.tree.bv);
-        util::init_support(select_close, &cjson.tree.bv);
+    DfTraversal(Cjson<DfTree> *c, int i=0, int t=1): cjson(c), nodeIndex(i), treeIndex(t) {
+        util::init_support(bp, &c->tree.bv);
+        util::init_support(rank_close, &c->tree.bv);
+        util::init_support(select_close, &c->tree.bv);
     }
 
-    DfTraversal(Value &d): cjson(d), nodeIndex(0), treeIndex(1) {
-        util::init_support(bp, &cjson.tree.bv);
-        util::init_support(rank_close, &cjson.tree.bv);
-        util::init_support(select_close, &cjson.tree.bv);
-    }
+    // DfTraversal(Value &d): cjson(d), nodeIndex(0), treeIndex(1) {
+    //     util::init_support(bp, &cjson.tree.bv);
+    //     util::init_support(rank_close, &cjson.tree.bv);
+    //     util::init_support(select_close, &cjson.tree.bv);
+    // }
 
     TraversalNode getCurrentNode();
-    bool hasParent();
+    inline bool hasParent();
     bool goToParent();
-    int degree();
+    inline int degree();
     bool hasChild();
     bool goToChild(int i=0);
     bool hasNextSibling();
+    int nextSiblingIndex();
     bool goToNextSibling();
 
 private:
