@@ -6,7 +6,9 @@
 #include "cjson.hpp"
 #include "jvalue.hpp"
 #include "bp_tree.hpp"
+#include "bp_traversal.hpp"
 #include "df_tree.hpp"
+#include "df_traversal.hpp"
 #include "serialize.hpp"
 
 #include <thread>
@@ -77,6 +79,13 @@ void rapidjson_usage_test(char *filename) {
     // cout << buffer.GetString() << endl;
 }
 
+Cjson<DfTree>* cjson_df_from_file(char *filename) {
+    Document *d = rapidjson_document_from_file(filename);
+	Cjson<DfTree> *p = new Cjson<DfTree>(*d, true);
+    delete d;
+    return p;
+}
+
 Cjson<BpTree>* cjson_bp_from_file(char *filename) {
     Document *d = rapidjson_document_from_file(filename);
 	Cjson<BpTree> *p = new Cjson<BpTree>(*d, true);
@@ -100,35 +109,17 @@ void cjson_log(Cjson<T> &p, char *filename) {
 }
 
 void cjson_usage_test(char *fnarg) {
-    bebusy();
-	Cjson<BpTree> *p = cjson_bp_from_file(fnarg);
-    cout << "values size " << p->values.size() << endl;
-    cout << "jvalue " << sizeof(Jvalue) << endl;
-    cout << "types " << sizeof(const types) << endl;
-    cout << "void* " << sizeof(const void *const) << endl;
-    // cout << "NAMES" << endl;
-    // for (auto v : p->names) { cout << v << endl; }
-    // cout << "END NAMES" << endl;
-    // cout << "VALUES" << endl;
-    // for (int i = 0; i < p->values.size(); ++i) { cout << &p->values[i] << " " << p->values[i] << endl; }
-    // cout << "END VALUES" << endl;
     // bebusy();
-    // p->removeValues();
-    // cout << "values size after " << p->values.size() << endl;
-    // for (int i = 0; i < p->values.size(); ++i)
-    //     cout << p->values[i] << endl;
-    bebusy();
-
+	Cjson<BpTree> *p = cjson_bp_from_file(fnarg);
+	// Cjson<DfTree> *p = cjson_df_from_file(fnarg);
+    // bebusy();
     // delete p;
 
-    // cout << "names SIZE " << get_size(p->names) << " " << p->names.size() << endl;
-    // cout << "namelist SIZE " << get_size(p->nameList) << " " << p->nameList.size() << endl;
-    // cout << "values SIZE " << get_size(p->values) << " " << p->values.values.size() << endl;
-    // p->names.clear();
-    // p->nameList.clear();// p->nameList.shrink_to_fit();
-    // cout << "namelist SIZE " << get_size(p->nameList) << " " << p->nameList.capacity() << endl;
-    // p->values.values.clear(); p->values.values.shrink_to_fit();
-    // cout << "values " << get_size(p->values) << " " << p->values.values.capacity() << endl;
+    cout << "BpTraversal creation" << endl;
+    BpTraversal *tbp = new BpTraversal(p);
+    // DfTraversal *tdf = new DfTraversal(p);
+
+    // bebusy();
 
     // cjson_save(*p, fnarg);
     //
@@ -143,7 +134,7 @@ int main(int argc, char *argv[]) {
     if (strcmp(argv[1], "-r") == 0) rapidjson_usage_test(argv[2]);
     else cjson_usage_test(argv[2]);
 
-    bebusy();
+    // bebusy();
 
     // Right now we have 3 bebusy calls
     // 1 -> right before json processing begins

@@ -11,7 +11,6 @@ SRCDIR := src
 BUILDDIR := build
 LIBDIR := lib
 TARGET := bin/runner
-TESTER := bin/tester
 
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
@@ -25,6 +24,7 @@ LIB := -L $(LIBDIR) -L /usr/local/lib
 INC := -I include -I /usr/local/include
 
 GTESTDIR := test/gtest-1.7.0
+TESTER := bin/tester
 OBJECTS_NO_MAIN := $(patsubst $(BUILDDIR)/main.o,,$(OBJECTS))
 
 $(TARGET): $(OBJECTS)

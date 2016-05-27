@@ -96,7 +96,7 @@ Jvalue Jvalue::ARRAY_VAL = Jvalue(types(types::kArray));
 ostream& operator<<(ostream &o, const Jvalue &enc) {
     string t[] = {"Null", "False", "True", "Object", "Array", "String", "Int",
         "Double"};
-    o << "(" << t[static_cast<char>(enc.type)];
+    o << "(" << t[static_cast<unsigned char>(enc.type)];
     if (enc.isString()) o << ",\"" << enc.getString() << "\"";
     if (enc.isInt()) o << "," << enc.getInt();
     if (enc.isDouble()) o << "," << enc.getDouble();
