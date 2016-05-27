@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 #include <chrono>
 #include <iostream>
 #include "rapidjson/document.h"
@@ -25,8 +26,11 @@ bool timerStarted = false;
 bool dot1 = false, dobt1 = false;
 
 long long tick(string msg="time", bool bt=false);
+long long average(long long *a, int n);
 Document wow2(int k = 1);
-template <class T> void traversalDfs(T& t);
+template <class T> void traversalDfs(T&);
+void traversalRapid(Value&);
+void doubleTraversalCjson(DfTraversal &tdf, BpTraversal &tbp);
 
 char fn[100];
 
@@ -74,7 +78,7 @@ TEST(DfTreeTest, DocumentDFS) {
 
     ASSERT_EQ(tree.N, 8);
     ASSERT_EQ(tree.size(), 18);
-    int t[] = {1,1,1,0,1,1,0,1,1,1,1,0,0,0,0,0,0,0};
+    int t[] = {1,1,1,0,0,1,1,0,0,1,1,1,1,0,0,0,0,0};
     for (int i = 0; i < tree.size(); ++i)
         ASSERT_EQ(tree.bv[i], t[i]);
 }
@@ -265,13 +269,13 @@ TEST(TraversalTest, Traversal) {
     Document d = wow(2);
     Cjson<BpTree> p(d);
 
-    BpTraversal t(p);
-    cout << "bptree " << t.cjson.tree << endl;
+    BpTraversal t(&p);
+    cout << "bptree " << t.cjson->tree << endl;
     traversalDfs(t);
 
     Cjson<DfTree> pd(d);
-    DfTraversal td(pd);
-    cout << "dftree " << td.cjson.tree << endl;
+    DfTraversal td(&pd);
+    cout << "dftree " << td.cjson->tree << endl;
     traversalDfs(td);
 
     // Cjson<DfTree> pd(d);
@@ -286,30 +290,70 @@ TEST(TraversalTest, Traversal) {
     // EXPECT_TRUE(t.hasNextSibling());
 }
 
-TEST(TraversalTime, Cjson) {
-    for (int i = 1; i <= 10; ++i) {
+TEST(TraversalTest, Time) {
+    int lo = 1;
+    int hi = 1;
+    int tries = 1;
+    long long times[tries];
+    for (int i = lo; i <= hi; ++i) {
+        cout << endl << "=== (parse input " << i << " ";
         Document d = wow(i, true);
-        cout << endl << "=== (input " << i << " " << fn << ") ===" << endl;
+        cout << fn << ") ===" << endl;
+
+        cout << "= dftree create" << endl;
+        Cjson<DfTree> pd(d);
+        DfTraversal td(&pd);
+
+        cout << "number of nodes (tree) " << pd.tree.N << endl;
+        cout << "number of nodes (cjson) " << pd.size << endl;
 
         cout << "= dftree begin traversal" << endl;
-        Cjson<DfTree> pd(d);
-        DfTraversal td(pd);
+        for (int k = 0; k < tries; ++k) {
+            tick();
+            traversalDfs(td);
+            times[k] = tick("cjson dftree time");
+        }
+        cout << "average: " << average(times, tries) << endl;
 
-        tick();
-        traversalDfs(td);
-        long long dur = tick("dftree time");
-
-        cout << "= bptree begin traversal" << endl;
+        cout << "= bptree create" << endl;
         Cjson<BpTree> p(d);
-        BpTraversal t(p);
+        BpTraversal t(&p);
+        cout << "= bptree begin traversal" << endl;
+        for (int k = 0; k < tries; ++k) {
+            tick();
+            traversalDfs(t);
+            times[k] = tick("cjson bptree time");
+        }
+        cout << "average: " << average(times, tries) << endl;
 
-        tick();
-        traversalDfs(t);
-        dur = tick("bptree time");
+        cout << "= rapid begin traversal" << endl;
+        for (int k = 0; k < tries; ++k) {
+            tick();
+            traversalRapid(d);
+            times[k] = tick("rapid time");
+        }
+        cout << "average: " << average(times, tries) << endl;
+
+        // cout << "= begin double traversal" << endl;
+        // doubleTraversalCjson(td, t);
     }
 }
 
-TEST(TraversalTime, Rapid) {
+void doubleTraversalCjson(DfTraversal &tdf, BpTraversal &tbp) {
+    // cout << "..DF: " << tdf << " " << tdf.getCurrentNode() << " | ";
+    // cout << "BP: " << tbp << " " << tbp.getCurrentNode() << endl;
+    ASSERT_EQ(tdf.getCurrentNode().value, tbp.getCurrentNode().value);
+
+    if (tdf.hasChild()) { ASSERT_EQ(tbp.hasChild(), true);
+        tdf.goToChild(); tbp.goToChild();
+
+        doubleTraversalCjson(tdf, tbp);
+        tdf.goToParent(); tbp.goToParent();
+    } else { ASSERT_EQ(tbp.hasChild(), false); }
+    if (tdf.goToNextSibling()) {
+        ASSERT_EQ(tbp.goToNextSibling(), true);
+        doubleTraversalCjson(tdf, tbp);
+    } else { ASSERT_EQ(tbp.goToNextSibling(), false); }
 }
 
 template <class T> void traversalDfs(T& t) {
@@ -317,12 +361,27 @@ template <class T> void traversalDfs(T& t) {
     // cout << t.hasChild() << " " << t.hasNextSibling() << " ";
     // // cout << t.bp.find_close(t.treeIndex) << " ";
     // cout << endl;
-    if (t.hasChild()) {
-        t.goToChild();
+    // auto node = t.getCurrentNode();
+    // if (t.hasChild()) {
+    //     t.goToChild();
+    if (t.goToChild()) {
         traversalDfs(t);
         t.goToParent();
     }
     if (t.goToNextSibling()) traversalDfs(t);
+}
+
+void traversalRapid(Value &d) {
+    if (d.IsObject()) {
+        for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
+            traversalRapid(it->value);
+        }
+    }
+    else if (d.IsArray()) {
+        for (auto it = d.Begin(); it != d.End(); ++it) {
+            traversalRapid(*it);
+        }
+    }
 }
 
 long filesize(int k) {
@@ -445,7 +504,7 @@ void log_cjson_size(Cjson<T> &obj, long long dur, int k) {
 long long tick(string msg, bool bt) {
     timerStarted = !timerStarted;
     if (timerStarted) {
-        cout << ".. timer start" << endl;
+        // cout << ".. timer start" << endl;
         t1 = high_resolution_clock::now();
         // return duration_cast<milliseconds>(t1 - t2).count();
         return duration_cast<nanoseconds>(t1 - t2).count();
@@ -453,9 +512,19 @@ long long tick(string msg, bool bt) {
     else {
         t2 = high_resolution_clock::now();
         // auto tot_time = duration_cast<milliseconds>(t2 - t1).count();
-        // cout << msg << ": " << tot_time << " millis" << endl;
+        // cout << ".. " << msg << ": " << tot_time << " millis" << endl;
         auto tot_time = duration_cast<nanoseconds>(t2 - t1).count();
-        cout << ".. " << msg << ": " << tot_time << " nanos" << endl;
+        // if (!msg.empty()) cout << ".. " << msg << ": " << tot_time << " nanos" << endl;
         return tot_time;
     }
+}
+
+long long average(long long *a, int n) {
+    sort(a, a+n);
+
+    long long avg = 0;
+    for (int i = n/4; i < n - (n/4); ++i) {
+        avg += a[i];
+    }
+    return avg / (n - 2 * (n / 4));
 }
