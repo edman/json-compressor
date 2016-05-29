@@ -99,10 +99,10 @@ int main(int argc, char **argv)
 		usage(argv[0]);
 		return 1;
 	}
-	char types[11] = "bBiInNsS";
-	for(int i = 0; i < 10; i++)
+	char types[11] = "bBiInNoOsS";
+	for(int i = 0; i < 12; i++)
 	{
-		if(i == 9)
+		if(i == 11)
 		{
 			std::cerr << "Invalid type." << std::endl;
 			usage(argv[0]);
@@ -129,7 +129,16 @@ int main(int argc, char **argv)
 	std::uniform_real_distribution<double> dist(0.0, 1.0);
 
 	/* First case. */
-	out << "{\"0\": " << addelement(argv[2][0]) << std::endl;
+	if(argv[2][0] != 'o' && argv[2][0] != 'O')
+	{
+		out << "{\"0\": " << addelement(argv[2][0]) << std::endl;
+	}
+	else
+	{
+		excess++;
+		first = false;
+		out << "{\"0\": {" << std::endl;
+	}
 
 	for(long long i = 1; i < num; i++)
 	{
@@ -156,6 +165,11 @@ int main(int argc, char **argv)
 		/* Add element. */
 		else if(ranval > 1.0 / 6.0)
 		{
+			if(argv[2][0] == 'o' || argv[2][0] == 'O')
+			{
+				i--;
+				continue;
+			}
 			if(!deep)
 			{
 				out << ",";
