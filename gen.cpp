@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 	}
 
 	/* Generate random balanced parantheses.*/
-	bool first = true, deep = false;
+	bool deep = false;
 	double ranval;
 	long long excess = 1;
 	unsigned long long seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -136,7 +136,6 @@ int main(int argc, char **argv)
 	else
 	{
 		excess++;
-		first = false;
 		out << "{\"0\": {" << std::endl;
 	}
 
@@ -155,7 +154,7 @@ int main(int argc, char **argv)
 		if(ranval > 5.0 / 6.0)
 		{
 			excess++;
-			if(first || deep)
+			if(!deep)
 			{
 				out << ",";
 			}
@@ -181,6 +180,12 @@ int main(int argc, char **argv)
 		{
 			if(excess > 1)
 			{
+				/* There should be no null paranthesis. */
+				if(deep)
+				{
+					i--;
+					continue;
+				}
 				excess--;
 				out << "}";
 				deep = false;
@@ -193,7 +198,6 @@ int main(int argc, char **argv)
 			}
 		}
 		out << std::endl;
-		first = true;
 	}
 
 	/* Close file. */
