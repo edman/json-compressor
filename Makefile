@@ -13,7 +13,7 @@ LIBDIR := lib
 TARGET := bin/runner
 
 SRCEXT := cpp
-SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
+SOURCES := $(shell find $(SRCDIR) -type f -name "*.$(SRCEXT)")
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 # CFLAGS := -g -Wall -std=c++11 -O3
 # the flag -O0 disables all (or most) optimizations
@@ -26,6 +26,10 @@ INC := -I include -I /usr/local/include
 GTESTDIR := test/gtest-1.7.0
 TESTER := bin/tester
 OBJECTS_NO_MAIN := $(patsubst $(BUILDDIR)/main.o,,$(OBJECTS))
+
+$(info $$SRCEXT is [${SRCEXT}])
+$(info $$SOURCES is [${SOURCES}])
+$(info $$OBJECTS is [${OBJECTS}])
 
 $(TARGET): $(OBJECTS)
 	@echo " Linking...";
