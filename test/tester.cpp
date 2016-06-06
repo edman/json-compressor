@@ -27,19 +27,15 @@ bool dot1 = false, dobt1 = false;
 
 long long tick(string msg="time", bool bt=false);
 long long average(long long *a, int n);
-Document wow2(int k = 1);
 template <class T> void traversalDfs(T&);
 void traversalRapid(Value&);
 void doubleTraversalCjson(DfTraversal &tdf, BpTraversal &tbp);
 
-char fn[100];
-
-Document wow(int k = 1, bool input = false);
-void filename(int k, char *fin=fn);
-void filenamec(int k, char *fin=fn);
-void filenameh(int k, char *fin=fn);
-template <class T> void log_cjson_size(Cjson<T>&, long long, int);
-long filesize(int k = 1);
+Document wow(int k=1, bool input=false);
+Document rapid_from_file(string fn);
+string filename(int k, bool input=false);
+template <class T> void log_cjson_size(Cjson<T>&, long long, string);
+long filesize(string);
 
 TEST(RapidJsonTest, ReadingStuff) {
     // 1. Parse a JSON string into DOM.
@@ -139,16 +135,16 @@ TEST(SerializationTest, get_size) {
 
     ASSERT_EQ(3, get_size(pb.tree));
     // ASSERT_EQ(39, get_size(pb.names));
-    ASSERT_EQ(48, get_size(pb.values));
-    ASSERT_EQ(111, get_size(pb));
+    ASSERT_EQ(38, get_size(pb.values));
+    ASSERT_EQ(101, get_size(pb));
     // ASSERT_EQ(4, get_size(pb.names.bv));
 
     Cjson<DfTree> pd(d);
 
     ASSERT_EQ(3, get_size(pd.tree));
     // ASSERT_EQ(39, get_size(pd.names));
-    ASSERT_EQ(48, get_size(pd.values));
-    ASSERT_EQ(111, get_size(pd));
+    ASSERT_EQ(38, get_size(pd.values));
+    ASSERT_EQ(101, get_size(pd));
 }
 
 TEST(SerializationTest, BpTree) {
@@ -203,19 +199,19 @@ TEST(SerializationTest, IntAndString) {
 
 TEST(SerializationTest, CjsonSize) {
     // for (int i = 5; i <= 9; ++i) {
-    for (int i = 1; i <= 1; ++i) {
-            cout << "start" << endl;
-        Document d = wow(i);
-            cout << "loaded with rapidjson" << endl;
+    for (int i = 1; i <= 6; ++i) {
+            cout << "start " << i << endl;
+        string fn = filename(i, true);
+        Document d = rapid_from_file(fn);
+            cout << "loaded " << fn << " with rapidjson" << endl;
+
         tick();
         Cjson<BpTree> p(d);
         long long dur = tick();
             cout << "constructed cjson" << endl;
-        filenamec(i);
-            cout << "filenamec" << endl;
-        save_to_file<BpTree>(p, string(fn));
+        save_to_file<BpTree>(p, fn + "_c");
             cout << "save to file" << endl;
-        log_cjson_size<BpTree>(p, dur, i);
+        log_cjson_size<BpTree>(p, dur, fn);
             cout << "log cjson size" << endl;
     }
 }
@@ -224,15 +220,15 @@ TEST(SerializationTest, CjsonDeserialization) {
     // for (int i = 5; i <= 9; ++i) {
     for (int i = 5; i <= 5; ++i) {
             // cout << "start" << endl;
-        Document d = wow(i);
+        string fn = filename(i);
+        Document d = rapid_from_file(fn);
             // cout << "loaded with rapidjson" << endl;
         Cjson<BpTree> p(d);
             // cout << "constructed cjson" << endl;
-        filenamec(i);
-        save_to_file(p, string(fn));
+        save_to_file(p, fn + "_c");
 
         tick();
-        Cjson<BpTree> loaded = load_from_file<BpTree>(string(fn));
+        Cjson<BpTree> loaded = load_from_file<BpTree>(fn);
         long long dur = tick();
         cout << "duration " << dur << endl;
         EXPECT_EQ(p.size, loaded.size);
@@ -249,11 +245,11 @@ TEST(SplitSerializationTest, CjsonDeserialization) {
     for (int i = 1; i <= 1; ++i) {
         Document d = wow(i);
         Cjson<BpTree> p(d);
-        filenamec(i);
-        save_to_file_split(p, string(fn));
+        string fn = filename(i);
+        save_to_file_split(p, fn);
 
         tick();
-        Cjson<BpTree> loaded = load_from_file_split<BpTree>(string(fn));
+        Cjson<BpTree> loaded = load_from_file_split<BpTree>(fn);
         long long dur = tick();
         cout << "duration " << dur << endl;
         EXPECT_EQ(p.size, loaded.size);
@@ -297,7 +293,8 @@ TEST(TraversalTest, Time) {
     long long times[tries];
     for (int i = lo; i <= hi; ++i) {
         cout << endl << "=== (parse input " << i << " ";
-        Document d = wow(i, true);
+        string fn = filename(i, true);
+        Document d = rapid_from_file(fn);
         cout << fn << ") ===" << endl;
 
         cout << "= dftree create" << endl;
@@ -384,9 +381,7 @@ void traversalRapid(Value &d) {
     }
 }
 
-long filesize(int k) {
-    char fn[100];
-    filename(k, fn);
+long filesize(string fn) {
     ifstream ifile;
     ifile.open(fn, ios::binary);
     ifile.seekg(0, ifile.end);
@@ -395,63 +390,26 @@ long filesize(int k) {
     return size;
 }
 
-void input_filename(int k, char *fn) {
-    sprintf(fn, "test/inputs/input%d.json", k);
+string filename(int k, bool input) {
+    if (input) return "test/inputs/input" + to_string(k) + ".json";
+    return "test/sample" + to_string(k) + ".json";
 }
 
-void filename(int k, char *fn) {
-    sprintf(fn, "test/sample%d.json", k);
-    if (k == 10) sprintf(fn, "test/dblp_.json");
-    if (k == 11) sprintf(fn, "test/dblp.json");
-    if (k == 12) sprintf(fn, "test/dataset/r1.json");
-    if (k == 13) sprintf(fn, "test/dataset/exi.json");
-}
-
-void filenamec(int k, char *fn) {
-    filename(k, fn);
-    sprintf(fn, "%s_c", fn);
-}
-
-void filenameh(int k, char *fn) {
-    filename(k, fn);
-    sprintf(fn, "%s_h", fn);
-}
-
-Document rapid_from_file(char *filename) {
+Document rapid_from_file(string fn) {
     Document d;
-    FILE *fp = fopen(filename, "r");
-    if (!fp) sprintf(filename, "../%s", filename), fp = fopen(filename, "r");
-    if (!fp) {
-        cout << "line: " << filename << endl;
-        cout << "Sample file not found\n";
-        return d;
-    }
+    FILE *fp = fopen(fn.c_str(), "r");
+    if (!fp) { fn = "../" + fn; fp = fopen(fn.c_str(), "r"); }
+    if (!fp) {cout << "'" << fn << "' not found" << endl; return d; }
 
     char buf[2 << 16];
     FileReadStream is(fp, buf, sizeof(buf));
     d.ParseStream(is);
     fclose(fp);
-
-    // StringBuffer buffer;
-    // Writer<StringBuffer> writer(buffer);
-    // d.Accept(writer);
-    // cout << buffer.GetString() << endl;
-    //
-    // for (Value::ConstMemberIterator it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-    //     cout << "Name: " << it->name.GetString() << endl;
-    //     cout << "Value type: " << it->value.GetType() << endl;
-    // }
-
-    // d.Accept(writer);
-    // cout << buffer.GetString() << endl;
-
     return d;
 }
 
 Document wow(int k, bool input) {
-    if (input) input_filename(k, fn);
-    else filename(k, fn);
-    return rapid_from_file(fn);
+    return rapid_from_file(filename(k, input));
 }
 
 void write_formatted(ofstream &f, const string &msg, long &a, size_t &b) {
@@ -459,24 +417,29 @@ void write_formatted(ofstream &f, const string &msg, long &a, size_t &b) {
 }
 
 template <class T>
-void log_cjson_size(Cjson<T> &obj, long long dur, int k) {
-    filenameh(k);
-    ofstream mfile(fn, ios::out);
+void log_cjson_size(Cjson<T> &obj, long long dur, string fn) {
     // original file size
-    long orig = filesize(k);
+    long orig = filesize(fn);
+    long comp = filesize(fn + "_c");
+
+    ofstream mfile(fn + "_h", ios::out);
     mfile << fn << endl;
     mfile << "original size (bytes): " << orig << endl;
+    mfile << "compressed size (bytes): " << comp << endl;
 
-    long header, tree, names, values;
+    long header, tree, names, nameList, values;
     // size of header
     size_t s = sizeof(int);
     header = s;
     // size of tree
     tree = get_size(obj.tree);
     s += tree;
-    // size of names
-    names = get_size(obj.names);
+    // size of names (length of names table + table)
+    names = sizeof(int) + get_size(obj.names);
     s += names;
+    // size of namelist
+    nameList = get_size(obj.nameList);
+    s += nameList;
     // size of values
     values = get_size(obj.values);
     s += values;
@@ -484,8 +447,10 @@ void log_cjson_size(Cjson<T> &obj, long long dur, int k) {
     write_formatted(mfile, ".header", header, s);
     write_formatted(mfile, ".tree", tree, s);
     write_formatted(mfile, ".names", names, s);
+    write_formatted(mfile, ".nameList", nameList, s);
     write_formatted(mfile, ".values", values, s);
     mfile << "Total " << s << endl;
+    assert(s == get_size(obj));
 
     // compression ratio
     mfile << "Compression ratio (bigger is better): " << (double)orig/s << endl;
