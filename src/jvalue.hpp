@@ -14,7 +14,11 @@
 using namespace std;
 using namespace rapidjson;
 
-enum class types : unsigned char { kNull, kFalse, kTrue, kObject, kArray, kString, kInt, kDouble };
+enum class types : unsigned char { kNull, kFalse, kTrue, kObject, kArray,
+        kString, kChar, kShort, kInt, kDouble };
+
+types typeForInt(int);
+void* pointerForInt(int);
 
 class Jvalue {
 public:
@@ -43,13 +47,17 @@ public:
     bool isArray() const { return type == types::kArray; }
 
     bool isString() const { return type == types::kString; }
-    bool isInt() const { return type == types::kInt; }
+    bool isChar() const { return type == types::kChar; }
+    bool isShort() const { return isChar() || type == types::kShort; }
+    bool isInt() const { return isShort() || type == types::kInt; }
     bool isDouble() const { return type == types::kDouble; }
     bool hasValue() const { return type >= types::kString && type <= types::kDouble; }
 
     string getString() const { return string((char*) val); }
     char *const getCStr() const { return (char*) val; }
-    int getInt() const { return *((int*) val); }
+    char getChar() const { return *((char*) val); }
+    short getShort() const { return isChar() ? getChar() : *((short*) val); }
+    int getInt() const { return isShort() ? getShort() : *((int*) val); }
     double getDouble() const { return *((double*) val); }
 
     /* Operators */
@@ -74,8 +82,8 @@ private:
         , val(cstr_copy(v)) {}
     Jvalue(string v) : type(types::kString)
         , val(string_to_cstr(v)) {}
-    Jvalue(int v) : type(types::kInt)
-        , val((void*) new int(v)) {}
+    Jvalue(int v) : type(typeForInt(v))
+        , val(pointerForInt(v)) {}
     Jvalue(double v) : type(types::kDouble)
         , val((void*) new double(v)) {}
 } __attribute__ ((packed));

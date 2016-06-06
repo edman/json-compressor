@@ -3,6 +3,7 @@
 
 #include "jvalue.hpp"
 #include "cjson.hpp"
+#include "util.hpp"
 #include "rapidjson/document.h"
 #include <cstdlib>
 #include <iostream>
@@ -49,6 +50,8 @@ Jvalue Jvalue::factory(Value &d) {
 
 Jvalue::~Jvalue() {
     if (isString()) { delete[] (char*) val; }
+    else if (isChar()) { delete (char*) val; }
+    else if (isShort()) { delete (short*) val; }
     else if (isInt()) { delete (int*) val; }
     else if (isDouble()) { delete (double*) val; }
 }
@@ -86,16 +89,27 @@ bool Jvalue::operator <(const Jvalue& rhs) const {
 
 
 /* Assignment of static values */
-Jvalue Jvalue::NULL_VAL = Jvalue(types(types::kNull));
-Jvalue Jvalue::FALSE_VAL = Jvalue(types(types::kFalse));
-Jvalue Jvalue::TRUE_VAL = Jvalue(types(types::kTrue));
-Jvalue Jvalue::OBJECT_VAL = Jvalue(types(types::kObject));
-Jvalue Jvalue::ARRAY_VAL = Jvalue(types(types::kArray));
+Jvalue Jvalue::NULL_VAL = Jvalue(types::kNull);
+Jvalue Jvalue::FALSE_VAL = Jvalue(types::kFalse);
+Jvalue Jvalue::TRUE_VAL = Jvalue(types::kTrue);
+Jvalue Jvalue::OBJECT_VAL = Jvalue(types::kObject);
+Jvalue Jvalue::ARRAY_VAL = Jvalue(types::kArray);
 
+types typeForInt(int num) {
+    if (intInChar(num)) return types::kChar;
+    if (intInShort(num)) return types::kShort;
+    return types::kInt;
+}
+
+void* pointerForInt(int num) {
+    if (intInChar(num)) return (void*) new char(num);
+    if (intInShort(num)) return (void*) new short(num);
+    return (void*) new int(num);
+}
 
 ostream& operator<<(ostream &o, const Jvalue &enc) {
-    string t[] = {"Null", "False", "True", "Object", "Array", "String", "Int",
-        "Double"};
+    string t[] = {"Null", "False", "True", "Object", "Array",
+            "String", "Char", "Short", "Int", "Double"};
     o << "(" << t[static_cast<unsigned char>(enc.type)];
     if (enc.isString()) o << ",\"" << enc.getString() << "\"";
     if (enc.isInt()) o << "," << enc.getInt();

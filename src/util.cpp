@@ -3,6 +3,8 @@
 #define __UTIL_CPP__
 
 #include "util.hpp"
+#include <climits>
+#include <cstdlib>
 #include <cstring>
 
 using namespace std;
@@ -35,5 +37,9 @@ char* cstr_copy(const char *const cstr) {
     strcpy(p, cstr);
     return p;
 }
+
+bool intInChar(int num) { return abs(num) <= SCHAR_MAX; }
+
+bool intInShort(int num) { return num <= SHRT_MAX; }
 
 #endif

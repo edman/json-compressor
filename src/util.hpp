@@ -16,4 +16,7 @@ bit_vector char_array_to_bitvector(char *p, int size_in_bits);
 char* string_to_cstr(const string&);
 char* cstr_copy(const char *const);
 
+bool intInChar(int);
+bool intInShort(int);
+
 #endif
