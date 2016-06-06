@@ -27,10 +27,6 @@ GTESTDIR := test/gtest-1.7.0
 TESTER := bin/tester
 OBJECTS_NO_MAIN := $(patsubst $(BUILDDIR)/main.o,,$(OBJECTS))
 
-$(info $$SRCEXT is [${SRCEXT}])
-$(info $$SOURCES is [${SOURCES}])
-$(info $$OBJECTS is [${OBJECTS}])
-
 $(TARGET): $(OBJECTS)
 	@echo " Linking...";
 	$(CC) $^ -o $(TARGET) $(LIB) $(LFLAGS)
