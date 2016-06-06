@@ -83,7 +83,9 @@ namespace detail {
     struct get_size_helper<BitmapIndex<T>> {
         static size_t value(const BitmapIndex<T> &obj) {
             // size of bit vector plus size of values vector
-            return get_size(obj.bv) + obj.byte_size + sizeof(int);
+            // return get_size(obj.bv) + obj.byte_size + sizeof(int);
+            // length of vector + series of elements
+            return sizeof(int) + get_size(obj.values);
         }
     };
 
@@ -227,14 +229,16 @@ namespace detail {
     struct serialize_helper<BitmapIndex<T>> {
         static void apply(const BitmapIndex<T> &obj, StreamType::iterator &res) {
             // serialize byte_size information
-            serializer(obj.byte_size, res);
+            // serializer(obj.byte_size, res);
 
             // serialize bitmap index
-            serializer(obj.bv, res);
+            // serializer(obj.bv, res);
 
             // serialize values
-            for (auto it : obj.values)
-                serializer(it, res);
+            serializer((int) obj.values.size(), res);
+            serializer(obj.values, res);
+            // for (auto it : obj.values)
+            //     serializer(it, res);
         }
     };
 
@@ -293,6 +297,7 @@ template void serialize<DfTree>(const DfTree&, StreamType&);
 template void serialize<BitmapIndex<string>>(const BitmapIndex<string>&, StreamType&);
 template void serialize<BitmapIndex<Jvalue>>(const BitmapIndex<Jvalue>&, StreamType&);
 template void serialize<Jvalue>(const Jvalue&, StreamType&);
+template void serialize<vector<Jvalue>>(const vector<Jvalue>&, StreamType&);
 template void serialize<vector<string>>(const vector<string>&, StreamType&);
 template void serialize<vector<char*>>(const vector<char*>&, StreamType&);
 template void serialize<vector<int>>(const vector<int>&, StreamType&);
@@ -391,21 +396,23 @@ namespace detail {
         static BitmapIndex<T> apply(int values_size, StreamType::const_iterator& begin,
                 StreamType::const_iterator end) {
 
-            // deserialize byte_size
-            int byte_size = deserialize_helper<int>::apply(begin, end);
+            // // deserialize byte_size
+            // int byte_size = deserialize_helper<int>::apply(begin, end);
 
-            // deserialize bit vector
-            int bv_size_in_bytes = bit_size_to_bytes(byte_size);
-            int bv_size_in_bits = byte_size;
-            bit_vector bv = deserialize_helper<bit_vector>::apply(bv_size_in_bits, bv_size_in_bytes, begin, end);
+            // // deserialize bit vector
+            // int bv_size_in_bytes = bit_size_to_bytes(byte_size);
+            // int bv_size_in_bits = byte_size;
+            // bit_vector bv = deserialize_helper<bit_vector>::apply(bv_size_in_bits, bv_size_in_bytes, begin, end);
 
             // deserialize values vector
-            vector<T> values; values.reserve(values_size);
+            int size = deserialize_helper<int>::apply(begin, end);
+            vector<T> values; values.reserve(size);
             for (int i = 0; i < values_size; ++i)
                 // deserialize a single value
                 values.push_back(deserialize_helper<T>::apply(begin, end));
 
-            return BitmapIndex<T>(byte_size, bv, values);
+            // return BitmapIndex<T>(byte_size, bv, values);
+            return BitmapIndex<T>(values);
         }
     };
 

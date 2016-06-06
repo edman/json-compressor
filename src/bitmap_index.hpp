@@ -11,13 +11,14 @@ using namespace sdsl;
 template <class T>
 class BitmapIndex {
 public:
-    int byte_size = 0;
-    bit_vector bv;
+    // int byte_size = 0;
+    // bit_vector bv;
     vector<T> values;
 
 public:
     BitmapIndex() {}  // default constructor
-    BitmapIndex(int bs, bit_vector b, vector<T> &v): byte_size(bs), bv(b), values(v) { values.shrink_to_fit(); }
+    // BitmapIndex(int bs, bit_vector b, vector<T> &v): byte_size(bs), bv(b), values(v) { values.shrink_to_fit(); }
+    BitmapIndex(vector<T> &v): values(v) { values.shrink_to_fit(); }
     void insert(T elem);
     void loadBitvector();
 
