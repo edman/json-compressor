@@ -2,7 +2,7 @@
 
 
 def fixM(a):
-    return [x / 10**6 for x in a]  # milli
+    return [x / 10**6 for x in a]
 
 import plotly as py
 import plotly.graph_objs as go
@@ -16,16 +16,12 @@ df = pd.read_csv(summary_file, skipinitialspace=True)
 x_axis = df['#input']
 
 # Create traces
-bpTrace = go.Bar(x=x_axis,
-                 y=fixM(df['#trav_bp']),
-                 marker={'color': '#FFCA28'},
-                 name='Cjson (BP)')
-dfTrace = go.Bar(x=x_axis,
-                 y=fixM(df['#trav_df']),
-                 marker={'color': '#00897B'},
-                 name='Cjson (DFUDS)')
+cjsonTrace = go.Bar(x=x_axis,
+                    y=fixM(df['#load_cjson']),
+                    marker={'color': '#FFCA28'},
+                    name='Cjson (BP)')
 rapidTrace = go.Bar(x=x_axis,
-                    y=fixM(df['#trav_rapid']),
+                    y=fixM(df['#load_rapid']),
                     marker={'color': '#303F9F'},
                     name='RapidJson')
 
@@ -37,11 +33,12 @@ layout = go.Layout(
     # xaxis={'title'='SNLI input file'}
     #            range=[.95, 10.05],
     #            tick0=1, dtick=1),
-    yaxis={'title': 'Time (ms)', 'dtick': 1000}
+    # yaxis={'title': 'Time (ms)', 'dtick': 1000}
+    yaxis={'title': 'Time (ms)'}
 )
 
 # Assemble traces that will be ploted
-data = [rapidTrace, bpTrace, dfTrace]
+data = [rapidTrace, cjsonTrace]
 # Make figure from data and layout
 fig = go.Figure(data=data, layout=layout)
 

@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+
+
+def fixM(a):
+    return [x / 10**6 for x in a]
+
+import plotly as py
+import plotly.graph_objs as go
+import pandas as pd
+
+# Read massif data from csv format
+# summary_file = 'test/inputs/comp_summary.csv'
+summary_file = 'test/inputs/mem_summary.csv'
+df = pd.read_csv(summary_file, skipinitialspace=True)
+# print(df.head())
+
+x_axis = df['#input']
+
+# Create traces
+originalTrace = go.Bar(x=x_axis,
+                       y=fixM(df['#original']),  # Data
+                       marker={'color': '#303F9F'},
+                       name='Original file')   # Additional options
+cjsonTrace = go.Bar(x=x_axis,
+                    y=fixM(df['#compression']),
+                    marker={'color': '#FFCA28'},
+                    name='Cjson (BP)')
+gzipTrace = go.Bar(x=x_axis,
+                   y=fixM(df['#gzip']),
+                   marker={'color': '#00897B'},
+                   name='gzip')
+
+layout = go.Layout(
+    barmode='group',
+    autosize=False,
+    # width=500, height=500,
+    xaxis={'tickangle': -45},
+    # xaxis={'title'='SNLI input file'}
+    #            range=[.95, 10.05],
+    #            tick0=1, dtick=1),
+    yaxis={'title': 'File size (MB)', 'dtick': 50}
+)
+
+# Assemble traces that will be ploted
+# data = [rapidTrace, pointerTrace, bpTrace, originalTrace]
+data = [originalTrace, cjsonTrace, gzipTrace]
+# Make figure from data and layout
+fig = go.Figure(data=data, layout=layout)
+
+# Generate the plot
+py.offline.plot(fig, auto_open=True)
+

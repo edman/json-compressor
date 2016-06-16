@@ -2,7 +2,7 @@
 
 
 def fixM(a):
-    return [x / 10**6 for x in a]  # milli
+    return [x / 10**6 for x in a]
 
 import plotly as py
 import plotly.graph_objs as go
@@ -16,16 +16,25 @@ df = pd.read_csv(summary_file, skipinitialspace=True)
 x_axis = df['#input']
 
 # Create traces
+originalTrace = go.Bar(x=x_axis,
+                       y=fixM(df['#original']),  # Data
+                       name='Original file')   # Additional options
 bpTrace = go.Bar(x=x_axis,
-                 y=fixM(df['#trav_bp']),
+                 y=fixM(df['#cjson_bp']),
                  marker={'color': '#FFCA28'},
                  name='Cjson (BP)')
 dfTrace = go.Bar(x=x_axis,
-                 y=fixM(df['#trav_df']),
-                 marker={'color': '#00897B'},
+                 y=fixM(df['#cjson_df']),
                  name='Cjson (DFUDS)')
+pointerBpTrace = go.Bar(x=x_axis,
+                        y=fixM(df['#pointer_bp']),
+                        marker={'color': '#00897B'},
+                        name='Cjson (pointer, BP)')
+pointerDfTrace = go.Bar(x=x_axis,
+                        y=fixM(df['#pointer_df']),
+                        name='Cjson (pointer, DFUDS)')
 rapidTrace = go.Bar(x=x_axis,
-                    y=fixM(df['#trav_rapid']),
+                    y=fixM(df['#rapid']),
                     marker={'color': '#303F9F'},
                     name='RapidJson')
 
@@ -37,11 +46,12 @@ layout = go.Layout(
     # xaxis={'title'='SNLI input file'}
     #            range=[.95, 10.05],
     #            tick0=1, dtick=1),
-    yaxis={'title': 'Time (ms)', 'dtick': 1000}
+    yaxis={'title': 'RAM usage (MB)', 'dtick': 50}
 )
 
 # Assemble traces that will be ploted
-data = [rapidTrace, bpTrace, dfTrace]
+# data = [rapidTrace, bpTrace, dfTrace, pointerBpTrace, pointerDfTrace]
+data = [rapidTrace, bpTrace, pointerBpTrace]
 # Make figure from data and layout
 fig = go.Figure(data=data, layout=layout)
 
