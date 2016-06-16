@@ -31,8 +31,6 @@ namespace detail {
             // size of names table
             s += sizeof(int);
             s += get_size(obj.names);
-            // size of names list
-            s += get_size(obj.nameList);
             // size of values BitmapIndex
             s += get_size(obj.values);
             return s;
@@ -92,7 +90,7 @@ namespace detail {
     template <>
     struct get_size_helper<Jvalue> {
         static size_t value(const Jvalue &obj) {
-            size_t s = sizeof(char);
+            size_t s = sizeof(uint) + sizeof(char);
             if (obj.isString()) s += get_size(obj.getCStr());
             else if (obj.isChar()) s += sizeof(char);
             else if (obj.isShort()) s += sizeof(short);
@@ -167,8 +165,6 @@ namespace detail {
             // store name table
             serializer((int) obj.names.size(), res);
             serializer(obj.names, res);
-            // store name list
-            serializer(obj.nameList, res);
             // store bitmap indexes for values
             serializer(obj.values, res);
         }
@@ -245,7 +241,11 @@ namespace detail {
     template <>
     struct serialize_helper<Jvalue> {
         static void apply(const Jvalue &obj, StreamType::iterator &res) {
+            // serialize name index
+            serializer(obj.nameId, res);
+            // serialize type
             serializer((char) obj.type, res);
+            // serialize data (if exists)
             if (obj.isString()) serializer(obj.getString(), res);
             else if (obj.isChar()) serializer(obj.getChar(), res);
             else if (obj.isShort()) serializer(obj.getShort(), res);
@@ -420,19 +420,20 @@ namespace detail {
     struct deserialize_helper<Jvalue> {
         static Jvalue apply(StreamType::const_iterator& begin,
                 StreamType::const_iterator end) {
+            uint nameId = deserialize_helper<uint>::apply(begin, end);
             types type = static_cast<types>(deserialize_helper<char>::apply(begin, end));
 
             if (type == types::kString)
-                return Jvalue::factory(deserialize_helper<string>::apply(begin, end));
+                return Jvalue::factory(nameId, deserialize_helper<string>::apply(begin, end));
             else if (type == types::kChar)
-                return Jvalue::factory(deserialize_helper<char>::apply(begin, end));
+                return Jvalue::factory(nameId, deserialize_helper<char>::apply(begin, end));
             else if (type == types::kShort)
-                return Jvalue::factory(deserialize_helper<short>::apply(begin, end));
+                return Jvalue::factory(nameId, deserialize_helper<short>::apply(begin, end));
             else if (type == types::kInt)
-                return Jvalue::factory(deserialize_helper<int>::apply(begin, end));
+                return Jvalue::factory(nameId, deserialize_helper<int>::apply(begin, end));
             else if (type == types::kDouble)
-                return Jvalue::factory(deserialize_helper<double>::apply(begin, end));
-            return Jvalue::factory(type);
+                return Jvalue::factory(nameId, deserialize_helper<double>::apply(begin, end));
+            return Jvalue::factory(nameId, type);
         }
     };
 
@@ -460,12 +461,10 @@ namespace detail {
             // recover names table
             int namesSize = deserialize_helper<int>::apply(begin, end);
             vector<char*> names = deserialize_helper<vector<char*>>::apply(namesSize, begin, end);
-            // recover names list
-            vector<int> nameList = deserialize_helper<vector<int>>::apply(size, begin, end);
             // recover values
             BitmapIndex<Jvalue> values = deserialize_helper<BitmapIndex<Jvalue>>::apply(size, begin, end);
 
-            return Cjson<T>(size, st, names, nameList, values);
+            return Cjson<T>(size, st, names, values);
         }
     };
 
@@ -523,16 +522,16 @@ template void save_to_file(Cjson<DfTree>&, const string&);
 
 template <class T>
 void save_to_file_split(Cjson<T> &cjson, const string &filename) {
-    const int nsplit = 5;
+    const int nsplit = 4;
+    string splitnames[] = {"_header", "_tree", "_names", "_values"};
+
     StreamType res[nsplit];
     serialize(cjson.size, res[0]);                 // header (size)
     serialize((int) cjson.names.size(), res[0]); // header (name table size)
     serialize(cjson.tree, res[1]); // tree
     serialize(cjson.names, res[2]); // name table
-    serialize(cjson.nameList, res[3]); // name list
-    serialize(cjson.values, res[4]); // values
+    serialize(cjson.values, res[3]); // values
 
-    string splitnames[] = {"_header", "_tree", "_table", "_names", "_values"};
     for (int i = 0; i < nsplit; i++) {
         string splitname = filename + splitnames[i];
         save_to_file(res[i], splitname);
@@ -565,8 +564,8 @@ template Cjson<DfTree> load_from_file(const string&);
 
 template <class T>
 Cjson<T> load_from_file_split(const string &filename) {
-    const int nsplit = 5;
-    string splitnames[] = {"_header", "_tree", "_table", "_names", "_values"};
+    const int nsplit = 4;
+    string splitnames[] = {"_header", "_tree", "_names", "_values"};
 
     int psize, namesSize;
     T st;
@@ -591,11 +590,11 @@ Cjson<T> load_from_file_split(const string &filename) {
         else if (i == 1) st = deserialize<T>(psize, begin, end);
         else if (i == 2) names = deserialize<vector<char*>>(namesSize, begin, end);
                           // return deserialize<Cjson>(res);
-        else if (i == 3) nameList = deserialize<vector<int>>(psize, begin, end);
+        // else if (i == 3)
         else values = deserialize<BitmapIndex<Jvalue>>(psize, begin, end);
     }
 
-    return Cjson<T>(psize, st, names, nameList, values);
+    return Cjson<T>(psize, st, names, values);
 }
 
 template Cjson<BpTree> load_from_file_split(const string&);

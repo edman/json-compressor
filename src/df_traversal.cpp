@@ -14,9 +14,9 @@ DfTraverser DfTraversal::getTraverser() {
 }
 
 TraversalNode DfTraversal::getNode(int nodeIndex, int treeIndex) {
-  if (nodeIndex == 0) return TraversalNode("", Jvalue::OBJECT_VAL);
-  return TraversalNode(cjson->names[cjson->nameList[nodeIndex - 1]],
-      cjson->values[nodeIndex - 1]);
+  if (nodeIndex == 0) return TraversalNode("", Jvalue::factory(-1, types::kObject));
+  Jvalue &value = cjson->values[nodeIndex - 1];
+  return TraversalNode(cjson->names[value.nameId], value);
 }
 
 TraversalNode DfTraversal::getCurrentNode() {

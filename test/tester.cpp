@@ -470,7 +470,9 @@ void log_cjson_size(Cjson<T> &obj, long long dur, string fn) {
     mfile << "original size (bytes): " << orig << endl;
     mfile << "compressed size (bytes): " << comp << endl;
 
-    long header, tree, names, nameList, values;
+    long header, tree, names, values;
+    // long header, tree, names, nameList, values; // remove
+
     // size of header
     size_t s = sizeof(int);
     header = s;
@@ -481,8 +483,8 @@ void log_cjson_size(Cjson<T> &obj, long long dur, string fn) {
     names = sizeof(int) + get_size(obj.names);
     s += names;
     // size of namelist
-    nameList = get_size(obj.nameList);
-    s += nameList;
+    // nameList = get_size(obj.nameList); // remove
+    // s += nameList; //remove
     // size of values
     values = get_size(obj.values);
     s += values;
@@ -490,7 +492,7 @@ void log_cjson_size(Cjson<T> &obj, long long dur, string fn) {
     write_formatted(mfile, ".header", header, s);
     write_formatted(mfile, ".tree", tree, s);
     write_formatted(mfile, ".names", names, s);
-    write_formatted(mfile, ".nameList", nameList, s);
+    // write_formatted(mfile, ".nameList", nameList, s); // remove
     write_formatted(mfile, ".values", values, s);
     mfile << "Total " << s << endl;
     assert(s == get_size(obj));

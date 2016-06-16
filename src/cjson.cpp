@@ -35,8 +35,6 @@ Cjson<SuccinctTree>::Cjson(Value &d, bool debug) {
 
     // Reduce excess vector capacity
     names.shrink_to_fit();
-    nameList.shrink_to_fit();
-    assert(nameList.size() == values.size());
 
     // Construct a tree from the JSON sctructure
     tree = SuccinctTree(d, size);
@@ -47,27 +45,26 @@ template <class SuccinctTree>
 void Cjson<SuccinctTree>::loadInfo(Value &d, unordered_map<string, int> &nameTable) {
     if (d.IsObject()) {
         for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-            int nameId = resolveNameId(it->name.GetString(), nameTable);
-            nameList.push_back(nameId);
-            values.insert(Jvalue::factory(it->value));
+            uint nameId = resolveNameId(it->name.GetString(), nameTable);
+            values.insert(Jvalue::factory(nameId, it->value));
 
             loadInfo(it->value, nameTable);
         }
     }
     else if (d.IsArray())
         for (auto it = d.Begin(); it != d.End(); ++it) {
-            nameList.push_back(resolveNameId("", nameTable));
-            values.insert(Jvalue::factory(*it));
+            uint nameId = resolveNameId("", nameTable);
+            values.insert(Jvalue::factory(nameId, *it));
 
             loadInfo(*it, nameTable);
         }
 }
 
 template <class SuccinctTree>
-int Cjson<SuccinctTree>::resolveNameId(const string &name, unordered_map<string, int> &nameTable) {
+uint Cjson<SuccinctTree>::resolveNameId(const string &name, unordered_map<string, int> &nameTable) {
     auto it = nameTable.find(name);
     if (it == nameTable.end()) {
-        int nameId = names.size();
+        uint nameId = names.size();
         nameTable[name] = nameId;
         names.push_back(string_to_cstr(name));
         return nameId;

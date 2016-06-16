@@ -22,6 +22,7 @@ void* pointerForInt(int);
 
 class Jvalue {
 public:
+    const uint nameId;
     const types type;
     // { "String", "Int", "Double" };
     const void *const val;
@@ -32,11 +33,11 @@ public:
     /* Destructor */
     ~Jvalue();
     /* Static factory methods */
-    static Jvalue factory(Value&);
-    static Jvalue factory(types t);
-    static Jvalue factory(string v);
-    static Jvalue factory(int v);
-    static Jvalue factory(double v);
+    static Jvalue factory(uint n, Value &d);
+    static Jvalue factory(uint n, types t);
+    static Jvalue factory(uint n, string v);
+    static Jvalue factory(uint n, int v);
+    static Jvalue factory(uint n, double v);
 
     /* Methods */
     bool isNull() const { return type == types::kNull; }
@@ -67,24 +68,16 @@ public:
     bool operator<(const Jvalue& rhs) const;
     friend ostream& operator<<(ostream &o, const Jvalue &enc);
 
-public:
-    /* Static helpers */
-    static Jvalue NULL_VAL;
-    static Jvalue FALSE_VAL;
-    static Jvalue TRUE_VAL;
-    static Jvalue OBJECT_VAL;
-    static Jvalue ARRAY_VAL;
-
 private:
     /* Constructors */
-    Jvalue(types t) : type(t), val(nullptr) {}
-    Jvalue(char *v) : type(types::kString)
+    Jvalue(uint n, types t) : nameId(n), type(t), val(nullptr) {}
+    Jvalue(uint n, char *v) : nameId(n), type(types::kString)
         , val(cstr_copy(v)) {}
-    Jvalue(string v) : type(types::kString)
+    Jvalue(uint n, string v) : nameId(n), type(types::kString)
         , val(string_to_cstr(v)) {}
-    Jvalue(int v) : type(typeForInt(v))
+    Jvalue(uint n, int v) : nameId(n), type(typeForInt(v))
         , val(pointerForInt(v)) {}
-    Jvalue(double v) : type(types::kDouble)
+    Jvalue(uint n, double v) : nameId(n), type(types::kDouble)
         , val((void*) new double(v)) {}
 } __attribute__ ((packed));
 
@@ -92,7 +85,7 @@ private:
 namespace std {
     template<> struct hash<Jvalue> {
         size_t operator()(const Jvalue& enc) const {
-            size_t h1 = hash<unsigned char>()(static_cast<unsigned char>(enc.type)), h2;
+            size_t h1 = hash<unsigned char>()(static_cast<unsigned char>(enc.type)), h2, h3;
             if (!enc.hasValue())
                 return h1;
             if (enc.isString())
@@ -101,7 +94,8 @@ namespace std {
                 h2 = hash<int>()(enc.getInt());
             if (enc.isDouble())
                 h2 = hash<double>()(enc.getDouble());
-            return h1 ^ (h2 << 1);
+            h3 = hash<uint>()(enc.nameId);
+            return h1 ^ ((h2 ^ (h3 << 1)) << 1);
         }
     };
 }

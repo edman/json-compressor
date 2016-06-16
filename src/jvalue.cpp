@@ -2,50 +2,41 @@
 #define __JVALUE_CPP__
 
 #include "jvalue.hpp"
-#include "cjson.hpp"
-#include "util.hpp"
-#include "rapidjson/document.h"
 #include <cstdlib>
-#include <iostream>
 
 using namespace std;
 using namespace rapidjson;
 
-Jvalue Jvalue::factory(types t) {
-    if (t == types::kNull) return Jvalue::NULL_VAL;
-    else if (t == types::kFalse) return Jvalue::FALSE_VAL;
-    else if (t == types::kTrue) return Jvalue::TRUE_VAL;
-    else if (t == types::kObject) return Jvalue::OBJECT_VAL;
-    // else if (t == types::kArray)
-    return Jvalue::ARRAY_VAL;
+Jvalue Jvalue::factory(uint n, types t) {
+    return Jvalue(n, t);
 }
-Jvalue Jvalue::factory(string v) { return Jvalue(v); }
-Jvalue Jvalue::factory(int v) { return Jvalue(v); }
-Jvalue Jvalue::factory(double v) { return Jvalue(v); }
+Jvalue Jvalue::factory(uint n, string v) { return Jvalue(n, v); }
+Jvalue Jvalue::factory(uint n, int v) { return Jvalue(n, v); }
+Jvalue Jvalue::factory(uint n, double v) { return Jvalue(n, v); }
 
-Jvalue::Jvalue(const Jvalue &r) : type(r.type)
+Jvalue::Jvalue(const Jvalue &r) : nameId(r.nameId), type(r.type)
     , val(r.isString() ? (void *) string_to_cstr(r.getString())
         : r.isInt() ? (void *) new int(r.getInt())
         : r.isDouble() ? (void *) new double(r.getDouble())
         : nullptr) {}
 
-Jvalue Jvalue::factory(Value &d) {
+Jvalue Jvalue::factory(uint n, Value &d) {
     if (d.IsString())
-        return Jvalue(d.GetString());
+        return Jvalue(n, d.GetString());
     else if (d.IsInt())
-        return Jvalue(d.GetInt());
+        return Jvalue(n, d.GetInt());
     else if (d.IsDouble())
-        return Jvalue(d.GetDouble());
+        return Jvalue(n, d.GetDouble());
     else if (d.IsNull())
-        return Jvalue::NULL_VAL;
+        return Jvalue(n, types::kNull);
     else if (d.IsFalse())
-        return Jvalue::FALSE_VAL;
+        return Jvalue(n, types::kFalse);
     else if (d.IsTrue())
-        return Jvalue::TRUE_VAL;
+        return Jvalue(n, types::kTrue);
     else if (d.IsObject())
-        return Jvalue::OBJECT_VAL;
+        return Jvalue(n, types::kObject);
     // else if (d.IsArray())
-    return Jvalue::ARRAY_VAL;
+    return Jvalue(n, types::kArray);
 }
 
 Jvalue::~Jvalue() {
@@ -87,13 +78,6 @@ bool Jvalue::operator <(const Jvalue& rhs) const {
     return false;
 }
 
-
-/* Assignment of static values */
-Jvalue Jvalue::NULL_VAL = Jvalue(types::kNull);
-Jvalue Jvalue::FALSE_VAL = Jvalue(types::kFalse);
-Jvalue Jvalue::TRUE_VAL = Jvalue(types::kTrue);
-Jvalue Jvalue::OBJECT_VAL = Jvalue(types::kObject);
-Jvalue Jvalue::ARRAY_VAL = Jvalue(types::kArray);
 
 types typeForInt(int num) {
     if (intInChar(num)) return types::kChar;
