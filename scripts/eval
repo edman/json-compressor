@@ -21,35 +21,14 @@ for i in `seq $lo $hi`; do
     # Run valgrind and generate massif output file
     echo ".. rapid input $i"
     valgrind $exec -r test/inputs/input$i.json
-
-    # $mcom $exec -r test/inputs/input$i.json
-    #
-    # # Convert the massif file to csv
-    # echo ". massif to csv"
-    # scripts/massif_to_csv $outfile.$i > $csvfile.$i
-    #
-    # # Plot the csv file in a graph
-    # echo ". plot csv"
-    # scripts/csv_to_graph $csvfile.$i
-    # mv temp-plot.html $outdir/$i.rapid.html
 done
 
 echo "== CJson"
 for i in `seq $lo $hi`; do
     # Run valgrind and generate massif output file
-    echo ".. cjson input $i"
-    valgrind $exec -c test/inputs/input$i.json
-
-    # # $mcom $exec -c test/inputs/input$i.json
-    #
-    # # Convert the massif file to csv
-    # echo ". massif to csv"
-    # scripts/massif_to_csv $outfile.$i > $csvfile.$i
-    #
-    # # Plot the csv file in a graph
-    # echo ". plot csv"
-    # scripts/csv_to_graph $csvfile.$i
-    # mv temp-plot.html $outdir/$i.cjson.html
+    echo ".. cjson input bp $i"
+    valgrind $exec -bp test/inputs/input$i.json
+    valgrind $exec -df test/inputs/input$i.json
 done
 
 echo "== CJson bitmap pointer"
@@ -58,18 +37,8 @@ make clean
 make
 for i in `seq $lo $hi`; do
     # Run valgrind and generate massif output file
-    echo ".. bitmap input $i"
-    valgrind $exec -c test/inputs/input$i.json
-
-    # # $mcom $exec -c test/inputs/input$i.json
-    #
-    # # Convert the massif file to csv
-    # echo ". massif to csv"
-    # scripts/massif_to_csv $outfile.$i > $csvfile.$i
-    #
-    # # Plot the csv file in a graph
-    # echo ". plot csv"
-    # scripts/csv_to_graph $csvfile.$i
-    # mv temp-plot.html $outdir/$i.pointer.cjson.html
+    echo ".. bitmap input bp $i"
+    valgrind $exec -bp test/inputs/input$i.json
+    valgrind $exec -df test/inputs/input$i.json
 done
 

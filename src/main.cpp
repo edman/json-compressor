@@ -108,16 +108,21 @@ void cjson_log(Cjson<T> &p, char *filename) {
 	log_cjson_size(p, fn, original_size);
 }
 
-void cjson_usage_test(char *fnarg) {
+void cjson_usage_test(char *fnarg, bool bp) {
     // bebusy();
-	Cjson<BpTree> *p = cjson_bp_from_file(fnarg);
-	// Cjson<DfTree> *p = cjson_df_from_file(fnarg);
+    if (bp) {
+        Cjson<BpTree> *p = cjson_bp_from_file(fnarg);
+        cout << "BpTraversal creation" << endl;
+        BpTraversal *tbp = new BpTraversal(p);
+    }
+    else {
+        Cjson<DfTree> *p = cjson_df_from_file(fnarg);
+        cout << "DFTraversal creation" << endl;
+        DfTraversal *tdf = new DfTraversal(p);
+     }
     // bebusy();
     // delete p;
 
-    cout << "BpTraversal creation" << endl;
-    BpTraversal *tbp = new BpTraversal(p);
-    // DfTraversal *tdf = new DfTraversal(p);
 
     // bebusy();
 
@@ -132,7 +137,8 @@ int main(int argc, char *argv[]) {
     if (!check_arguments(argc, argv)) { return 1; }
 
     if (strcmp(argv[1], "-r") == 0) rapidjson_usage_test(argv[2]);
-    else cjson_usage_test(argv[2]);
+    else if (strcmp(argv[1], "-bp") == 0) cjson_usage_test(argv[2], true);
+    else cjson_usage_test(argv[2], false);
 
     // bebusy();
 
