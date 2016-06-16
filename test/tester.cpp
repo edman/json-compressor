@@ -28,6 +28,8 @@ bool dot1 = false, dobt1 = false;
 long long tick(string msg="time", bool bt=false);
 long long average(long long *a, int n);
 template <class T> void traversalDfs(T&);
+template <class T> void traverserDfs(T);
+template <class T> void traverserBfs(T);
 void traversalRapid(Value&);
 void doubleTraversalCjson(DfTraversal &tdf, BpTraversal &tbp);
 
@@ -135,16 +137,16 @@ TEST(SerializationTest, get_size) {
 
     ASSERT_EQ(3, get_size(pb.tree));
     // ASSERT_EQ(39, get_size(pb.names));
-    ASSERT_EQ(38, get_size(pb.values));
-    ASSERT_EQ(101, get_size(pb));
+    ASSERT_EQ(34, get_size(pb.values));
+    ASSERT_EQ(97, get_size(pb));
     // ASSERT_EQ(4, get_size(pb.names.bv));
 
     Cjson<DfTree> pd(d);
 
     ASSERT_EQ(3, get_size(pd.tree));
     // ASSERT_EQ(39, get_size(pd.names));
-    ASSERT_EQ(38, get_size(pd.values));
-    ASSERT_EQ(101, get_size(pd));
+    ASSERT_EQ(34, get_size(pd.values));
+    ASSERT_EQ(97, get_size(pd));
 }
 
 TEST(SerializationTest, BpTree) {
@@ -198,8 +200,7 @@ TEST(SerializationTest, IntAndString) {
 }
 
 TEST(SerializationTest, CjsonSize) {
-    // for (int i = 5; i <= 9; ++i) {
-    for (int i = 1; i <= 6; ++i) {
+    for (int i = 1; i <= 0; ++i) {
             cout << "start " << i << endl;
         string fn = filename(i, true);
         Document d = rapid_from_file(fn);
@@ -228,7 +229,7 @@ TEST(SerializationTest, CjsonDeserialization) {
         save_to_file(p, fn + "_c");
 
         tick();
-        Cjson<BpTree> loaded = load_from_file<BpTree>(fn);
+        Cjson<BpTree> loaded = load_from_file<BpTree>(fn + "_c");
         long long dur = tick();
         cout << "duration " << dur << endl;
         EXPECT_EQ(p.size, loaded.size);
@@ -286,14 +287,37 @@ TEST(TraversalTest, Traversal) {
     // EXPECT_TRUE(t.hasNextSibling());
 }
 
-TEST(TraversalTest, Time) {
+TEST(TimeTest, CjsonDeserialization) {
+    for (int i = 8; i <= 9; ++i) {
+        string fn = filename(i, true);
+
+        cout << "== loading " << fn << endl;
+        // cout << "= rapidjson loading" << endl;
+        // tick();
+        // Document d = rapid_from_file(fn);
+        // long long dur = tick();
+        // cout << "time: " << dur << endl;
+
+        cout << "= cjson bp loading" << endl;
+        tick();
+        Cjson<BpTree> loaded = load_from_file<BpTree>(fn + "_c");
+        long long dur = tick();
+        cout << "time: " << dur << endl;
+        cout << "size " << loaded.size << endl;
+        cout << "names size " << loaded.names.size() << endl;
+    }
+}
+
+
+TEST(TimeTest, Traversal) {
     int lo = 1;
-    int hi = 1;
-    int tries = 1;
+    int hi = 0;
+    int tries = 5;
     long long times[tries];
     for (int i = lo; i <= hi; ++i) {
         cout << endl << "=== (parse input " << i << " ";
         string fn = filename(i, true);
+        // string fn = filename(i, false);
         Document d = rapid_from_file(fn);
         cout << fn << ") ===" << endl;
 
@@ -301,13 +325,12 @@ TEST(TraversalTest, Time) {
         Cjson<DfTree> pd(d);
         DfTraversal td(&pd);
 
-        cout << "number of nodes (tree) " << pd.tree.N << endl;
-        cout << "number of nodes (cjson) " << pd.size << endl;
-
         cout << "= dftree begin traversal" << endl;
         for (int k = 0; k < tries; ++k) {
             tick();
-            traversalDfs(td);
+            // traversalDfs(td);
+            traverserDfs(td.getTraverser());
+            // traverserBfs(td.getTraverser());
             times[k] = tick("cjson dftree time");
         }
         cout << "average: " << average(times, tries) << endl;
@@ -351,6 +374,26 @@ void doubleTraversalCjson(DfTraversal &tdf, BpTraversal &tbp) {
         ASSERT_EQ(tbp.goToNextSibling(), true);
         doubleTraversalCjson(tdf, tbp);
     } else { ASSERT_EQ(tbp.goToNextSibling(), false); }
+}
+
+template <class T> void traverserDfs(T t) {
+    if (!t.hasChild()) return;
+    vector<T> children = t.getChildren();
+    for (auto child : children) {
+        traverserDfs(child);
+    }
+}
+
+template <class T> void traverserBfs(T t) {
+    queue<T> q; q.push(t);
+
+    while (!q.empty()) {
+        T cur = q.front(); q.pop();
+        if (cur.hasChild()) {
+            for (auto child : cur.getChildren())
+                q.push(child);
+        }
+    }
 }
 
 template <class T> void traversalDfs(T& t) {
