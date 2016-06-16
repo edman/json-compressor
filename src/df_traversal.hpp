@@ -3,6 +3,7 @@
 
 #include "cjson.hpp"
 #include "df_tree.hpp"
+#include "df_traverser.hpp"
 #include "traversal_node.hpp"
 #include "rapidjson/document.h"
 #include <sdsl/bp_support_sada.hpp>
@@ -12,6 +13,7 @@
 using namespace std;
 using namespace rapidjson;
 
+class DfTraverser;
 
 class DfTraversal {
 public:
@@ -35,19 +37,32 @@ public:
     //     util::init_support(select_close, &cjson.tree.bv);
     // }
 
+    DfTraverser getTraverser();
     TraversalNode getCurrentNode();
-    inline bool hasParent();
+    TraversalNode getNode(int ni, int ti);
+    bool hasParent();
+    bool hasParent(int ti);
     bool goToParent();
-    inline int degree();
+    DfTraverser getParent(int ni, int ti);
+    int degree();
+    int degree(int ni, int ti);
     bool hasChild();
+    bool hasChild(int ni, int ti);
     bool goToChild(int i=0);
+    DfTraverser getChild(int ni, int ti, int i=0);
+    vector<DfTraverser> getChildren(int ni, int ti);
     bool hasNextSibling();
+    bool hasNextSibling(int ni, int ti);
     int nextSiblingIndex();
+    int nextSiblingIndex(int ni, int ti);
     bool goToNextSibling();
+    DfTraverser getNextSibling(int ni, int ti);
 
 private:
     void updateNodeIndexFromTreeIndex();
     void updateTreeIndexFromNodeIndex();
+    int nodeIndexFromTreeIndex(int treeIndex);
+    int treeIndexFromNodeIndex(int ni);
 };
 
 ostream& operator<<(ostream &o, const DfTraversal &t);
