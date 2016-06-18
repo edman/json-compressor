@@ -7,6 +7,7 @@
 #include "df_tree.hpp"
 #include "cjson.hpp"
 #include "util.hpp"
+#include "packed_array.hpp"
 #include <cstring>
 #include <numeric>
 #include <string>
@@ -29,7 +30,7 @@ namespace detail {
             // size of tree
             s += get_size(obj.tree);
             // size of names table
-            s += sizeof(int);
+            s += sizeof(uint);
             s += get_size(obj.names);
             // size of values BitmapIndex
             s += get_size(obj.values);
@@ -77,20 +78,30 @@ namespace detail {
         }
     };
 
-    template <class T>
-    struct get_size_helper<BitmapIndex<T>> {
-        static size_t value(const BitmapIndex<T> &obj) {
+    template <>
+    struct get_size_helper<PackedArray> {
+        static size_t value(const PackedArray &obj) {
+            // size and blob array
+            return sizeof(obj.size()) + obj.size();
+        }
+    };
+
+    template <>
+    struct get_size_helper<BitmapIndex> {
+        static size_t value(const BitmapIndex &obj) {
             // size of bit vector plus size of values vector
             // return get_size(obj.bv) + obj.byte_size + sizeof(int);
-            // length of vector + series of elements
-            return sizeof(int) + get_size(obj.values);
+            // number of elements + bit vector + series of elements
+            return sizeof(obj.size()) + get_size((uint) obj._bitmap.size())
+                    + get_size(obj._bitmap) + get_size(obj._array);
         }
     };
 
     template <>
     struct get_size_helper<Jvalue> {
         static size_t value(const Jvalue &obj) {
-            size_t s = sizeof(uint) + sizeof(char);
+            // type + nameId
+            size_t s = sizeof(char) + sizeof(uint);
             if (obj.isString()) s += get_size(obj.getCStr());
             else if (obj.isChar()) s += sizeof(char);
             else if (obj.isShort()) s += sizeof(short);
@@ -131,8 +142,8 @@ template size_t get_size< Cjson<DfTree> >(const Cjson<DfTree>&);
 template size_t get_size<bit_vector>(const bit_vector&);
 template size_t get_size<BpTree>(const BpTree&);
 template size_t get_size<DfTree>(const DfTree&);
-template size_t get_size<BitmapIndex<string>>(const BitmapIndex<string>&);
-template size_t get_size<BitmapIndex<Jvalue>>(const BitmapIndex<Jvalue>&);
+template size_t get_size<PackedArray>(const PackedArray&);
+template size_t get_size<BitmapIndex>(const BitmapIndex&);
 template size_t get_size<Jvalue>(const Jvalue&);
 template size_t get_size<vector<string>>(const vector<string>&);
 template size_t get_size<vector<char*>>(const vector<char*>&);
@@ -221,30 +232,36 @@ namespace detail {
         }
     };
 
-    template <class T>
-    struct serialize_helper<BitmapIndex<T>> {
-        static void apply(const BitmapIndex<T> &obj, StreamType::iterator &res) {
-            // serialize byte_size information
-            // serializer(obj.byte_size, res);
+    template <>
+    struct serialize_helper<PackedArray> {
+        static void apply(const PackedArray &obj, StreamType::iterator &res) {
+            // serialize number of bytes
+            serializer(obj.size(), res);
+            // serialize byte array
+            serialize_array(obj._array, obj.size(), res);
+        }
+    };
 
+    template <>
+    struct serialize_helper<BitmapIndex> {
+        static void apply(const BitmapIndex &obj, StreamType::iterator &res) {
+            // serialize element count
+            serializer(obj.size(), res);
             // serialize bitmap index
-            // serializer(obj.bv, res);
-
+            serializer((uint) obj._bitmap.size(), res);
+            serializer(obj._bitmap, res);
             // serialize values
-            serializer((int) obj.values.size(), res);
-            serializer(obj.values, res);
-            // for (auto it : obj.values)
-            //     serializer(it, res);
+            serializer(obj._array, res);
         }
     };
 
     template <>
     struct serialize_helper<Jvalue> {
         static void apply(const Jvalue &obj, StreamType::iterator &res) {
-            // serialize name index
-            serializer(obj.nameId, res);
             // serialize type
             serializer((char) obj.type, res);
+            // serialize name index
+            serializer(obj.nameId, res);
             // serialize data (if exists)
             if (obj.isString()) serializer(obj.getString(), res);
             else if (obj.isChar()) serializer(obj.getChar(), res);
@@ -286,6 +303,7 @@ void serialize(const T &obj, StreamType &res) {
 
     StreamType::iterator it = res.begin() + offset;
     detail::serializer(obj,it);
+    // cout << "exp: " << offset + size << " | got:" << it - res.begin() << endl;
     assert(res.begin() + offset + size == it);
 }
 
@@ -294,8 +312,7 @@ template void serialize< Cjson<DfTree> >(const Cjson<DfTree>&, StreamType&);
 template void serialize<bit_vector>(const bit_vector&, StreamType&);
 template void serialize<BpTree>(const BpTree&, StreamType&);
 template void serialize<DfTree>(const DfTree&, StreamType&);
-template void serialize<BitmapIndex<string>>(const BitmapIndex<string>&, StreamType&);
-template void serialize<BitmapIndex<Jvalue>>(const BitmapIndex<Jvalue>&, StreamType&);
+template void serialize<BitmapIndex>(const BitmapIndex&, StreamType&);
 template void serialize<Jvalue>(const Jvalue&, StreamType&);
 template void serialize<vector<Jvalue>>(const vector<Jvalue>&, StreamType&);
 template void serialize<vector<string>>(const vector<string>&, StreamType&);
@@ -328,6 +345,12 @@ namespace detail {
             return val;
         }
     };
+
+    void deserialize_array(char *a, int size, StreamType::const_iterator &begin,
+            StreamType::const_iterator end) {
+        for (int i = 0; i < size; ++i)
+            a[i] = deserialize_helper<char>::apply(begin, end);
+    }
 
     template <>
     struct deserialize_helper<string> {
@@ -391,28 +414,37 @@ namespace detail {
        }
     };
 
-    template <class T>
-    struct deserialize_helper<BitmapIndex<T>> {
-        static BitmapIndex<T> apply(int values_size, StreamType::const_iterator& begin,
+    template <>
+    struct deserialize_helper<PackedArray> {
+        static PackedArray apply(StreamType::const_iterator& begin,
                 StreamType::const_iterator end) {
+            // deserialize void array size in bytes
+            size_t size = deserialize_helper<size_t>::apply(begin, end);
+            // allocate an array of the appropriate size
+            char *array = new char[size];
+            // deserialize the void array byte by byte
+            deserialize_array(array, size, begin, end);
+            // construct and return a PackedArray
+            return PackedArray(size, array);
+       }
+    };
 
-            // // deserialize byte_size
-            // int byte_size = deserialize_helper<int>::apply(begin, end);
+    template <>
+    struct deserialize_helper<BitmapIndex> {
+        static BitmapIndex apply(int values_size, StreamType::const_iterator& begin,
+                StreamType::const_iterator end) {
+            // deserialize size
+            uint size = deserialize_helper<uint>::apply(begin, end);
 
-            // // deserialize bit vector
-            // int bv_size_in_bytes = bit_size_to_bytes(byte_size);
-            // int bv_size_in_bits = byte_size;
-            // bit_vector bv = deserialize_helper<bit_vector>::apply(bv_size_in_bits, bv_size_in_bytes, begin, end);
+            // deserialize bit vector
+            uint bv_size_in_bits = deserialize_helper<uint>::apply(begin, end);
+            uint bv_size_in_bytes = bit_size_to_bytes(bv_size_in_bits);
+            bit_vector bitmap = deserialize_helper<bit_vector>::apply(bv_size_in_bits, bv_size_in_bytes, begin, end);
 
-            // deserialize values vector
-            int size = deserialize_helper<int>::apply(begin, end);
-            vector<T> values; values.reserve(size);
-            for (int i = 0; i < values_size; ++i)
-                // deserialize a single value
-                values.push_back(deserialize_helper<T>::apply(begin, end));
+            // deserialize values array
+            PackedArray array = deserialize_helper<PackedArray>::apply(begin, end);
 
-            // return BitmapIndex<T>(byte_size, bv, values);
-            return BitmapIndex<T>(values);
+            return BitmapIndex(size, bitmap, array);
         }
     };
 
@@ -420,20 +452,23 @@ namespace detail {
     struct deserialize_helper<Jvalue> {
         static Jvalue apply(StreamType::const_iterator& begin,
                 StreamType::const_iterator end) {
-            uint nameId = deserialize_helper<uint>::apply(begin, end);
+            // deserialize type
             types type = static_cast<types>(deserialize_helper<char>::apply(begin, end));
+            // deserialize nameId
+            uint nameId = deserialize_helper<uint>::apply(begin, end);
 
+            // deserialize value data if pertinent
             if (type == types::kString)
-                return Jvalue::factory(nameId, deserialize_helper<string>::apply(begin, end));
+                return Jvalue::factory(deserialize_helper<string>::apply(begin, end), nameId);
             else if (type == types::kChar)
-                return Jvalue::factory(nameId, deserialize_helper<char>::apply(begin, end));
+                return Jvalue::factory(deserialize_helper<char>::apply(begin, end), nameId);
             else if (type == types::kShort)
-                return Jvalue::factory(nameId, deserialize_helper<short>::apply(begin, end));
+                return Jvalue::factory(deserialize_helper<short>::apply(begin, end), nameId);
             else if (type == types::kInt)
-                return Jvalue::factory(nameId, deserialize_helper<int>::apply(begin, end));
+                return Jvalue::factory(deserialize_helper<int>::apply(begin, end), nameId);
             else if (type == types::kDouble)
-                return Jvalue::factory(nameId, deserialize_helper<double>::apply(begin, end));
-            return Jvalue::factory(nameId, type);
+                return Jvalue::factory(deserialize_helper<double>::apply(begin, end), nameId);
+            return Jvalue::factory(type, nameId);
         }
     };
 
@@ -462,7 +497,7 @@ namespace detail {
             int namesSize = deserialize_helper<int>::apply(begin, end);
             vector<char*> names = deserialize_helper<vector<char*>>::apply(namesSize, begin, end);
             // recover values
-            BitmapIndex<Jvalue> values = deserialize_helper<BitmapIndex<Jvalue>>::apply(size, begin, end);
+            BitmapIndex values = deserialize_helper<BitmapIndex>::apply(size, begin, end);
 
             return Cjson<T>(size, st, names, values);
         }
@@ -498,8 +533,7 @@ template Cjson<DfTree> deserialize(StreamType::const_iterator&, const StreamType
 template bit_vector deserialize(int, int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template BpTree deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template DfTree deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
-template BitmapIndex<string> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
-template BitmapIndex<Jvalue> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
+template BitmapIndex deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template Jvalue deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
 template vector<char*> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template vector<string> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
@@ -571,7 +605,7 @@ Cjson<T> load_from_file_split(const string &filename) {
     T st;
     vector<char*> names;
     vector<int> nameList;
-    BitmapIndex<Jvalue> values;
+    BitmapIndex values;
 
     for (int i = 0; i < nsplit; i++) {
         ifstream ifile(filename + splitnames[i], ios::binary);
@@ -591,7 +625,7 @@ Cjson<T> load_from_file_split(const string &filename) {
         else if (i == 2) names = deserialize<vector<char*>>(namesSize, begin, end);
                           // return deserialize<Cjson>(res);
         // else if (i == 3)
-        else values = deserialize<BitmapIndex<Jvalue>>(psize, begin, end);
+        else values = deserialize<BitmapIndex>(psize, begin, end);
     }
 
     return Cjson<T>(psize, st, names, values);

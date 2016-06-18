@@ -19,18 +19,16 @@ public:
     int size;
     SuccinctTree tree;
     vector<char*> names;
-    BitmapIndex<Jvalue> values;
+    BitmapIndex values;
 
 public:
     /* Constructors and destructor */
     Cjson(Value &d, bool debug=false);
-    Cjson(int s, SuccinctTree st, vector<char*> nm, BitmapIndex<Jvalue> vl): size(s), tree(st), names(nm), values(vl) {}
+    Cjson(int s, SuccinctTree &st, vector<char*> &nm, BitmapIndex &vl): size(s), tree(st), names(nm), values(std::move(vl)) {}
 
     /* Methods */
     void loadInfo(Value &d, unordered_map<string, int> &nt);
     uint resolveNameId(const string &n, unordered_map<string, int> &nt);
-
-    void removeValues();
 
     /* Operators */
     bool operator==(const Cjson &rhs) const;

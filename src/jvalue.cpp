@@ -7,37 +7,55 @@
 using namespace std;
 using namespace rapidjson;
 
-Jvalue Jvalue::factory(uint n, types t) {
-    return Jvalue(n, t);
+Jvalue Jvalue::factory(types t, uint n) {
+    return Jvalue(t, n);
 }
-Jvalue Jvalue::factory(uint n, string v) { return Jvalue(n, v); }
-Jvalue Jvalue::factory(uint n, int v) { return Jvalue(n, v); }
-Jvalue Jvalue::factory(uint n, double v) { return Jvalue(n, v); }
+Jvalue Jvalue::factory(string v, uint n) { return Jvalue(v, n); }
+Jvalue Jvalue::factory(int v, uint n) { return Jvalue(v, n); }
+Jvalue Jvalue::factory(double v, uint n) { return Jvalue(v, n); }
 
-Jvalue::Jvalue(const Jvalue &r) : nameId(r.nameId), type(r.type)
+Jvalue::Jvalue(const Jvalue &r) : type(r.type), nameId(r.nameId)
     , val(r.isString() ? (void *) string_to_cstr(r.getString())
+        : r.isChar() ? (void *) new char(r.getChar())
+        : r.isShort() ? (void *) new short(r.getShort())
         : r.isInt() ? (void *) new int(r.getInt())
         : r.isDouble() ? (void *) new double(r.getDouble())
         : nullptr) {}
 
-Jvalue Jvalue::factory(uint n, Value &d) {
-    if (d.IsString())
-        return Jvalue(n, d.GetString());
-    else if (d.IsInt())
-        return Jvalue(n, d.GetInt());
-    else if (d.IsDouble())
-        return Jvalue(n, d.GetDouble());
-    else if (d.IsNull())
-        return Jvalue(n, types::kNull);
-    else if (d.IsFalse())
-        return Jvalue(n, types::kFalse);
-    else if (d.IsTrue())
-        return Jvalue(n, types::kTrue);
-    else if (d.IsObject())
-        return Jvalue(n, types::kObject);
-    // else if (d.IsArray())
-    return Jvalue(n, types::kArray);
+Jvalue::Jvalue(Jvalue &&other) : type(types::kNull), nameId(-1), val(nullptr) {
+    // copy the data of other to this
+    type = other.type;
+    nameId = other.nameId;
+    val = other.val;
+    // remove the content of other
+    other.type = types::kNull;
+    other.nameId = -1;
+    other.val = nullptr;
 }
+
+Jvalue Jvalue::factory(Value &d, uint n) {
+    if (d.IsString())
+        return Jvalue(d.GetString(), n);
+    else if (d.IsInt())
+        return Jvalue(d.GetInt(), n);
+    else if (d.IsDouble())
+        return Jvalue(d.GetDouble(), n);
+    else if (d.IsNull())
+        return Jvalue(types::kNull, n);
+    else if (d.IsFalse())
+        return Jvalue(types::kFalse, n);
+    else if (d.IsTrue())
+        return Jvalue(types::kTrue, n);
+    else if (d.IsObject())
+        return Jvalue(types::kObject, n);
+    // else if (d.IsArray())
+    return Jvalue(types::kArray, n);
+}
+
+// Jvalue& Jvalue::factory(void *pointer) {
+//     Jvalue *value = (Jvalue*) pointer;
+//     return value;
+// }
 
 Jvalue::~Jvalue() {
     if (isString()) { delete[] (char*) val; }
@@ -47,13 +65,35 @@ Jvalue::~Jvalue() {
     else if (isDouble()) { delete (double*) val; }
 }
 
-// Jvalue Jvalue::operator=(const Jvalue &rhs) {
-//     type = rhs.type;
-//     if (rhs.isString()) vstring = rhs.vstring;
-//     if (rhs.isInt()) vint = rhs.vint;
-//     if (rhs.isDouble()) vdouble = rhs.vdouble;
-//     return *this;
-// }
+Jvalue& Jvalue::operator=(Jvalue &other) {
+    // Copy-assignment operator
+    if (this != &other) {
+        // copy the data from other to this
+        type = other.type;
+        nameId = other.nameId;
+        val = other.isString() ? (void *) string_to_cstr(other.getString())
+            : other.isInt() ? (void *) new int(other.getInt())
+            : other.isDouble() ? (void *) new double(other.getDouble())
+            : nullptr;
+    }
+    return *this;
+}
+
+Jvalue& Jvalue::operator=(Jvalue &&other) {
+    // Move-assignment operator
+    if (this != &other) {
+        // copy the data from other to this
+        type = other.type;
+        nameId = other.nameId;
+        val = other.val;
+
+        // remove the content of other
+        other.type = types::kNull;
+        other.nameId = -1;
+        other.val = nullptr;
+    }
+    return *this;
+}
 
 bool Jvalue::operator==(const Jvalue &rhs) const {
     // Not same type => different
@@ -98,6 +138,7 @@ ostream& operator<<(ostream &o, const Jvalue &enc) {
     if (enc.isString()) o << ",\"" << enc.getString() << "\"";
     if (enc.isInt()) o << "," << enc.getInt();
     if (enc.isDouble()) o << "," << enc.getDouble();
+    o << "," << enc.nameId << "," << enc.val;
     return o << ")";
 }
 

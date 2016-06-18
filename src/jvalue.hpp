@@ -22,22 +22,31 @@ void* pointerForInt(int);
 
 class Jvalue {
 public:
-    const uint nameId;
-    const types type;
+    types type;
+    uint nameId;
     // { "String", "Int", "Double" };
-    const void *const val;
+    const void *val;
 
 public:
     /* Explicit copy constructor */
-    Jvalue(const Jvalue &j);
+    Jvalue(const Jvalue&);
+    /* Explicit move constructor */
+    Jvalue(Jvalue&&);
     /* Destructor */
     ~Jvalue();
     /* Static factory methods */
-    static Jvalue factory(uint n, Value &d);
-    static Jvalue factory(uint n, types t);
-    static Jvalue factory(uint n, string v);
-    static Jvalue factory(uint n, int v);
-    static Jvalue factory(uint n, double v);
+    static Jvalue factory(Value &d, uint n);
+    static Jvalue factory(types t, uint n);
+    static Jvalue factory(string v, uint n);
+    static Jvalue factory(int v, uint n);
+    static Jvalue factory(double v, uint n);
+    // static Jvalue factory(void*);
+    // Unnamed
+    // static Jvalue factory(Value &d);
+    // static Jvalue factory(types t);
+    // static Jvalue factory(string v);
+    // static Jvalue factory(int v);
+    // static Jvalue factory(double v);
 
     /* Methods */
     bool isNull() const { return type == types::kNull; }
@@ -62,22 +71,23 @@ public:
     double getDouble() const { return *((double*) val); }
 
     /* Operators */
-    // Jvalue operator=(const Jvalue &enc);
-    bool operator==(const Jvalue &enc) const;
+    Jvalue& operator=(Jvalue&);  // copy-assignment operator
+    Jvalue& operator=(Jvalue&&); // move-assignment operator
+    bool operator==(const Jvalue&) const;
     bool operator!=(const Jvalue &rhs) const { return !(*this == rhs); }
-    bool operator<(const Jvalue& rhs) const;
+    bool operator<(const Jvalue&) const;
     friend ostream& operator<<(ostream &o, const Jvalue &enc);
 
 private:
     /* Constructors */
-    Jvalue(uint n, types t) : nameId(n), type(t), val(nullptr) {}
-    Jvalue(uint n, char *v) : nameId(n), type(types::kString)
+    Jvalue(types t, uint n) : type(t), nameId(n), val(nullptr) {}
+    Jvalue(char *v, uint n) : type(types::kString), nameId(n)
         , val(cstr_copy(v)) {}
-    Jvalue(uint n, string v) : nameId(n), type(types::kString)
+    Jvalue(string v, uint n) : type(types::kString), nameId(n)
         , val(string_to_cstr(v)) {}
-    Jvalue(uint n, int v) : nameId(n), type(typeForInt(v))
+    Jvalue(int v, uint n) : type(typeForInt(v)), nameId(n)
         , val(pointerForInt(v)) {}
-    Jvalue(uint n, double v) : nameId(n), type(types::kDouble)
+    Jvalue(double v, uint n) : type(types::kDouble), nameId(n)
         , val((void*) new double(v)) {}
 } __attribute__ ((packed));
 
