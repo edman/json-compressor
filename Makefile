@@ -23,8 +23,10 @@ LFLAGS := -lsdsl -ldivsufsort -ldivsufsort64
 LIB := -L $(LIBDIR) -L /usr/local/lib
 INC := -I include -I /usr/local/include
 
-GTESTDIR := test/gtest-1.7.0
 TESTER := bin/tester
+TESTDIR := test
+GTESTDIR := $(TESTDIR)/gtest-1.7.0
+TEST_SOURCES := $(shell find $(TESTDIR) -type f -name "*.$(SRCEXT)")
 OBJECTS_NO_MAIN := $(patsubst $(BUILDDIR)/main.o,,$(OBJECTS))
 
 $(TARGET): $(OBJECTS)
@@ -60,7 +62,7 @@ $(LIBDIR)/gtest_main.a: $(BUILDDIR)/gtest_main.o $(BUILDDIR)/gtest-all.o
 	@echo " Creating gtest library archive..."
 	ar -rv $(LIBDIR)/gtest_main.a $(BUILDDIR)/gtest-all.o $(BUILDDIR)/gtest_main.o
 
-$(TESTER): $(OBJECTS_NO_MAIN) test/tester.cpp $(LIBDIR)/gtest_main.a
+$(TESTER): $(OBJECTS_NO_MAIN) $(TEST_SOURCES) $(LIBDIR)/gtest_main.a
 	@echo " Building tests...";
 	$(CC) $(CFLAGS) -isystem ${GTESTDIR}/include $(INC) $(LIB) $(LFLAGS) \
 		-pthread $^ -o $(TESTER)
