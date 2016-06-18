@@ -3,58 +3,82 @@
 #define __BITMAP_INDEX_CPP__
 
 #include "bitmap_index.hpp"
-#include "serialize.hpp"
-#include "jvalue.hpp"
+#include <utility>
 
 using namespace std;
 using namespace sdsl;
 
-template <class T>
-void BitmapIndex<T>::insert(T elem) {
-    values.push_back(elem);
-    // byte_size += get_size(elem);
+BitmapIndex::BitmapIndex(BitmapIndex &&other) : _size(other._size),
+        _bitmap(other._bitmap), _array(move(other._array)), select(other.select) {
+    other._size = 0;
+    _array.shrink();
 }
 
-template <class T>
-void BitmapIndex<T>::loadBitvector() {
-    // Reduce excess vector capacity
-    values.shrink_to_fit();
+void BitmapIndex::loadBitmap() {
+    // reduce excess packed array capacity
+    _array.shrink();
+    // initialize a bit vector of size boolBitmap with zeroes
+    _bitmap = bit_vector(boolBitmap->size(), 0);
+    // set bits to '1' in bitmap whenever boolBitmap is true
+    for (int i = 0; i < boolBitmap->size(); i++) {
+        if (boolBitmap->operator[](i)) _bitmap[i] = 1;
+    }
 
-    // Initialize a bit vector of size byte_size with zeroes
-    // bv = bit_vector(byte_size, 0);
+    // deallocate boolBitmap
+    delete boolBitmap; boolBitmap = nullptr;
 
-    // int c = 0, n = values.size();
-    // for (int i = 0; i < n - 1; i++) {
-    //     c += get_size(values[i]);
-    //     bv[c] = 1;
-    // }
+    // initialize select support structure
+    loadSelect();
 }
 
-template <class T>
-bool BitmapIndex<T>::operator==(const BitmapIndex<T> &rhs) const {
-    if (size() != rhs.size()) return false;
-    for (int i = 0; i < size(); ++i) if (values[i] != rhs.values[i])
-        return false;
-    // return bv == rhs.bv;
-    return true;
+void BitmapIndex::loadSelect() {
+    // initialize the select support structure
+    util::init_support(select, &_bitmap);
 }
 
-template <class T>
-ostream& operator<<(ostream &o, const BitmapIndex<T> &b) {
-    // o<<"("<<b.byte_size<<",";
-    // o<<b.bv<<",";
-    o<<"{";
-    for (auto it : b.values) o<<"'"<<it<<"',";
-    o<<"}";
-    return o<<endl;
+BitmapIndex& BitmapIndex::operator=(BitmapIndex &&other) {
+    if (this != &other) {
+        _size = other._size;
+        _bitmap = other._bitmap;
+        _array = move(other._array);
+        select = other.select;
+
+        other._size = 0;
+    }
+    return *this;
 }
 
+bool BitmapIndex::operator==(const BitmapIndex &rhs) const {
+    return this == &rhs ||
+        (_size == rhs._size && _bitmap == rhs._bitmap && _array == rhs._array);
+}
 
-/* Explicit instantiation of needed template classes and methods */
-template class BitmapIndex<string>;
-template class BitmapIndex<Jvalue>;
+void* BitmapIndex::operator[](const uint index) const {
+    // select(k) => position of k-th element, where k in [1, _size]
+    assert(index < _size);
+    // get position of index-th element
+    size_t position = select(index + 1); // index is 0-based so we add 1
+    // return a pointer to the beginning of the index-th element
+    return _array[position];
+}
 
-template ostream& operator<< (ostream &o, const BitmapIndex<string> &b);
-template ostream& operator<< (ostream &o, const BitmapIndex<Jvalue> &b);
+void BitmapIndex::markNewElementOfSize(size_t elemSize) {
+    // allocate a new boolean bitmap the first time an element is marked
+    if (boolBitmap == nullptr) { boolBitmap = new vector<bool>(); }
+
+    // mark a new element in the boolean bit vector
+    boolBitmap->push_back(true); // add a '1' bit to mark beginning of element
+    for (int i  = 1; i < elemSize; ++i)
+        boolBitmap->push_back(false); // fill remaining space with '0' bits
+}
+
+ostream& operator<<(ostream &o, const BitmapIndex &b) {
+    return o << "(" << b._size << "," << b._bitmap << ")";
+    // o<<"{";
+    // for (auto it : b._array) o<<"'"<<it<<"',";
+    // o<<"}";
+    // return o<<endl;
+}
+
 
 #endif

@@ -16,18 +16,14 @@ using namespace std;
 using namespace rapidjson;
 
 template <class SuccinctTree>
-void Cjson<SuccinctTree>::removeValues() {
-    values.values.clear();
-}
-
-template <class SuccinctTree>
 Cjson<SuccinctTree>::Cjson(Value &d, bool debug) {
     if (debug) cout << ".. start new cjson" << endl;
 
     // Load names and values arrays
     unordered_map<string, int> nameTable;
     loadInfo(d, nameTable);
-    values.loadBitvector();
+    // Load the values bitmap
+    values.loadBitmap();
 
     size = values.size();
     if (debug) cout << ".. load info" << endl;
@@ -46,7 +42,7 @@ void Cjson<SuccinctTree>::loadInfo(Value &d, unordered_map<string, int> &nameTab
     if (d.IsObject()) {
         for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
             uint nameId = resolveNameId(it->name.GetString(), nameTable);
-            values.insert(Jvalue::factory(nameId, it->value));
+            values.append<Jvalue>(Jvalue::factory(it->value, nameId));
 
             loadInfo(it->value, nameTable);
         }
@@ -54,7 +50,7 @@ void Cjson<SuccinctTree>::loadInfo(Value &d, unordered_map<string, int> &nameTab
     else if (d.IsArray())
         for (auto it = d.Begin(); it != d.End(); ++it) {
             uint nameId = resolveNameId("", nameTable);
-            values.insert(Jvalue::factory(nameId, *it));
+            values.append<Jvalue>(Jvalue::factory(*it, nameId));
 
             loadInfo(*it, nameTable);
         }
