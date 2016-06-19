@@ -23,11 +23,14 @@ LFLAGS := -lsdsl -ldivsufsort -ldivsufsort64
 LIB := -L $(LIBDIR) -L /usr/local/lib
 INC := -I include -I /usr/local/include
 
-TESTER := bin/tester
-TESTDIR := test
-GTESTDIR := $(TESTDIR)/gtest-1.7.0
-TEST_SOURCES := $(shell find $(TESTDIR) -type f -name "*.$(SRCEXT)")
+TEST_TARGET := bin/tester
+TEST_SRCDIR := test
+TEST_BUILDDIR := $(BUILDDIR)/test
+TEST_SOURCES := $(shell find $(TEST_SRCDIR) -type f -name "*.$(SRCEXT)")
+TEST_OBJECTS := $(patsubst $(TEST_SRCDIR)/%,$(TEST_BUILDDIR)/%,$(TEST_SOURCES:.$(SRCEXT)=.o))
 OBJECTS_NO_MAIN := $(patsubst $(BUILDDIR)/main.o,,$(OBJECTS))
+
+GTESTDIR := $(TEST_SRCDIR)/gtest-1.7.0
 
 $(TARGET): $(OBJECTS)
 	@echo " Linking...";
@@ -45,7 +48,7 @@ eval:
 
 clean:
 	@echo " Cleaning...";
-	$(RM) -r $(BUILDDIR) $(TARGET) $(TESTER)
+	$(RM) -r $(BUILDDIR) $(TARGET) $(TEST_TARGET)
 
 # Tests
 $(BUILDDIR)/gtest-all.o: $(GTESTDIR)/src/gtest-all.cc
@@ -62,14 +65,19 @@ $(LIBDIR)/gtest_main.a: $(BUILDDIR)/gtest_main.o $(BUILDDIR)/gtest-all.o
 	@echo " Creating gtest library archive..."
 	ar -rv $(LIBDIR)/gtest_main.a $(BUILDDIR)/gtest-all.o $(BUILDDIR)/gtest_main.o
 
-$(TESTER): $(OBJECTS_NO_MAIN) $(TEST_SOURCES) $(LIBDIR)/gtest_main.a
+# $(TEST_TARGET): $(OBJECTS_NO_MAIN) $(TEST_SOURCES) $(LIBDIR)/gtest_main.a
+$(TEST_TARGET): $(OBJECTS_NO_MAIN) $(TEST_OBJECTS) $(LIBDIR)/gtest_main.a
 	@echo " Building tests...";
 	$(CC) $(CFLAGS) -isystem ${GTESTDIR}/include $(INC) $(LIB) $(LFLAGS) \
-		-pthread $^ -o $(TESTER)
+		-pthread $^ -o $(TEST_TARGET)
 
-test: $(TESTER)
+$(TEST_BUILDDIR)/%.o: $(TEST_SRCDIR)/%.$(SRCEXT) $(LIBDIR)/gtest_main.a
+	@mkdir -p $(TEST_BUILDDIR)
+	$(CC) $(CFLAGS) $(INC) -isystem ${GTESTDIR}/include -c -o $@ $<
+
+test: $(TEST_TARGET)
 	@echo " Running tests..."
-	$(TESTER)
+	$(TEST_TARGET)
 
 run: $(TARGET)
 	@echo " Running..."
