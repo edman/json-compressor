@@ -33,6 +33,7 @@ char* string_to_cstr(const string &s) {
 }
 
 char* cstr_copy(const char *const cstr) {
+    if (cstr == nullptr) return nullptr;
     char *p = new char[strlen(cstr) + 1];
     strcpy(p, cstr);
     return p;
@@ -41,5 +42,7 @@ char* cstr_copy(const char *const cstr) {
 bool intInChar(int num) { return abs(num) <= SCHAR_MAX; }
 
 bool intInShort(int num) { return num <= SHRT_MAX; }
+
+bool isMaxUint(uint num) { return num == MAX_UINT; }
 
 #endif
