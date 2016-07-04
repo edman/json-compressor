@@ -14,9 +14,13 @@ DfTraverser DfTraversal::getTraverser() {
 }
 
 TraversalNode DfTraversal::getNode(int nodeIndex, int treeIndex) {
-  if (nodeIndex == 0) return TraversalNode("", Jvalue::factory(types::kObject, -1));
-  Jvalue &value = cjson->values.get<Jvalue>(nodeIndex - 1);
+  Jvalue &value = cjson->values.get<Jvalue>(nodeIndex);
   return TraversalNode(cjson->names[value.nameId], value);
+}
+
+const Jval& DfTraversal::getValue(int nodeIndex, int treeIndex) {
+  const Jval &val = cjson->operator[](nodeIndex);
+  return val;
 }
 
 TraversalNode DfTraversal::getCurrentNode() {
@@ -99,7 +103,7 @@ DfTraverser DfTraversal::getChild(int nodeIndex, int treeIndex, int i) {
 vector<DfTraverser> DfTraversal::getChildren(int nodeIndex, int treeIndex) {
   // assert there are children
   int d = degree(nodeIndex, treeIndex);
-  assert(d > 0);
+  // assert(d > 0);
 
   vector<DfTraverser> children(d);
   for (int i = 0; i < d; ++i) {

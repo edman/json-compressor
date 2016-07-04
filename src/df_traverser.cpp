@@ -13,6 +13,10 @@ TraversalNode DfTraverser::getNode() {
   return traversal->getNode(nodeIndex, treeIndex);
 }
 
+const Jval& DfTraverser::getValue() const {
+  return traversal->getValue(nodeIndex, treeIndex);
+}
+
 bool DfTraverser::hasParent() {
   return traversal->hasParent(treeIndex);
 }
@@ -29,11 +33,11 @@ bool DfTraverser::hasChild() {
   return traversal->hasChild(nodeIndex, treeIndex);
 }
 
-DfTraverser DfTraverser::getChild(int i) {
+DfTraverser DfTraverser::getChild(int i) const {
   return traversal->getChild(nodeIndex, treeIndex, i);
 }
 
-vector<DfTraverser> DfTraverser::getChildren() {
+vector<DfTraverser> DfTraverser::getChildren() const {
   return traversal->getChildren(nodeIndex, treeIndex);
 }
 

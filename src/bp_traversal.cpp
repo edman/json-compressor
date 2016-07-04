@@ -10,8 +10,7 @@ using namespace std;
 
 
 TraversalNode BpTraversal::getCurrentNode() {
-  if (nodeIndex == 0) return TraversalNode("", Jvalue::factory(types::kObject, -1));
-  Jvalue &value = cjson->values.get<Jvalue>(nodeIndex - 1);
+  Jvalue &value = cjson->values.get<Jvalue>(nodeIndex);
   return TraversalNode(cjson->names[value.nameId], value);
 }
 

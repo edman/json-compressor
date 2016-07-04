@@ -40,6 +40,7 @@ public:
     DfTraverser getTraverser();
     TraversalNode getCurrentNode();
     TraversalNode getNode(int ni, int ti);
+    const Jval& getValue(int ni, int ti);
     bool hasParent();
     bool hasParent(int ti);
     bool goToParent();

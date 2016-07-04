@@ -20,12 +20,13 @@ public:
             traversal(trav), nodeIndex(ni), treeIndex(ti) {}
 
     TraversalNode getNode();
+    const Jval& getValue() const;
     bool hasParent();
     DfTraverser getParent();
     int degree();
     bool hasChild();
-    DfTraverser getChild(int i=0);
-    vector<DfTraverser> getChildren();
+    DfTraverser getChild(int i=0) const;
+    vector<DfTraverser> getChildren() const;
     bool hasNextSibling();
     DfTraverser getNextSibling();
 };
