@@ -60,15 +60,19 @@ public:
     inline bool hasValue() const { return hasValue(_type); }
 
     /* Data access methods */
-    string getString() const;
-    const char* getCStr() const;
+    uint getStringIndex() const;
     char getChar() const;
     short getShort() const;
     int getInt() const;
     double getDouble() const;
 
+    /* Operators */
+    // copy-assignment operator (folds as move-assignment operator)
+    Jval& operator=(const Jval &other) { _type = other._type; return *this; }
+
 } __attribute__ ((packed));
 
+ostream& operator<<(ostream &o, const Jval &v);
 
 /******************************************************************************/
 /* Simple Named Jval */
@@ -86,6 +90,11 @@ public:
     /* Member methods */
     uint nameId() { return _nameId; }
 
+    /* Operators */
+    // copy-assignment operator (folds as move-assignment operator)
+    NamedJval& operator=(const NamedJval &other) {
+        _type = other._type; _nameId = other._nameId; return *this; }
+
 } __attribute__ ((packed));
 
 
@@ -100,13 +109,13 @@ public:
 public:
     /* Constructors */
     DataJval(T data) : Jval(TYPE), _data(data) {}
-    // Copy constructor
+    // Copy constructor (folds as move constructor)
     DataJval(const DataJval<T,TYPE> &r) : Jval(TYPE), _data(r._data) {}
-    // Move constructor
-    DataJval(DataJval<T,TYPE> &&r) : Jval(TYPE), _data(r._data) {}
-    /* Destructor */
-    ~DataJval() {}
 
+    /* Operators */
+    // copy-assignment operator (folds as move-assignment operator)
+    DataJval& operator=(const DataJval &other) {
+        _type = other._type; _data = other._data; return *this; }
 } __attribute__ ((packed));
 
 
@@ -122,27 +131,27 @@ public:
     /* Constructors */
     NamedDataJval(uint nameId, T data) : NamedJval(doname(TYPE), nameId),
             _data(data) {}
-    // Copy constructor
+    // Copy constructor (folds as move constructor)
     NamedDataJval(const NamedDataJval &r) : NamedJval(doname(TYPE), r._nameId),
             _data(r._data) {}
-    // Move constructor
-    NamedDataJval(NamedDataJval &&r) : NamedJval(doname(TYPE), r._nameId),
-            _data(r._data) {}
-    /* Destructor */
-    ~NamedDataJval() {}
 
+    /* Operators */
+    // copy-assignment operator (folds as move-assignment operator)
+    NamedDataJval& operator=(const NamedDataJval &other) {
+        _type = other._type; _nameId = other._nameId; _data = other._data;
+        return *this; }
 } __attribute__ ((packed));
 
 
 /******************************************************************************/
 /* Typedefs and template instantiations */
-typedef DataJval<char*,  Jval::TYPE_STRING> StringJval;
+typedef DataJval<uint,   Jval::TYPE_STRING> StringJval;
 typedef DataJval<char,   Jval::TYPE_CHAR>   CharJval;
 typedef DataJval<short,  Jval::TYPE_SHORT>  ShortJval;
 typedef DataJval<int,    Jval::TYPE_INT>    IntJval;
 typedef DataJval<double, Jval::TYPE_DOUBLE> DoubleJval;
 
-typedef NamedDataJval<char*,  Jval::TYPE_STRING> NamedStringJval;
+typedef NamedDataJval<uint,   Jval::TYPE_STRING> NamedStringJval;
 typedef NamedDataJval<char,   Jval::TYPE_CHAR>   NamedCharJval;
 typedef NamedDataJval<short,  Jval::TYPE_SHORT>  NamedShortJval;
 typedef NamedDataJval<int,    Jval::TYPE_INT>    NamedIntJval;

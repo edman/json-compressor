@@ -3,8 +3,6 @@
 #define __JVAL_CPP__
 
 #include "jval.hpp"
-// #include <cstdlib>
-// #include <iostream>
 
 using namespace std;
 
@@ -16,11 +14,7 @@ uint Jval::nameId() const {
     return (hasName(_type)) ? ((NamedJval*) this)->nameId() : MAX_UINT;
 }
 
-string Jval::getString() const {
-    return string(getCStr());
-}
-
-const char* Jval::getCStr() const {
+uint Jval::getStringIndex() const {
     assert(isString());
     if (hasName()) return ((NamedStringJval*) this)->_data;
     return ((StringJval*) this)->_data;
@@ -54,40 +48,17 @@ double Jval::getDouble() const {
 
 
 /******************************************************************************/
-/* Specialized copy constructors for strings */
-
-template<> StringJval::DataJval(const StringJval &other) : Jval(other._type),
-        _data(cstr_copy(other._data)) {}
-
-template<> NamedStringJval::NamedDataJval(const NamedStringJval &other) :
-        NamedJval(other._type, other._nameId), _data(cstr_copy(other._data)) {}
-
-
-/******************************************************************************/
-/* Specialized move constructors for strings */
-
-template<> StringJval::DataJval(StringJval &&other) : Jval(other._type),
-        _data(cstr_copy(other._data)) { other._data = nullptr; }
-
-template<> NamedStringJval::NamedDataJval(NamedStringJval &&other) :
-        NamedJval(other._type, other._nameId), _data(cstr_copy(other._data)) {
-    other._data = nullptr;
+/* Output operator */
+ostream& operator<<(ostream &o, const Jval &v) {
+    string types[] = {"NULL", "OBJECT", "ARRAY", "FALSE", "TRUE",
+        "STRING", "CHAR", "SHORT", "INT", "DOUBLE"};
+    o << "(" << types[v.type() - 1];
+    if (v.hasName()) o << ",n" << v.nameId();
+    if (v.isString()) o << ",v" << v.getStringIndex();
+    if (v.isInt()) o << ",v" << v.getInt();
+    if (v.isDouble()) o << ",v" << v.getDouble();
+    return o << ")";
 }
-
-
-/******************************************************************************/
-/* Specialized destructors for strings */
-
-template<> StringJval::~DataJval() {
-    if (_data != nullptr) delete[] _data;
-    // if (_data != nullptr) { cout << "deleting " << _data << endl; delete[] _data; }
-}
-
-template<> NamedStringJval::~NamedDataJval() {
-    if (_data != nullptr) delete[] _data;
-    // if (_data != nullptr) { cout << "deleting " << _data << endl; delete[] _data; }
-}
-
 
 /******************************************************************************/
 /* Definition of static variables */
