@@ -34,6 +34,9 @@ namespace detail {
             s += get_size(obj.names);
             // size of values BitmapIndex
             s += get_size(obj.values);
+            // size of stringValues array
+            s += sizeof(uint);
+            s += get_size(obj.stringValues);
             return s;
         }
     };
@@ -92,22 +95,8 @@ namespace detail {
             // size of bit vector plus size of values vector
             // return get_size(obj.bv) + obj.byte_size + sizeof(int);
             // number of elements + bit vector + series of elements
-            return sizeof(obj.size()) + get_size((uint) obj._bitmap.size())
+            return sizeof(obj.size()) + sizeof((uint) obj._bitmap.size())
                     + get_size(obj._bitmap) + get_size(obj._array);
-        }
-    };
-
-    template <>
-    struct get_size_helper<Jvalue> {
-        static size_t value(const Jvalue &obj) {
-            // type + nameId
-            size_t s = sizeof(char) + sizeof(uint);
-            if (obj.isString()) s += get_size(obj.getCStr());
-            else if (obj.isChar()) s += sizeof(char);
-            else if (obj.isShort()) s += sizeof(short);
-            else if (obj.isInt()) s += sizeof(int);
-            else if (obj.isDouble()) s += sizeof(double);
-            return s;
         }
     };
 
@@ -144,7 +133,6 @@ template size_t get_size<BpTree>(const BpTree&);
 template size_t get_size<DfTree>(const DfTree&);
 template size_t get_size<PackedArray>(const PackedArray&);
 template size_t get_size<BitmapIndex>(const BitmapIndex&);
-template size_t get_size<Jvalue>(const Jvalue&);
 template size_t get_size<vector<string>>(const vector<string>&);
 template size_t get_size<vector<char*>>(const vector<char*>&);
 template size_t get_size<vector<int>>(const vector<int>&);
@@ -174,10 +162,13 @@ namespace detail {
             // store the tree
             serializer(obj.tree, res);
             // store name table
-            serializer((int) obj.names.size(), res);
+            serializer((uint) obj.names.size(), res);
             serializer(obj.names, res);
             // store bitmap indexes for values
             serializer(obj.values, res);
+            // store stringValues array
+            serializer((uint) obj.stringValues.size(), res);
+            serializer(obj.stringValues, res);
         }
     };
 
@@ -255,22 +246,6 @@ namespace detail {
         }
     };
 
-    template <>
-    struct serialize_helper<Jvalue> {
-        static void apply(const Jvalue &obj, StreamType::iterator &res) {
-            // serialize type
-            serializer((char) obj.type, res);
-            // serialize name index
-            serializer(obj.nameId, res);
-            // serialize data (if exists)
-            if (obj.isString()) serializer(obj.getString(), res);
-            else if (obj.isChar()) serializer(obj.getChar(), res);
-            else if (obj.isShort()) serializer(obj.getShort(), res);
-            else if (obj.isInt()) serializer(obj.getInt(), res);
-            else if (obj.isDouble()) serializer(obj.getDouble(), res);
-        }
-    };
-
     template <class T>
     struct serialize_helper<vector<T>> {
         static void apply(const vector<T> &obj, StreamType::iterator &res) {
@@ -313,8 +288,6 @@ template void serialize<bit_vector>(const bit_vector&, StreamType&);
 template void serialize<BpTree>(const BpTree&, StreamType&);
 template void serialize<DfTree>(const DfTree&, StreamType&);
 template void serialize<BitmapIndex>(const BitmapIndex&, StreamType&);
-template void serialize<Jvalue>(const Jvalue&, StreamType&);
-template void serialize<vector<Jvalue>>(const vector<Jvalue>&, StreamType&);
 template void serialize<vector<string>>(const vector<string>&, StreamType&);
 template void serialize<vector<char*>>(const vector<char*>&, StreamType&);
 template void serialize<vector<int>>(const vector<int>&, StreamType&);
@@ -448,30 +421,6 @@ namespace detail {
         }
     };
 
-    template <>
-    struct deserialize_helper<Jvalue> {
-        static Jvalue apply(StreamType::const_iterator& begin,
-                StreamType::const_iterator end) {
-            // deserialize type
-            types type = static_cast<types>(deserialize_helper<char>::apply(begin, end));
-            // deserialize nameId
-            uint nameId = deserialize_helper<uint>::apply(begin, end);
-
-            // deserialize value data if pertinent
-            if (type == types::kString)
-                return Jvalue::factory(deserialize_helper<string>::apply(begin, end), nameId);
-            else if (type == types::kChar)
-                return Jvalue::factory(deserialize_helper<char>::apply(begin, end), nameId);
-            else if (type == types::kShort)
-                return Jvalue::factory(deserialize_helper<short>::apply(begin, end), nameId);
-            else if (type == types::kInt)
-                return Jvalue::factory(deserialize_helper<int>::apply(begin, end), nameId);
-            else if (type == types::kDouble)
-                return Jvalue::factory(deserialize_helper<double>::apply(begin, end), nameId);
-            return Jvalue::factory(type, nameId);
-        }
-    };
-
     template <class T>
     struct deserialize_helper<vector<T>> {
         static vector<T> apply(int size, StreamType::const_iterator& begin,
@@ -494,12 +443,15 @@ namespace detail {
             // recover the succinct tree
             T st = deserialize_helper<T>::apply(size, begin, end);
             // recover names table
-            int namesSize = deserialize_helper<int>::apply(begin, end);
+            uint namesSize = deserialize_helper<uint>::apply(begin, end);
             vector<char*> names = deserialize_helper<vector<char*>>::apply(namesSize, begin, end);
             // recover values
             BitmapIndex values = deserialize_helper<BitmapIndex>::apply(size, begin, end);
+            // recover stringValues array
+            uint strvSize = deserialize_helper<uint>::apply(begin, end);
+            vector<char*> stringValues = deserialize_helper<vector<char*>>::apply(strvSize, begin, end);
 
-            return Cjson<T>(size, st, names, values);
+            return Cjson<T>(size, st, names, values, stringValues);
         }
     };
 
@@ -534,7 +486,6 @@ template bit_vector deserialize(int, int, StreamType::const_iterator&, const Str
 template BpTree deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template DfTree deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template BitmapIndex deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
-template Jvalue deserialize(StreamType::const_iterator&, const StreamType::const_iterator&);
 template vector<char*> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template vector<string> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
 template vector<int> deserialize(int, StreamType::const_iterator&, const StreamType::const_iterator&);
@@ -556,15 +507,17 @@ template void save_to_file(Cjson<DfTree>&, const string&);
 
 template <class T>
 void save_to_file_split(Cjson<T> &cjson, const string &filename) {
-    const int nsplit = 4;
-    string splitnames[] = {"_header", "_tree", "_names", "_values"};
+    const int nsplit = 5;
+    string splitnames[] = {"_header", "_tree", "_names", "_values", "_strvalues"};
 
     StreamType res[nsplit];
-    serialize(cjson.size, res[0]);                 // header (size)
+    serialize(cjson.size, res[0]); // header (size)
     serialize((int) cjson.names.size(), res[0]); // header (name table size)
+    serialize((uint) cjson.stringValues.size(), res[0]); // header (str values size)
     serialize(cjson.tree, res[1]); // tree
     serialize(cjson.names, res[2]); // name table
     serialize(cjson.values, res[3]); // values
+    serialize(cjson.stringValues, res[4]); // string values
 
     for (int i = 0; i < nsplit; i++) {
         string splitname = filename + splitnames[i];
@@ -598,14 +551,14 @@ template Cjson<DfTree> load_from_file(const string&);
 
 template <class T>
 Cjson<T> load_from_file_split(const string &filename) {
-    const int nsplit = 4;
-    string splitnames[] = {"_header", "_tree", "_names", "_values"};
+    const int nsplit = 5;
+    string splitnames[] = {"_header", "_tree", "_names", "_values", "_strvalues"};
 
-    int psize, namesSize;
+    int psize, namesSize, strvSize;
     T st;
     vector<char*> names;
-    vector<int> nameList;
     BitmapIndex values;
+    vector<char*> stringValues;
 
     for (int i = 0; i < nsplit; i++) {
         ifstream ifile(filename + splitnames[i], ios::binary);
@@ -620,15 +573,17 @@ Cjson<T> load_from_file_split(const string &filename) {
         if (i == 0) {
             psize = deserialize<int>(begin, end);
             namesSize = deserialize<int>(begin, end);
+            strvSize = deserialize<uint>(begin, end);
         }
         else if (i == 1) st = deserialize<T>(psize, begin, end);
         else if (i == 2) names = deserialize<vector<char*>>(namesSize, begin, end);
                           // return deserialize<Cjson>(res);
-        // else if (i == 3)
-        else values = deserialize<BitmapIndex>(psize, begin, end);
+        else if (i == 3) values = deserialize<BitmapIndex>(psize, begin, end);
+        // else if (i == 4)
+        else stringValues = deserialize<vector<char*>>(strvSize, begin, end);
     }
 
-    return Cjson<T>(psize, st, names, values);
+    return Cjson<T>(psize, st, names, values, stringValues);
 }
 
 template Cjson<BpTree> load_from_file_split(const string&);
