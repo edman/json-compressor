@@ -35,14 +35,14 @@ public:
 
     template <typename T> void append(T &&elem) {
         // append new value to the packed array
-        _array.append(std::forward<T>(elem)); // std::move will send elem in as an rvalue
+        _array.append(std::forward<T>(elem));
         // increment element counter
         _size++;
         // mark the new elemnt position in boolBitmap
         markNewElementOfSize(sizeof(elem));
     }
 
-    template <typename T> T& get(const uint index) {
+    template <typename T> T& get(const uint index) const {
         // get a reference to the position in the packed array corresponding to
         // the index-th element
         T* value = (T*) this->operator[](index);
