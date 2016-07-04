@@ -27,6 +27,7 @@ long long average(long long *a, int n);
 /* Document traversal */
 void traversalRapid(Value&);
 void doubleTraversalCjson(DfTraversal &tdf, BpTraversal &tbp);
+void assert_compare(Value &d, const Jval &val, vector<char*> &stringValues);
 
 /******************************************************************************/
 /* Document traversal (header-only definitions) */
@@ -58,3 +59,24 @@ template <class T> static void traversalDfs(T& t) {
     if (t.goToNextSibling()) traversalDfs(t);
 }
 
+template <class T>
+void doubleTraverserRapid(Value &d, T &t, vector<char*> &stringValues) {
+    assert_compare(d, t.getValue(), stringValues);
+
+    if (d.IsObject()) {
+        auto dit = d.MemberBegin();
+        for (auto child : t.getChildren()) {
+            doubleTraverserRapid(dit->value, child, stringValues);
+            dit++;
+        }
+        EXPECT_EQ(d.MemberEnd(), dit);
+    }
+    else if (d.IsArray()) {
+        auto dit = d.Begin();
+        for (auto child : t.getChildren()) {
+            doubleTraverserRapid(*dit, child, stringValues);
+            dit++;
+        }
+        EXPECT_EQ(d.End(), dit);
+    }
+}

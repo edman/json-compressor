@@ -18,23 +18,20 @@ TEST(JvalueTest, Jval) {
 }
 
 TEST(JvalueTest, StringJval) {
-    /* Jval correctly constructs an unnamed int value */
+    /* Jval correctly constructs an unnamed string index value */
 
-    string val = "a dog could smell your mistakes";
-    StringJval i(string_to_cstr(val));
-    EXPECT_EQ(9, sizeof(i)); // correct size
-    EXPECT_EQ(Jval::TYPE_STRING, i.type()); // correct type
-    EXPECT_TRUE(i.hasValue()); // should have value
-    EXPECT_EQ(0, strcmp(val.c_str(), i.getCStr())); // correct value
-    EXPECT_EQ(val, i.getString()); // correct value
-    EXPECT_FALSE(i.hasName()); // shouldn't have name
+    StringJval s(42);
+    EXPECT_EQ(5, sizeof(s)); // correct size
+    EXPECT_EQ(Jval::TYPE_STRING, s.type()); // correct type
+    EXPECT_TRUE(s.hasValue()); // should have value
+    EXPECT_EQ(42, s.getStringIndex()); // correct value
+    EXPECT_FALSE(s.hasName()); // shouldn't have name
 
     // assert things still work with a pointer to Jval
-    Jval *v = &i;
+    Jval *v = &s;
     EXPECT_EQ(Jval::TYPE_STRING, v->type()); // correct type
     EXPECT_TRUE(v->hasValue()); // should have value
-    EXPECT_EQ(0, strcmp(val.c_str(), v->getCStr())); // correct value
-    EXPECT_EQ(val, v->getString()); // correct value
+    EXPECT_EQ(42, v->getStringIndex()); // correct value
     EXPECT_FALSE(v->hasName()); // shouldn't have name
 }
 
@@ -132,22 +129,21 @@ TEST(JvalueTest, NamedJval) {
 TEST(JvalueTest, NamedStringJval) {
     /* Jval correctly constructs a named string value */
 
-    string val = "even a dog can smell your farts";
-    NamedStringJval i(42, string_to_cstr(val));
-    EXPECT_EQ(13, sizeof(i)); // correct size
-    EXPECT_EQ(Jval::TYPE_STRING, i.type()); // correct type
-    EXPECT_TRUE(i.hasValue()); // should have value
-    EXPECT_EQ(0, strcmp(val.c_str(), i.getCStr())); // correct value
-    EXPECT_EQ(val, i.getString()); // correct value
-    EXPECT_TRUE(i.hasName()); // should have name
+    NamedStringJval s(27, 42);
+    EXPECT_EQ(9, sizeof(s)); // correct size
+    EXPECT_EQ(Jval::TYPE_STRING, s.type()); // correct type
+    EXPECT_TRUE(s.hasValue()); // should have value
+    EXPECT_EQ(42, s.getStringIndex()); // correct value
+    EXPECT_TRUE(s.hasName()); // should have name
+    EXPECT_EQ(27, s.nameId()); // correct name
 
     // assert things still work with a pointer to Jval
-    Jval *v = &i;
+    Jval *v = &s;
     EXPECT_EQ(Jval::TYPE_STRING, v->type()); // correct type
     EXPECT_TRUE(v->hasValue()); // should have value
-    EXPECT_EQ(0, strcmp(val.c_str(), v->getCStr())); // correct value
-    EXPECT_EQ(val, v->getString()); // correct value
-    EXPECT_TRUE(v->hasName()); // should have name
+    EXPECT_EQ(42, v->getStringIndex()); // correct value
+    EXPECT_TRUE(v->hasName()); // shouldn't have name
+    EXPECT_EQ(27, v->nameId()); // correct name
 }
 
 TEST(JvalueTest, NamedCharJval) {
@@ -246,15 +242,14 @@ TEST(JvalueTest, CopyConstructor) {
 TEST(JvalueTest, StrngCopyConstructor) {
     /* Jval string copy constructor works correctly */
 
-    string val = "a dog could smell your mistakes";
-    NamedStringJval one(27, string_to_cstr(val));
+    NamedStringJval one(27, 42);
     NamedStringJval other(one);
 
     EXPECT_EQ(one.type(), other.type());
     EXPECT_EQ(one.hasName(), other.hasName());
     EXPECT_EQ(one.hasValue(), other.hasValue());
     EXPECT_EQ(one.nameId(), other.nameId());
-    EXPECT_EQ(one.getString(), other.getString());
+    EXPECT_EQ(one.getStringIndex(), other.getStringIndex());
 }
 
 TEST(JvalueTest, MoveConstructor) {
@@ -272,12 +267,11 @@ TEST(JvalueTest, MoveConstructor) {
 TEST(JvalueTest, StrngMoveConstructor) {
     /* Jval string movw constructor works correctly */
 
-    string val = "a dog could smell your mistakes";
-    NamedStringJval one(NamedStringJval(27, string_to_cstr(val)));
+    NamedStringJval one(NamedStringJval(27, 42));
 
     EXPECT_EQ(Jval::TYPE_STRING, one.type());
     EXPECT_TRUE(one.hasValue());
     EXPECT_TRUE(one.hasName());
     EXPECT_EQ(27, one.nameId());
-    EXPECT_EQ(val, one.getString());
+    EXPECT_EQ(42, one.getStringIndex());
 }

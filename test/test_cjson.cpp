@@ -15,27 +15,45 @@ TEST(CjsonTest, Names) {
     Document d = rapid_from_file(2);
     Cjson<BpTree> p(d); // indifferent with respect to tree type
 
-    int n = 5;
-    EXPECT_EQ(n, p.names.size());
+    int n = 4;
+    ASSERT_EQ(n, p.names.size());
 
-    string names[] = {"foo", "st", "name", "grades", ""};
+    string names[] = {"foo", "st", "name", "grades"};
     for (int i = 0; i < n; ++i)
         EXPECT_EQ(names[i], p.names[i]);
 }
 
+TEST(CjsonTest, Values) {
+    /* Cjson loads and retrieves values correctly */
+
+    Document d = rapid_from_file(2);
+    CjsonBp p(d);
+
+    for (int i = 0; i < p.names.size(); ++i)
+        cout << i << "\t" << p.names[i] << endl;
+    for (int i = 0; i < p.size; ++i) {
+        const Jval &v = p[i];
+        cout << v << endl;
+        EXPECT_EQ(v.nameId(), v.hasName() ? v.nameId() : MAX_UINT);
+    }
+}
+
 TEST(CjsonTest, GetSize) {
     /* Cjson get_size reports its size accurately */
+
     Document d = rapid_from_file(2);
 
     // bp tree
-    Cjson<BpTree> pb(d);
+    // Cjson<BpTree> pb(d);
+    CjsonBp pb(d);
     EXPECT_EQ(3, get_size(pb.tree));
     EXPECT_EQ(20, get_size(pb.names));
     EXPECT_EQ(133, get_size(pb.values));
     EXPECT_EQ(164, get_size(pb));
 
     // df tree
-    Cjson<DfTree> pd(d);
+    // Cjson<DfTree> pd(d);
+    CjsonDf pd(d);
     EXPECT_EQ(3, get_size(pd.tree));
     EXPECT_EQ(20, get_size(pd.names));
     EXPECT_EQ(133, get_size(pd.values));

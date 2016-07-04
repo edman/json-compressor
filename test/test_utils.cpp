@@ -184,3 +184,47 @@ void traversalRapid(Value &d) {
     }
 }
 
+void assert_compare(Value &d, const Jval &val, vector<char*> &stringValues) {
+    // cout << "..jval:  " << val;
+    // if (val.isString()) cout << " " << stringValues[val.getStringIndex()]; cout << endl;
+
+    // no data
+    if (d.IsNull()) ASSERT_TRUE(val.isNull());
+    else if (d.IsObject()) ASSERT_TRUE(val.isObject());
+    else if (d.IsArray()) ASSERT_TRUE(val.isArray());
+    else if (d.IsFalse()) ASSERT_TRUE(val.isFalse());
+    else if (d.IsTrue()) ASSERT_TRUE(val.isTrue());
+    // string
+    else if (d.IsString()) {
+        ASSERT_TRUE(val.isString());
+        ASSERT_EQ(0, strcmp(d.GetString(), stringValues[val.getStringIndex()]));
+    }
+    // integer
+    else if (d.IsInt()) {
+        ASSERT_TRUE(val.isInt());
+        int num = d.GetInt();
+        // char
+        if (intInChar(num)) {
+            ASSERT_TRUE(val.isChar());
+            ASSERT_EQ(num, val.getChar());
+        }
+        // short
+        else if (intInShort(num)) {
+            ASSERT_TRUE(val.isShort());
+            ASSERT_FALSE(val.isChar());
+            ASSERT_EQ(num, val.getShort());
+        }
+        // int
+        else {
+            ASSERT_FALSE(val.isShort());
+            ASSERT_EQ(num, val.getInt());
+        }
+    }
+    // double
+    else if (d.IsDouble()) {
+        ASSERT_TRUE(val.isDouble());
+        ASSERT_EQ(d.GetDouble(), val.getDouble());
+    }
+}
+
+

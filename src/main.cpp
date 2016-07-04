@@ -81,14 +81,14 @@ void rapidjson_usage_test(char *filename) {
 
 Cjson<DfTree>* cjson_df_from_file(char *filename) {
     Document *d = rapidjson_document_from_file(filename);
-	Cjson<DfTree> *p = new Cjson<DfTree>(*d, true);
+	Cjson<DfTree> *p = new Cjson<DfTree>(*d);
     delete d;
     return p;
 }
 
 Cjson<BpTree>* cjson_bp_from_file(char *filename) {
     Document *d = rapidjson_document_from_file(filename);
-	Cjson<BpTree> *p = new Cjson<BpTree>(*d, true);
+	Cjson<BpTree> *p = new Cjson<BpTree>(*d);
     delete d;
     return p;
 }

@@ -11,7 +11,7 @@
 using namespace std;
 using namespace rapidjson;
 
-TEST(TraversalTest, Traversal) {
+TEST(TraversalTest, ItWorks) {
     /* Traversals are executed correctly */
 
     Document d = rapid_from_file(2);
@@ -23,4 +23,28 @@ TEST(TraversalTest, Traversal) {
     Cjson<DfTree> pd(d);
     DfTraversal td(&pd);
     traversalDfs(td);
+}
+
+TEST(TraversalTest, CompareToRapid) {
+    /* A DFS traversal of the document is the same in Cjson and in RapidJson */
+
+    Document d = rapid_from_file(2);
+    Cjson<DfTree> pd(d);
+    DfTraversal td(&pd);
+    const DfTraverser &traverser = td.getTraverser();
+
+    doubleTraverserRapid(d, traverser, pd.stringValues);
+}
+
+TEST(TraversalTest, FullCompareToRapid) {
+    /* A DFS traversal of the document is the same in Cjson and in RapidJson */
+
+    for (int i = 1; i <= 6; ++i) {
+        Document d = rapid_from_file(i);
+        CjsonDf pd(d);
+        DfTraversal td(&pd);
+        const DfTraverser &traverser = td.getTraverser();
+
+        doubleTraverserRapid(d, traverser, pd.stringValues);
+    }
 }
