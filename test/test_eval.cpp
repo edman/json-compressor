@@ -29,8 +29,8 @@ TEST(EvalTest, CjsonSaveToFile) {
             cout << "constructed cjson (size=" << get_size(p) << ")" << endl;
             cout << ".. cjson number of nodes: " << p.size << endl;
             cout << ".. values packed array size: " << p.values._array.size() << endl;
-        save_to_file_split<BpTree>(p, fn);
-        // save_to_file<BpTree>(p, fn + "_c");
+        // save_to_file_split<BpTree>(p, fn);
+        save_to_file<BpTree>(p, fn + "_c");
         //     cout << "save to file" << endl;
         // log_cjson_size<BpTree>(p, dur, fn);
         //     cout << "log cjson size" << endl;

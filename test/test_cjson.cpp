@@ -78,6 +78,8 @@ TEST(CjsonTest, Serialization) {
     for (int i = 0; i < p.names.size(); ++i)
         EXPECT_EQ(strcmp(p.names[i], loaded.names[i]), 0);
     EXPECT_EQ(p.values, loaded.values);
+    for (int i = 0; i < p.stringValues.size(); ++i)
+        EXPECT_EQ(strcmp(p.stringValues[i], loaded.stringValues[i]), 0);
     EXPECT_EQ(p, loaded);
 }
 
