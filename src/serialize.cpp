@@ -92,11 +92,8 @@ namespace detail {
     template <>
     struct get_size_helper<BitmapIndex> {
         static size_t value(const BitmapIndex &obj) {
-            // size of bit vector plus size of values vector
-            // return get_size(obj.bv) + obj.byte_size + sizeof(int);
-            // number of elements + bit vector + series of elements
-            return sizeof(obj.size()) + sizeof((uint) obj._bitmap.size())
-                    + get_size(obj._bitmap) + get_size(obj._array);
+            // series of elements (packed array only)
+            return get_size(obj._array);
         }
     };
 
@@ -236,11 +233,6 @@ namespace detail {
     template <>
     struct serialize_helper<BitmapIndex> {
         static void apply(const BitmapIndex &obj, StreamType::iterator &res) {
-            // serialize element count
-            serializer(obj.size(), res);
-            // serialize bitmap index
-            serializer((uint) obj._bitmap.size(), res);
-            serializer(obj._bitmap, res);
             // serialize values
             serializer(obj._array, res);
         }
@@ -406,18 +398,13 @@ namespace detail {
     struct deserialize_helper<BitmapIndex> {
         static BitmapIndex apply(int values_size, StreamType::const_iterator& begin,
                 StreamType::const_iterator end) {
-            // deserialize size
-            uint size = deserialize_helper<uint>::apply(begin, end);
-
-            // deserialize bit vector
-            uint bv_size_in_bits = deserialize_helper<uint>::apply(begin, end);
-            uint bv_size_in_bytes = bit_size_to_bytes(bv_size_in_bits);
-            bit_vector bitmap = deserialize_helper<bit_vector>::apply(bv_size_in_bits, bv_size_in_bytes, begin, end);
-
             // deserialize values array
             PackedArray array = deserialize_helper<PackedArray>::apply(begin, end);
 
-            return BitmapIndex(size, bitmap, array);
+            // load jval bitmap index from its values array
+            BitmapIndex index(array);
+            loadJvalBitmapIndex(index);
+            return index;
         }
     };
 
@@ -577,7 +564,6 @@ Cjson<T> load_from_file_split(const string &filename) {
         }
         else if (i == 1) st = deserialize<T>(psize, begin, end);
         else if (i == 2) names = deserialize<vector<char*>>(namesSize, begin, end);
-                          // return deserialize<Cjson>(res);
         else if (i == 3) values = deserialize<BitmapIndex>(psize, begin, end);
         // else if (i == 4)
         else stringValues = deserialize<vector<char*>>(strvSize, begin, end);

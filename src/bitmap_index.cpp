@@ -15,7 +15,7 @@ BitmapIndex::BitmapIndex(BitmapIndex &&other) : _size(other._size),
 }
 
 void BitmapIndex::loadBitmap() {
-    // reduce excess packed array capacity
+    // reduce any eventual excess packed array capacity
     _array.shrink();
     // initialize a bit vector of size boolBitmap with zeroes
     _bitmap = bit_vector(boolBitmap->size(), 0);
@@ -29,11 +29,6 @@ void BitmapIndex::loadBitmap() {
 
     // initialize select support structure
     loadSelect();
-}
-
-void BitmapIndex::loadSelect() {
-    // initialize the select support structure
-    util::init_support(select, &_bitmap);
 }
 
 BitmapIndex& BitmapIndex::operator=(BitmapIndex &&other) {

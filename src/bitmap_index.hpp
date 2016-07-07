@@ -24,13 +24,14 @@ public:
     // move constructor
     BitmapIndex(BitmapIndex&&);
     // deserialization constructor
-    BitmapIndex(uint s, bit_vector &b, PackedArray &v) : _size(s), _bitmap(b),
-            _array(move(v)) { _array.shrink(); loadSelect(); }
+    BitmapIndex(PackedArray &v) : _array(move(v)) {}
     /* Destructor */
     ~BitmapIndex() { if (boolBitmap != nullptr) { delete boolBitmap; } }
 
     /* Methods */
     void loadBitmap();
+    // initialize the select support structure
+    void loadSelect() { util::init_support(select, &_bitmap); }
     uint size() const { return _size; }
 
     template <typename T> void append(T &&elem) {
@@ -58,9 +59,7 @@ public:
 
 private:
     vector<bool> *boolBitmap = nullptr;
-
     void markNewElementOfSize(size_t); // mark a new element in boolBitmap
-    void loadSelect(); // initialize the select support structure
 };
 
 ostream& operator<<(ostream &o, const BitmapIndex &b);

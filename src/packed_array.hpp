@@ -94,7 +94,7 @@ public:
 
     bool operator==(const PackedArray &r) const {
         return this == &r ||
-                (_size == r._size && memcmp(_array, r._array, _size) == 0);
+            (_size == r._size && memcmp(_array, r._array, _size) == 0);
     }
 
     void* operator[](const int index) const {
@@ -116,9 +116,9 @@ private:
     }
 
     void copy_to_size(const size_t newCapacity) {
-        assert(newCapacity >= _size); // ensure enough space for the content
         // do nothing if the dynamic array is already the desired capacity
         if (newCapacity == _capacity) { return; }
+        assert(newCapacity >= _size); // ensure enough space for the content
 
         // allocate new array
         char *newarray = new char[newCapacity];
@@ -132,8 +132,7 @@ private:
     }
 
     void init() {
-        _capacity = INITIAL_CAPACITY;
-        _array = new char[_capacity];
+        _array = new char[_capacity = INITIAL_CAPACITY];
     }
 
 };

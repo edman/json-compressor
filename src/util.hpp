@@ -9,6 +9,9 @@
 using namespace std;
 using namespace sdsl;
 
+class Jval;
+class BitmapIndex;
+
 typedef unsigned int uint;
 typedef unsigned char uchar;
 
@@ -26,5 +29,8 @@ bool intInChar(int);
 bool intInShort(int);
 
 bool isMaxUint(uint);
+
+uint jvalByteSize(const Jval&);
+void loadJvalBitmapIndex(BitmapIndex&);
 
 #endif
