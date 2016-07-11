@@ -66,21 +66,20 @@ TEST(EvalTest, TraversalTime) {
     /* Cjson tree traversal time evaluation */
 
     int lo = 1;
-    int hi = 0;
-    int tries = 5;
+    int hi = 9;
+    int tries = 10;
     long long times[tries];
     for (int i = lo; i <= hi; ++i) {
-        cout << endl << "=== (parse input " << i << " ";
+            cout << endl << "=== (parse input " << i << " ";
         string fn = filename(i, true);
-        // string fn = filename(i, false);
         Document d = rapid_from_file(fn);
-        cout << fn << ") ===" << endl;
+            cout << fn << ") ===" << endl;
 
-        cout << "= dftree create" << endl;
+            cout << "= dftree create" << endl;
         Cjson<DfTree> pd(d);
         DfTraversal td(&pd);
 
-        cout << "= dftree begin traversal" << endl;
+            cout << "= dftree begin traversal" << endl;
         for (int k = 0; k < tries; ++k) {
             tick();
             // traversalDfs(td);
@@ -88,26 +87,26 @@ TEST(EvalTest, TraversalTime) {
             // traverserBfs(td.getTraverser());
             times[k] = tick("cjson dftree time");
         }
-        cout << "average: " << average(times, tries) << endl;
+            cout << "average: " << average(times, tries) << endl;
 
-        cout << "= bptree create" << endl;
+            cout << "= bptree create" << endl;
         Cjson<BpTree> p(d);
         BpTraversal t(&p);
-        cout << "= bptree begin traversal" << endl;
+            cout << "= bptree begin traversal" << endl;
         for (int k = 0; k < tries; ++k) {
             tick();
             traversalDfs(t);
             times[k] = tick("cjson bptree time");
         }
-        cout << "average: " << average(times, tries) << endl;
+            cout << "average: " << average(times, tries) << endl;
 
-        cout << "= rapid begin traversal" << endl;
+            cout << "= rapid begin traversal" << endl;
         for (int k = 0; k < tries; ++k) {
             tick();
             traversalRapid(d);
             times[k] = tick("rapid time");
         }
-        cout << "average: " << average(times, tries) << endl;
+            cout << "average: " << average(times, tries) << endl;
 
         // cout << "= begin double traversal" << endl;
         // doubleTraversalCjson(td, t);

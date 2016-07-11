@@ -137,7 +137,7 @@ long long tick(string msg, bool bt) {
         // auto tot_time = duration_cast<milliseconds>(t2 - t1).count();
         // cout << ".. " << msg << ": " << tot_time << " millis" << endl;
         auto tot_time = duration_cast<nanoseconds>(t2 - t1).count();
-        // if (!msg.empty()) cout << ".. " << msg << ": " << tot_time << " nanos" << endl;
+        if (!msg.empty()) cout << ".. " << msg << ": " << tot_time << " nanos" << endl;
         return tot_time;
     }
 }
