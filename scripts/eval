@@ -13,8 +13,22 @@ mcom="valgrind $vflags $mflags --massif-out-file=$outfile.$i"
 
 echo "== Running evaluations"
 
-lo=1
-hi=10
+lo=20
+hi=20
+
+echo "== Jsoncpp"
+for i in `seq $lo $hi`; do
+    # Run valgrind and generate massif output file
+    echo ".. jsoncpp input $i"
+    valgrind $exec -c test/inputs/input$i.json
+done
+
+echo "== Json for Modern C++"
+for i in `seq $lo $hi`; do
+    # Run valgrind and generate massif output file
+    echo ".. modern json input $i"
+    valgrind $exec -m test/inputs/input$i.json
+done
 
 echo "== RapidJson"
 for i in `seq $lo $hi`; do
@@ -28,17 +42,18 @@ for i in `seq $lo $hi`; do
     # Run valgrind and generate massif output file
     echo ".. cjson input bp $i"
     valgrind $exec -bp test/inputs/input$i.json
-    valgrind $exec -df test/inputs/input$i.json
+    # echo ".. cjson input df $i"
+    # valgrind $exec -df test/inputs/input$i.json
 done
 
-echo "== CJson bitmap pointer"
-git checkout bitmappointer
-make clean
-make
-for i in `seq $lo $hi`; do
-    # Run valgrind and generate massif output file
-    echo ".. bitmap input bp $i"
-    valgrind $exec -bp test/inputs/input$i.json
-    valgrind $exec -df test/inputs/input$i.json
-done
+# echo "== CJson bitmap pointer"
+# git checkout bitmappointer
+# make clean
+# make
+# for i in `seq $lo $hi`; do
+#     # Run valgrind and generate massif output file
+#     echo ".. bitmap input bp $i"
+#     valgrind $exec -bp test/inputs/input$i.json
+#     valgrind $exec -df test/inputs/input$i.json
+# done
 

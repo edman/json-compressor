@@ -11,6 +11,9 @@
 #include "df_traversal.hpp"
 #include "serialize.hpp"
 
+#include "json.hpp"
+#include "jsoncpp/json.h"
+
 #include <thread>
 #include <chrono>
 #include <cstdio>
@@ -41,10 +44,28 @@ bool check_arguments(int argc, char *argv[]) {
     return true;
 }
 
+Json::Value* jsoncpp_from_file(char *filename) {
+    ifstream file(filename, std::ifstream::binary);
+    Json::Value *v = new Json::Value();
+    file >> *v;
+    return v;
+}
+
+nlohmann::json* modernjson_from_file(char *filename) {
+    ifstream file;
+    file.open(filename);
+    nlohmann::json *j = new nlohmann::json();
+    file >> *j;
+    return j;
+}
+
+void modernjson_usage_test(char *filename) {
+    nlohmann::json *j = modernjson_from_file(filename);
+}
+
 Document* rapidjson_document_from_file(char *filename) {
 	FILE *fp;
 	char buf[2 << 16];
-	// char *buf = new char[2 << 16];
 	fp = fopen(filename, "r");
 	FileReadStream is(fp, buf, sizeof(buf));
     Document *d = new Document();
@@ -55,10 +76,8 @@ Document* rapidjson_document_from_file(char *filename) {
 }
 
 void rapidjson_usage_test(char *filename) {
-    bebusy();
 	Document *d = rapidjson_document_from_file(filename);
     // cout << d << endl;
-    bebusy();
     // delete d;
 
     // // 1. Parse a JSON string into DOM.
@@ -137,8 +156,10 @@ int main(int argc, char *argv[]) {
     if (!check_arguments(argc, argv)) { return 1; }
 
     if (strcmp(argv[1], "-r") == 0) rapidjson_usage_test(argv[2]);
+    else if (strcmp(argv[1], "-m") == 0) modernjson_usage_test(argv[2]);
+    else if (strcmp(argv[1], "-c") == 0) jsoncpp_from_file(argv[2]);
     else if (strcmp(argv[1], "-bp") == 0) cjson_usage_test(argv[2], true);
-    else cjson_usage_test(argv[2], false);
+    else if (strcmp(argv[1], "-df") == 0) cjson_usage_test(argv[2], false);
 
     // bebusy();
 

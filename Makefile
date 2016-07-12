@@ -15,7 +15,6 @@ TARGET := bin/runner
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name "*.$(SRCEXT)")
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-# CFLAGS := -g -Wall -std=c++11 -O3
 # the flag -O0 disables all (or most) optimizations
 CFLAGS := -g -Wall -std=c++11 -O3
 LFLAGS := -lsdsl -ldivsufsort -ldivsufsort64
