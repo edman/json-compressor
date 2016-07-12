@@ -4,6 +4,9 @@
 #include "../src/bp_traversal.hpp"
 #include "../src/df_traversal.hpp"
 
+#include "../src/json.hpp"
+#include "../src/jsoncpp/json.h"
+
 using namespace std;
 using namespace rapidjson;
 
@@ -17,6 +20,10 @@ template <class T> void log_cjson_size(Cjson<T>&, long long, string&);
 /* Json parsing */
 Document rapid_from_file(string fn);
 Document rapid_from_file(int k=1, bool input=false);
+nlohmann::json modern_from_file(string fn);
+nlohmann::json modern_from_file(int k=1, bool input=false);
+Json::Value jsoncpp_from_file(string fn);
+Json::Value jsoncpp_from_file(int k=1, bool input=false);
 
 /******************************************************************************/
 /* Time measurement and evaluation */
@@ -25,7 +32,9 @@ long long average(long long *a, int n);
 
 /******************************************************************************/
 /* Document traversal */
-void traversalRapid(Value&);
+void traversalRapid(Value&, int&);
+void traversalModern(nlohmann::json&, int&);
+void traversalJsoncpp(Json::Value&, int&);
 void doubleTraversalCjson(DfTraversal &tdf, BpTraversal &tbp);
 void assert_compare(Value &d, const Jval &val, vector<char*> &stringValues);
 

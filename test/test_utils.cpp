@@ -117,6 +117,28 @@ Document rapid_from_file(int k, bool input) {
     return rapid_from_file(filename(k, input));
 }
 
+nlohmann::json modern_from_file(string fn) {
+    nlohmann::json j;
+    ifstream file(fn, std::ifstream::binary);
+    file >> j;
+    return j;
+}
+
+nlohmann::json modern_from_file(int k, bool input) {
+    return modern_from_file(filename(k, input));
+}
+
+Json::Value jsoncpp_from_file(string fn) {
+    Json::Value v;
+    ifstream file(fn, std::ifstream::binary);
+    file >> v;
+    return v;
+}
+
+Json::Value jsoncpp_from_file(int k, bool input) {
+    return jsoncpp_from_file(filename(k, input));
+}
+
 
 /******************************************************************************/
 /* Time measurement and evaluation */
@@ -171,16 +193,36 @@ void doubleTraversalCjson(DfTraversal &tdf, BpTraversal &tbp) {
     } else { ASSERT_EQ(tbp.goToNextSibling(), false); }
 }
 
-void traversalRapid(Value &d) {
+void traversalRapid(Value &d, int &count) {
+    count++;
     if (d.IsObject()) {
         for (auto it = d.MemberBegin(); it != d.MemberEnd(); ++it) {
-            traversalRapid(it->value);
+            traversalRapid(it->value, count);
         }
     }
     else if (d.IsArray()) {
         for (auto it = d.Begin(); it != d.End(); ++it) {
-            traversalRapid(*it);
+            traversalRapid(*it, count);
         }
+    }
+}
+
+void traversalModern(nlohmann::json &j, int& count) {
+    count++;
+    if (j.is_object() || j.is_array()) {
+        // for (auto it = j.begin(); it != j.end(); ++it) {
+        //     traversalModern(*it);
+        // }
+        for (auto &elem : j)
+            traversalModern(elem, count);
+    }
+}
+
+void traversalJsoncpp(Json::Value &v, int &count) {
+    count++;
+    if (v.isObject() || v.isArray()) {
+        for (auto it = v.begin(); it != v.end(); ++it)
+            traversalJsoncpp(*it, count);
     }
 }
 
