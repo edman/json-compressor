@@ -16,22 +16,19 @@ TEST(EvalTest, CjsonSaveToFile) {
     /* Cjson compressed file size evaluation */
 
     int lo = 1;
-    int hi = 0;
+    int hi = 12;
     for (int i = lo; i <= hi; ++i) {
             cout << "start " << i << endl;
         string fn = filename(i, true);
         Document d = rapid_from_file(fn);
             cout << "loaded " << fn << " with rapidjson" << endl;
 
-        tick();
         Cjson<BpTree> p(d);
-        long long dur = tick();
             cout << "constructed cjson (size=" << get_size(p) << ")" << endl;
-            cout << ".. cjson number of nodes: " << p.size << endl;
-            cout << ".. values packed array size: " << p.values._array.size() << endl;
-        // save_to_file_split<BpTree>(p, fn);
-        save_to_file<BpTree>(p, fn + "_c");
-        //     cout << "save to file" << endl;
+            // cout << ".. cjson number of nodes: " << p.size << endl;
+            // cout << ".. values packed array size: " << p.values._array.size() << endl;
+        // save_to_file<BpTree>(p, fn + "_c");
+            // cout << "save to file" << endl;
         // log_cjson_size<BpTree>(p, dur, fn);
         //     cout << "log cjson size" << endl;
     }
@@ -66,7 +63,7 @@ TEST(EvalTest, TraversalTime) {
     /* Cjson tree traversal time evaluation */
 
     int lo = 1;
-    int hi = 10;
+    int hi = 0;
     int tries = 1;
     long long times[tries];
     for (int i = lo; i <= hi; ++i) {
