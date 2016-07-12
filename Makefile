@@ -17,7 +17,7 @@ SOURCES := $(shell find $(SRCDIR) -type f -name "*.$(SRCEXT)")
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 # CFLAGS := -g -Wall -std=c++11 -O3
 # the flag -O0 disables all (or most) optimizations
-CFLAGS := -g -Wall -std=c++11 -O0
+CFLAGS := -g -Wall -std=c++11 -O3
 LFLAGS := -lsdsl -ldivsufsort -ldivsufsort64
 # LIB := -pthread -L lib -lboost_thread-mt -lboost_filesystem-mt -lboost_system-mt
 LIB := -L $(LIBDIR) -L /usr/local/lib
