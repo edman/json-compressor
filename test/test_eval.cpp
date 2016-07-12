@@ -66,28 +66,31 @@ TEST(EvalTest, TraversalTime) {
     /* Cjson tree traversal time evaluation */
 
     int lo = 1;
-    int hi = 9;
-    int tries = 10;
+    int hi = 10;
+    int tries = 1;
     long long times[tries];
     for (int i = lo; i <= hi; ++i) {
             cout << endl << "=== (parse input " << i << " ";
         string fn = filename(i, true);
         Document d = rapid_from_file(fn);
+        nlohmann::json j = modern_from_file(fn);
+        Json::Value v = jsoncpp_from_file(fn);
             cout << fn << ") ===" << endl;
 
-            cout << "= dftree create" << endl;
-        Cjson<DfTree> pd(d);
-        DfTraversal td(&pd);
 
-            cout << "= dftree begin traversal" << endl;
-        for (int k = 0; k < tries; ++k) {
-            tick();
-            // traversalDfs(td);
-            traverserDfs(td.getTraverser());
-            // traverserBfs(td.getTraverser());
-            times[k] = tick("cjson dftree time");
-        }
-            cout << "average: " << average(times, tries) << endl;
+        //     cout << "= dftree create" << endl;
+        // Cjson<DfTree> pd(d);
+        // DfTraversal td(&pd);
+
+        //     cout << "= dftree begin traversal" << endl;
+        // for (int k = 0; k < tries; ++k) {
+        //     tick();
+        //     // traversalDfs(td);
+        //     traverserDfs(td.getTraverser());
+        //     // traverserBfs(td.getTraverser());
+        //     times[k] = tick("cjson dftree time");
+        // }
+        //     cout << "average: " << average(times, tries) << endl;
 
             cout << "= bptree create" << endl;
         Cjson<BpTree> p(d);
@@ -103,8 +106,30 @@ TEST(EvalTest, TraversalTime) {
             cout << "= rapid begin traversal" << endl;
         for (int k = 0; k < tries; ++k) {
             tick();
-            traversalRapid(d);
+            int c = 0;
+            traversalRapid(d, c);
+            cout << ".. .. count = " << c << endl;
             times[k] = tick("rapid time");
+        }
+            cout << "average: " << average(times, tries) << endl;
+
+            cout << "= modern begin traversal" << endl;
+        for (int k = 0; k < tries; ++k) {
+            tick();
+            int c = 0;
+            traversalModern(j, c);
+            cout << ".. .. count = " << c << endl;
+            times[k] = tick("modern time");
+        }
+            cout << "average: " << average(times, tries) << endl;
+
+            cout << "= jsoncpp begin traversal" << endl;
+        for (int k = 0; k < tries; ++k) {
+            tick();
+            int c = 0;
+            traversalJsoncpp(v, c);
+            cout << ".. .. count = " << c << endl;
+            times[k] = tick("jsoncpp time");
         }
             cout << "average: " << average(times, tries) << endl;
 
