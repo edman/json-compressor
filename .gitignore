@@ -1,6 +1,7 @@
 # Ignore the build and lib dirs
 build
 lib/*
+!lib/README.md
 
 # Ignore any executables
 bin/*
