@@ -33,11 +33,15 @@ long filesize(const char *);
 template <class T> void log_cjson_size(Cjson<T> &, const char *, long);
 
 bool check_arguments(int argc, char *argv[]) {
-    if (argc > 3 || argc == 1) {
+    if (argc != 3 || 
+        (strcmp(argv[1], "-r") != 0 && 
+         strcmp(argv[1], "-bp") != 0 && 
+         strcmp(argv[1], "-df") != 0)) {
         cout << "Usage" << endl;
-        cout << "runner [-rc] <file.json>" << endl;
+        cout << "runner <-r|-bp|-df> <file.json>" << endl;
         return false;
     }
+
     return true;
 }
 
