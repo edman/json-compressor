@@ -114,11 +114,13 @@ void cjson_usage_test(char *fnarg, bool bp) {
         Cjson<BpTree> *p = cjson_bp_from_file(fnarg);
         cout << "BpTraversal creation" << endl;
         BpTraversal *tbp = new BpTraversal(p);
+        cjson_save(*p, fnarg);
     }
     else {
         Cjson<DfTree> *p = cjson_df_from_file(fnarg);
         cout << "DFTraversal creation" << endl;
         DfTraversal *tdf = new DfTraversal(p);
+        cjson_save(*p, fnarg);
      }
     // bebusy();
     // delete p;
