@@ -34,6 +34,7 @@ GTESTDIR := $(TEST_SRCDIR)/gtest-1.7.0
 
 $(TARGET): $(OBJECTS)
 	@echo " Linking...";
+	mkdir -p $(shell dirname $(TARGET))
 	$(CC) $^ -o $(TARGET) $(LIB) $(LFLAGS)
 	# @echo " Running..."; $(TARGET) test/sample4.json
 
